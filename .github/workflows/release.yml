@@ -2,6 +2,8 @@ name: Build and publish TwinPanel for Windows
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
   workflow_dispatch:
