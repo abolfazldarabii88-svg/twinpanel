@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     onStatus: callback => ipcRenderer.on('telegram-native:status-update', (_event, value) => callback(value))
   },
   toggleFullscreen: () => ipcRenderer.invoke('twinpanel:toggle-fullscreen'),
+  getVersion: () => ipcRenderer.invoke('twinpanel:app-version'),
   checkForUpdates: () => ipcRenderer.invoke('twinpanel:check-updates'),
   downloadUpdate: () => ipcRenderer.invoke('twinpanel:download-update'),
   installUpdate: () => ipcRenderer.invoke('twinpanel:install-update'),
