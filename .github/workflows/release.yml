@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
-    tags:
-      - "v*"
   workflow_dispatch:
+
+concurrency:
+  group: twinpanel-windows-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -24,7 +26,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Build and publish installer
+      - name: Build and publish installer and updater metadata
         run: npm run publish:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
