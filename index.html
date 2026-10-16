@@ -160,7 +160,7 @@ body[data-theme="glass"] .btn.primary,body[data-theme="glass"] .mode-btn.active{
   <div class="setting-row"><div class="setting-copy"><strong>به‌روزرسانی TwinPanel</strong><small>نسخهٔ جدید را بررسی کن؛ دریافت آپدیت به انتشار رسمی نسخه در GitHub نیاز دارد.</small></div><button class="btn primary" id="checkUpdates">بررسی آپدیت</button></div>
   <div class="setting-row"><div class="setting-copy"><strong>افکت صوتی Dynamic Island</strong><small>با شروع صدای ChatGPT یا تلگرام یک افکت کوتاه و ملایم پخش می‌شود.</small></div><button class="btn" id="soundToggle" aria-pressed="true">صدا روشن</button></div>
   <div class="setting-row"><div class="setting-copy"><strong>Dynamic Island</strong><small>کپسول بالای پنجره هنگام تشخیص پخش صدا متحرک می‌شود.</small></div><button class="btn" id="islandToggle" aria-pressed="true">نمایش روشن</button></div>
-  <div class="update-status" id="updateStatus" aria-live="polite">نسخهٔ فعلی: 1.3.5</div>
+  <div class="update-status" id="updateStatus" aria-live="polite">در حال خواندن نسخهٔ برنامه…</div>
   <div class="settings-actions"><button class="btn" id="closeSettingsBottom">بستن</button></div>
  </div>
 </div>
@@ -248,6 +248,7 @@ fullBtn.addEventListener('click',async()=>{if(window.twinPanel)await window.twin
 if(window.twinPanel){
  window.twinPanel.onFullscreenChanged(isFullscreen=>{setFocusMode(isFullscreen);});
  window.twinPanel.onCommand(command=>{if(command==='toggle-focus')setFocusMode(!document.body.classList.contains('focus'));if(command==='open-settings')openSettings();if(command==='reload-gpt')$('gpt').reload();if(command==='reload-telegram')$('tg').reload();if(command==='reload-both'){$('gpt').reload();$('tg').reload();}});
+ window.twinPanel.getVersion().then(version=>{const status=$('updateStatus');if(status)status.textContent='نسخهٔ فعلی: '+version;}).catch(()=>{});
  window.twinPanel.onUpdateStatus(data=>{const status=$('updateStatus');status.textContent=data.message||'وضعیت به‌روزرسانی تغییر کرد.';if(data.state==='available')$('checkUpdates').textContent='دریافت آپدیت';else if(data.state==='downloaded')$('checkUpdates').textContent='نصب و راه‌اندازی مجدد';else if(data.state==='downloading')$('checkUpdates').textContent='در حال دریافت…';else $('checkUpdates').textContent='بررسی آپدیت';});
 }
 $('checkUpdates').addEventListener('click',async()=>{const button=$('checkUpdates');button.disabled=true;try{const state=button.textContent;if(state==='دریافت آپدیت'&&window.twinPanel)await window.twinPanel.downloadUpdate();else if(state==='نصب و راه‌اندازی مجدد'&&window.twinPanel)await window.twinPanel.installUpdate();else if(window.twinPanel){$('updateStatus').textContent='در حال بررسی نسخهٔ جدید…';await window.twinPanel.checkForUpdates();}}catch(error){$('updateStatus').textContent='بررسی آپدیت انجام نشد: '+(error?.message||'خطای نامشخص');}finally{button.disabled=false;}});
