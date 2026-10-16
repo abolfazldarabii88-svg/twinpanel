@@ -289,7 +289,14 @@ class TdlibService {
             // Prefer QR once; after QR has started, accept the code if TDLib requests it.
             if (!qrRequested) {
               qrRequested = true;
-              await client.invoke({ _: 'requestQrCodeAuthentication', other_user_ids: [] });
+              this.reportStage('request-qr-from-wait-code', 'وضعیت ورود از قبل روی کد ورود است؛ درخواست QR را بدون مسدودکردن صف وضعیت‌ها ارسال می‌کنم…');
+              // Keep the authorization-update queue free: TDLib can emit another
+              // authorization state before this request promise settles.
+              const qrRequest = client.invoke({ _: 'requestQrCodeAuthentication', other_user_ids: [] });
+              qrRequest.then(() => {
+                this.reportStage('qr-request-accepted', 'درخواست QR توسط TDLib پذیرفته شد؛ منتظر وضعیت QR هستم…');
+              }).catch(error => finish(error));
+              scheduleAuthorizationStatePoll();
               return;
             }
             while (true) {
