@@ -189,6 +189,8 @@ class TdlibService {
       let statePollTimer = null;
       let statePollInFlight = false;
       let statePollAttempts = 0;
+      let qrRequestInFlight = false;
+      let qrRetryCount = 0;
       let lastPolledState = '';
 
       const stopStatePolling = () => {
@@ -218,7 +220,19 @@ class TdlibService {
               }
             } else {
               statePollAttempts += 1;
-              if (statePollAttempts === 3) {
+              if (statePollAttempts === 3 && !qrRequestInFlight && qrRetryCount < 1) {
+                // TDLib accepted the first request but remained in WaitPhoneNumber.
+                // Retry once only; repeated requests could create confusing auth states.
+                qrRetryCount += 1;
+                qrRequestInFlight = true;
+                this.reportStage('qr-request-retry', 'درخواست اول پذیرفته شد اما وضعیت ورود تغییر نکرد؛ یک بار دیگر QR را درخواست می‌کنم…');
+                client.invoke({ _: 'requestQrCodeAuthentication', other_user_ids: [] })
+                  .then(() => {
+                    this.reportStage('qr-retry-accepted', 'درخواست مجدد QR پذیرفته شد؛ منتظر وضعیت جدید هستم…');
+                  })
+                  .catch(error => finish(error))
+                  .finally(() => { qrRequestInFlight = false; });
+              } else if (statePollAttempts === 3) {
                 this.reportStage('qr-server-no-response', 'بعد از درخواست QR، TDLib هنوز در وضعیت انتظار شماره است؛ لینک QR دریافت نشده است.');
               }
             }
@@ -262,10 +276,11 @@ class TdlibService {
               // Do not await inside the serialized auth-update queue. TDLib may emit
               // authorizationStateWaitOtherDeviceConfirmation before this request promise
               // resolves; returning lets the next update be processed immediately.
+              qrRequestInFlight = true;
               const qrRequest = client.invoke({ _: 'requestQrCodeAuthentication', other_user_ids: [] });
               qrRequest.then(() => {
                 this.reportStage('qr-request-accepted', 'درخواست QR توسط TDLib پذیرفته شد؛ منتظر وضعیت QR هستم…');
-              }).catch(error => finish(error));
+              }).catch(error => finish(error)).finally(() => { qrRequestInFlight = false; });
               scheduleAuthorizationStatePoll();
               return;
             }
