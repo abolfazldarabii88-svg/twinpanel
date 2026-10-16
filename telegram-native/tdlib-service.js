@@ -394,15 +394,18 @@ class TdlibService {
       let buildInfoPath = null;
 
       if (process.platform === 'win32' && app.isPackaged) {
-        // Published Windows releases must use the TDLib DLL built from the pinned
-        // official tdlib/td commit by this repository's CI, not the older npm prebuild.
-        tdjsonPath = packagedOfficialTdjson;
-        buildInfoPath = path.join(process.resourcesPath, 'telegram-native', 'tdlib-build-info.json');
-        if (!fs.existsSync(tdjsonPath)) {
-          throw new Error('نسخهٔ رسمی TDLib که باید همراه نصاب باشد پیدا نشد؛ این بسته ناقص است.');
-        }
-        if (!fs.existsSync(buildInfoPath)) {
-          throw new Error('مشخصات ساخت رسمی TDLib همراه برنامه پیدا نشد؛ نسخهٔ بسته قابل تأیید نیست.');
+        // Prefer an official TDLib resource when present. The current CI release
+        // workflow does not build that DLL yet, so use the pinned prebuilt package
+        // as a safe fallback rather than aborting before QR authentication starts.
+        if (fs.existsSync(packagedOfficialTdjson)) {
+          tdjsonPath = packagedOfficialTdjson;
+          buildInfoPath = path.join(process.resourcesPath, 'telegram-native', 'tdlib-build-info.json');
+        } else {
+          tdjsonPath = getTdjson();
+          if (tdjsonPath.includes('app.asar')) tdjsonPath = tdjsonPath.replace('app.asar', 'app.asar.unpacked');
+          if (!fs.existsSync(tdjsonPath)) {
+            throw new Error('موتور TDLib در نصاب پیدا نشد؛ لطفاً نسخهٔ کامل TwinPanel را نصب کن.');
+          }
         }
       } else if (process.platform === 'win32' && fs.existsSync(localOfficialTdjson)) {
         tdjsonPath = localOfficialTdjson;
