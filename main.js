@@ -263,6 +263,7 @@ ipcMain.handle('twinpanel:toggle-fullscreen', event => {
   if (!win) return false;
   win.setFullScreen(!win.isFullScreen()); return win.isFullScreen();
 });
+ipcMain.handle('twinpanel:app-version', () => app.getVersion());
 ipcMain.handle('twinpanel:check-updates', async () => {
   if (!app.isPackaged) { status('dev-mode', 'بررسی آپدیت فقط در نسخهٔ نصب‌شده فعال است.'); return { ok: false }; }
   try { status('checking', 'در حال بررسی نسخهٔ جدید…'); await autoUpdater.checkForUpdates(); return { ok: true }; }
