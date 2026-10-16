@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TwinPanel</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#111827;--panel-head:#141c2e;--line:#25314a;--muted:#93a4c3;--text:#eef2ff;--accent:#7c5cff;--accent2:#5142cf}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font:14px "Segoe UI",Tahoma,system-ui,sans-serif}
+body{display:flex;flex-direction:column}
+body[data-theme="midnight"]{--bg:#071523;--panel:#0b2134;--panel-head:#102a40;--line:#1d405a;--accent:#27b6d8;--accent2:#1479aa}
+body[data-theme="graphite"]{--bg:#141414;--panel:#202124;--panel-head:#292a2d;--line:#3b3d42;--muted:#b0b5bd;--accent:#a1a1aa;--accent2:#52525b}
+body[data-theme="light"]{color-scheme:light;--bg:#edf1f8;--panel:#fff;--panel-head:#f4f6fb;--line:#d7deea;--muted:#5e6b82;--text:#1c2638;--accent:#6750d8;--accent2:#4d39b7}
+.topbar{height:66px;flex:0 0 66px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:linear-gradient(110deg,color-mix(in srgb,var(--panel) 85%,var(--accent)),var(--panel) 70%);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#8b5cf6,#4f46e5);box-shadow:0 6px 24px #6d4aff40;overflow:hidden}.logo svg{width:100%;height:100%}.brand-title{font-weight:800;font-size:17px;letter-spacing:.2px}.subtitle{font-size:11px;color:var(--muted);margin-top:3px}
+.actions{display:flex;gap:8px;align-items:center}.btn{border:1px solid var(--line);border-radius:10px;background:var(--panel-head);color:var(--text);padding:9px 13px;cursor:pointer;font:inherit;transition:background .15s,border-color .15s}.btn:hover{border-color:var(--accent);filter:brightness(1.08)}.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff}.btn:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{direction:ltr;flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,var(--left-width,30%)) 7px minmax(0,1fr);gap:0;padding:8px;background:radial-gradient(ellipse at top left,color-mix(in srgb,var(--accent) 13%,transparent) 0,transparent 42%),var(--bg)}
+.panel{direction:rtl;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:15px;background:var(--panel);box-shadow:0 10px 30px #0002}
+.panel-head{height:45px;flex:0 0 45px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;background:var(--panel-head);border-bottom:1px solid var(--line)}
+.panel-title{display:flex;align-items:center;gap:9px;font-weight:700}.dot{width:9px;height:9px;border-radius:50%;background:#31c48d;box-shadow:0 0 12px #31c48d70}.gptdot{background:#a78bfa;box-shadow:0 0 12px #a78bfa70}
+.tools{display:flex;gap:6px}.iconbtn{padding:5px 9px;border-radius:8px;font-size:12px}
+webview{width:100%;height:100%;flex:1;background:white}
+#splitter{cursor:col-resize;position:relative;z-index:3;touch-action:none;outline:none}
+#splitter:before{content:"";position:absolute;top:0;bottom:0;left:2px;right:2px;border-radius:6px;background:transparent;transition:background .15s}
+#splitter:hover:before,#splitter:focus-visible:before,#splitter.dragging:before{background:var(--accent)}
+body.focus .topbar,body.focus .panel-head{display:none}
+body.focus main{padding:0;gap:0;grid-template-columns:minmax(0,var(--left-width,30%)) 7px minmax(0,1fr)}
+body.focus .panel{border:0;border-radius:0}
+#exitFocus{display:none;position:fixed;top:12px;left:12px;z-index:99999;padding:10px 15px;border:1px solid var(--accent);border-radius:10px;background:var(--accent2);color:#fff;cursor:pointer;font:inherit;box-shadow:0 5px 22px #0005}
+body.focus #exitFocus{display:block}
+#settingsOverlay{display:none;position:fixed;inset:0;z-index:100000;background:#050813b8;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(8px)}
+#settingsOverlay.open{display:flex}
+.settings-card{width:min(520px,100%);max-height:90vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 24px 80px #0008}
+.settings-title{display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:800;margin-bottom:18px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}.setting-row:last-of-type{border-bottom:0}
+.setting-copy{display:flex;flex-direction:column;gap:4px}.setting-copy small{color:var(--muted);font-size:12px;line-height:1.5}
+select{min-width:145px;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel-head);color:var(--text);font:inherit}
+.update-status{font-size:12px;color:var(--muted);line-height:1.6;margin-top:12px;min-height:20px}
+.settings-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
+@media(max-width:850px){.topbar{padding:0 10px}.subtitle{display:none}main{grid-template-columns:minmax(220px,var(--left-width,34%)) 7px minmax(0,1fr);padding:6px}.panel{border-radius:10px}.btn{padding:8px}.brand{gap:8px}.brand-title{font-size:15px}.actions{gap:5px}}
+
+/* TwinPanel modern visual refresh */
+:root{--radius:18px;--ease:cubic-bezier(.2,.75,.25,1)}
+html,body{font-feature-settings:"ss01" on;letter-spacing:.05px}
+body{background:var(--bg);transition:background .28s ease,color .28s ease}
+.topbar{position:relative;z-index:5;height:72px;flex-basis:72px;padding-inline:24px;background:var(--panel);border-bottom:1px solid var(--line)}
+.logo{border-radius:15px;box-shadow:0 8px 26px color-mix(in srgb,var(--accent) 28%,transparent);transition:transform .25s var(--ease),box-shadow .25s}
+.logo:hover{transform:translateY(-1px) rotate(-3deg);box-shadow:0 10px 32px color-mix(in srgb,var(--accent) 42%,transparent)}
+.brand-title{letter-spacing:-.35px;font-size:18px}
+.btn{border-radius:12px;padding:9px 14px;background:color-mix(in srgb,var(--panel-head) 92%,transparent);transition:transform .18s var(--ease),background .2s,border-color .2s,box-shadow .2s}
+.btn:active{transform:scale(.97)}
+.btn.primary{box-shadow:0 5px 18px color-mix(in srgb,var(--accent) 20%,transparent)}
+main{gap:0;padding:14px;background:var(--bg)}
+.panel{border-radius:19px;border-color:var(--line);box-shadow:0 5px 14px #00000012}
+.panel:focus-within{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 16px 48px #00000020,0 0 0 1px color-mix(in srgb,var(--accent) 13%,transparent)}
+.panel-head{height:49px;flex-basis:49px;padding-inline:15px;background:color-mix(in srgb,var(--panel-head) 92%,transparent)}
+.panel-title{letter-spacing:.1px}
+.iconbtn{padding:6px 10px}
+#splitter{width:9px}
+#splitter:before{left:3px;right:3px}
+.settings-card{border-radius:24px;padding:25px;background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(28px) saturate(150%);box-shadow:0 30px 100px #0007}
+.setting-row{padding:15px 0}
+select{border-radius:12px;max-width:220px}
+#dynamicIsland{position:fixed;z-index:100001;top:9px;left:50%;transform:translateX(-50%);height:34px;min-width:148px;max-width:min(320px,50vw);display:flex;align-items:center;justify-content:center;gap:9px;padding:0 13px;border:1px solid #ffffff1a;border-radius:999px;background:#101116;color:#f7f7fb;box-shadow:0 5px 20px #0003;transition:width .28s var(--ease),height .28s var(--ease),background .25s,box-shadow .25s;user-select:none;pointer-events:auto;cursor:pointer;outline:none}#dynamicIsland:focus-visible{box-shadow:0 0 0 2px var(--accent),0 8px 28px #0005}#dynamicIsland .island-app-icon{font-size:13px;font-weight:800;line-height:1;min-width:12px;text-align:center;color:#b7a7ff}#dynamicIsland .island-app-icon.telegram{color:#55b9ff;transform:rotate(-25deg)}#dynamicIsland.speaking.telegram{box-shadow:0 8px 28px #0005,0 0 0 1px #55b9ff35}#dynamicIsland.speaking.telegram .island-mark{background:#55b9ff;box-shadow:0 0 12px #55b9ffaa}#dynamicIsland.speaking.telegram .island-wave i{background:#9bd8ff}#dynamicIsland .island-wave i{transition:height .18s ease}#islandPopover{position:fixed;z-index:100002;top:52px;left:50%;transform:translateX(-50%);width:min(300px,calc(100vw - 24px));padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:0 16px 44px #0006;display:grid;gap:8px}#islandPopover[hidden]{display:none}#islandPopover .island-pop-title{font-size:12px;color:var(--muted);padding:2px 4px 5px;overflow-wrap:anywhere}#islandPopover .btn{width:100%;text-align:center}
+#dynamicIsland .island-mark{width:8px;height:8px;border-radius:50%;background:#858b9b;flex:none;transition:background .2s,box-shadow .2s}
+#dynamicIsland .island-label{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;letter-spacing:.15px}
+#dynamicIsland .island-wave{display:flex;align-items:center;gap:2px;height:14px;opacity:0;max-width:0;overflow:hidden;transition:opacity .2s,max-width .25s}
+#dynamicIsland .island-wave i{display:block;width:2px;height:4px;border-radius:3px;background:#a9f6d0}
+#dynamicIsland.speaking{height:42px;min-width:205px;background:#08090df2;box-shadow:0 8px 28px #0005,0 0 0 1px #a9f6d025}
+#dynamicIsland.speaking .island-mark{background:#67e8a5;box-shadow:0 0 12px #67e8a5aa}
+#dynamicIsland.speaking .island-wave{opacity:1;max-width:48px}
+#dynamicIsland.speaking .island-wave i{animation:islandWave .72s ease-in-out infinite alternate}
+#dynamicIsland.speaking .island-wave i:nth-child(2n){animation-delay:-.32s}
+#dynamicIsland.speaking .island-wave i:nth-child(3n){animation-delay:-.5s}
+@keyframes islandWave{from{height:3px}to{height:13px}}
+body[data-theme="glass"]{--bg:#dce5f2;--panel:#ffffff62;--panel-head:#ffffff70;--line:#ffffff9c;--muted:#64748b;--text:#182337;--accent:#5b8cff;--accent2:#3867d6;color-scheme:light}
+body[data-theme="glass"] .topbar,body[data-theme="glass"] .panel,body[data-theme="glass"] .settings-card{background:color-mix(in srgb,#ffffff 48%,transparent);backdrop-filter:blur(28px) saturate(175%);-webkit-backdrop-filter:blur(28px) saturate(175%);border-color:#ffffffa6;box-shadow:0 18px 50px #47658a20,inset 0 1px #ffffffa8}
+body[data-theme="glass"] main{background:radial-gradient(ellipse at 15% 8%,#91baff70,transparent 40%),radial-gradient(ellipse at 90% 95%,#c6a7ff66,transparent 45%),linear-gradient(135deg,#eaf2ff,#dce7f8 48%,#f2eaff)}
+body[data-theme="glass"] .panel-head{background:#ffffff42}
+body[data-theme="glass"] .btn{background:#ffffff75;border-color:#ffffffad;color:#25324b}
+body[data-theme="glass"] #dynamicIsland{background:#11131af5}
+body[data-theme="oled"]{--bg:#000;--panel:#070707;--panel-head:#0e0e0e;--line:#222;--muted:#9ca3af;--text:#f5f5f5;--accent:#f5f5f5;--accent2:#777}
+body[data-theme="ocean"]{--bg:#061b2a;--panel:#0b293d;--panel-head:#10364d;--line:#20506a;--muted:#9bb9ca;--text:#e7f7ff;--accent:#38c8e8;--accent2:#167ea6}
+body[data-theme="emerald"]{--bg:#071b17;--panel:#0d2922;--panel-head:#12382d;--line:#225446;--muted:#9cc8b8;--text:#e8fff5;--accent:#34d399;--accent2:#0f9f75}
+body[data-theme="rose"]{--bg:#24111c;--panel:#351827;--panel-head:#462033;--line:#6c334c;--muted:#d5a9bd;--text:#fff0f6;--accent:#fb7185;--accent2:#be3455}
+body[data-theme="sunset"]{--bg:#24140f;--panel:#382018;--panel-head:#482a20;--line:#71402b;--muted:#d7b2a0;--text:#fff4e9;--accent:#fb923c;--accent2:#dc4b38}
+body[data-theme="cyber"]{--bg:#080b17;--panel:#11152b;--panel-head:#171d37;--line:#303d6c;--muted:#a3b4df;--text:#f1f5ff;--accent:#22d3ee;--accent2:#a855f7}
+body[data-theme="nord"]{--bg:#242933;--panel:#2e3440;--panel-head:#3b4252;--line:#4c566a;--muted:#b8c3d5;--text:#eceff4;--accent:#88c0d0;--accent2:#5e81ac}
+body[data-theme="dracula"]{--bg:#191a27;--panel:#242537;--panel-head:#2c2d40;--line:#44475a;--muted:#b9bbd0;--text:#f8f8f2;--accent:#bd93f9;--accent2:#ff79c6}
+body[data-theme="lavender"]{--bg:#171326;--panel:#241d38;--panel-head:#302646;--line:#4a3b67;--muted:#c0b2df;--text:#f8f3ff;--accent:#c4a7ff;--accent2:#8965e8}
+body[data-theme="crimson"]{--bg:#1c0a0e;--panel:#2b1117;--panel-head:#3a1720;--line:#632733;--muted:#d4a0a8;--text:#fff1f2;--accent:#fb4f6b;--accent2:#a7193b}
+body[data-theme="amber"]{--bg:#20190a;--panel:#30250e;--panel-head:#403113;--line:#685020;--muted:#d2bd8b;--text:#fff8e6;--accent:#fbbf24;--accent2:#d97706}
+body[data-theme="forest"]{--bg:#101b14;--panel:#19291e;--panel-head:#223629;--line:#3b5a43;--muted:#afc5b2;--text:#f0fff1;--accent:#86c96b;--accent2:#38834a}
+body[data-theme="slate"]{--bg:#171e2b;--panel:#222c3d;--panel-head:#2c394d;--line:#42516a;--muted:#a8b5ca;--text:#edf3ff;--accent:#8ca9d8;--accent2:#5876a7}
+body[data-theme="mint"]{--bg:#e9f8f3;--panel:#ffffff;--panel-head:#f4fffb;--line:#c5e9dc;--muted:#58796e;--text:#18352c;--accent:#20a985;--accent2:#16785f;color-scheme:light}
+body[data-theme="sakura"]{--bg:#fff0f5;--panel:#fffafd;--panel-head:#fff4f8;--line:#f2cbd9;--muted:#966b7d;--text:#462638;--accent:#e86b9a;--accent2:#b94378;color-scheme:light}
+body[data-theme="sand"]{--bg:#f2eee6;--panel:#fffdf8;--panel-head:#f8f3e9;--line:#dfd5c4;--muted:#857764;--text:#302a20;--accent:#b8874b;--accent2:#86602e;color-scheme:light}
+body[data-theme="cobalt"]{--bg:#07112a;--panel:#0d1c3b;--panel-head:#13264b;--line:#274578;--muted:#9db4e0;--text:#edf4ff;--accent:#4f8cff;--accent2:#3158d5}
+body[data-theme="copper"]{--bg:#1d1715;--panel:#2d211d;--panel-head:#3c2b25;--line:#64463a;--muted:#c8a99a;--text:#fff5ef;--accent:#e9a17d;--accent2:#a65f42}
+body[data-theme="mono"]{--bg:#171717;--panel:#222;--panel-head:#2b2b2b;--line:#444;--muted:#bbb;--text:#f5f5f5;--accent:#e5e5e5;--accent2:#737373}
+body[data-theme="aurora"]{--bg:#08151c;--panel:#10252c;--panel-head:#16343a;--line:#2a5557;--muted:#a3c6c5;--text:#f0fffc;--accent:#5eead4;--accent2:#818cf8}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+@media(max-width:850px){#dynamicIsland{top:5px;min-width:105px;height:29px}.topbar{height:64px;flex-basis:64px}.brand-title{font-size:15px}.topbar .actions .btn{padding:7px 9px}}
+
+
+/* Compact workspace modes: keep the two apps as the main content */
+.topbar{height:54px;flex-basis:54px;padding:0 12px}
+.topbar .logo{width:30px;height:30px;border-radius:10px}
+.topbar .brand{gap:8px}
+.topbar .brand-title{font-size:15px}
+.brand .settings-btn{width:32px;height:32px;min-width:32px;padding:0;display:grid;place-items:center;border-radius:11px;color:var(--muted);background:color-mix(in srgb,var(--panel-head) 84%,transparent);border-color:var(--line);box-shadow:inset 0 1px #ffffff0b;transition:color .18s,border-color .18s,background .18s,transform .18s}
+.brand .settings-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.brand .settings-btn:hover{color:var(--text);background:color-mix(in srgb,var(--accent) 16%,var(--panel-head));border-color:var(--accent);transform:rotate(18deg)}
+.compact-actions{gap:5px}
+.compact-actions .btn{padding:7px 10px;font-size:12px}
+.mode-btn.active{background:var(--accent);color:#fff;border-color:transparent}
+main{padding:7px}
+body[data-mode="telegram"] #gptPanel,body[data-mode="telegram"] #splitter,
+body[data-mode="chatgpt"] #tgPanel,body[data-mode="chatgpt"] #splitter{display:none}
+body[data-mode="telegram"] main,body[data-mode="chatgpt"] main{display:grid;grid-template-columns:minmax(0,1fr);padding:6px}
+body[data-mode="telegram"] #tgPanel,body[data-mode="chatgpt"] #gptPanel{display:flex;grid-column:1;min-width:0;width:100%}
+body[data-mode="telegram"] .panel,body[data-mode="chatgpt"] .panel{border-radius:12px}
+body.focus .topbar{display:none}
+body.focus main{height:100%;min-height:0}
+body[data-theme="glass"]{--bg:#e9eef7;--panel:#f8faff;--panel-head:#edf2fb;--line:#c8d2e3;--muted:#52627b;--text:#18243a;--accent:#526fe5;--accent2:#344dc4;color-scheme:light}
+body[data-theme="glass"] .panel{background:rgba(255,255,255,.88);backdrop-filter:none;-webkit-backdrop-filter:none}
+body[data-theme="glass"] .panel-head,body[data-theme="glass"] .settings-card,body[data-theme="glass"] select{background:rgba(255,255,255,.78);color:#18243a}
+body[data-theme="glass"] .setting-copy small,body[data-theme="glass"] .subtitle,body[data-theme="glass"] .update-status{color:#52627b}
+body[data-theme="glass"] .btn{color:#18243a;background:rgba(255,255,255,.78)}
+body[data-theme="glass"] .btn.primary,body[data-theme="glass"] .mode-btn.active{color:#fff;background:linear-gradient(135deg,#617ff2,#4756c9)}
+@media(max-width:850px){.topbar{height:48px;flex-basis:48px;padding:0 6px}.compact-actions .btn{padding:6px 7px;font-size:11px}.topbar .brand-title{font-size:13px}}
+
+</style>
+</head>
+<body data-theme="purple">
+<header class="topbar">
+ <div class="brand"><button class="btn settings-btn" id="settingsBtn" title="تنظیمات" aria-label="تنظیمات"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"/><path d="m19.4 13.5 1.1.8-1.2 2.1-1.3-.5a7.9 7.9 0 0 1-1.5.9l-.2 1.4h-2.5l-.3-1.4a7.9 7.9 0 0 1-1.7-.4l-1.1 1-2-1.2.4-1.4a7.6 7.6 0 0 1-1-1.4l-1.4-.2v-2.5l1.4-.3a7.6 7.6 0 0 1 .7-1.6l-.7-1.2 1.7-1.7 1.2.7a7.6 7.6 0 0 1 1.7-.6l.3-1.4h2.5l.2 1.4a7.9 7.9 0 0 1 1.5.9l1.4-.4 1.2 2-1 1.1a7.6 7.6 0 0 1 .3 1.7Z"/></svg></button><div class="logo" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#4338ca"/></linearGradient></defs><rect width="64" height="64" rx="19" fill="url(#brandGrad)"/><path d="M13 15h38v10H35v26H25V25H13z" fill="#fff"/><path d="M43 32h8v19h-8z" fill="#c4b5fd"/></svg></div><div><div class="brand-title">TwinPanel</div></div></div>
+ <div class="actions compact-actions"><button class="btn mode-btn" data-mode="both" title="نمایش هر دو برنامه">دو پنل</button><button class="btn mode-btn" data-mode="telegram" title="نمایش تلگرام">تلگرام</button><button class="btn" id="openNativeTelegram" title="باز کردن کلاینت تلگرام آزمایشی">تلگرام اختصاصی ↗</button><button class="btn mode-btn" data-mode="chatgpt" title="نمایش ChatGPT">ChatGPT</button><button class="btn" id="fullBtn" title="ورود/خروج از حالت متمرکز تمام‌صفحه">⛶ تمرکز</button></div>
+</header>
+<div id="dynamicIsland" role="button" tabindex="0" aria-expanded="false" aria-controls="islandPopover" aria-live="polite" title="باز کردن کنترل‌های Dynamic Island"><span class="island-app-icon" id="islandAppIcon" aria-hidden="true">✳</span><span class="island-mark"></span><span class="island-label" id="islandLabel">TwinPanel آماده است</span><span class="island-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+<div id="islandPopover" hidden><div class="island-pop-title" id="islandPopoverTitle">TwinPanel آماده است</div><button class="btn primary" id="islandSwitch">رفتن به برنامهٔ در حال پخش</button><button class="btn" id="islandSound">افکت صوتی: روشن</button><button class="btn" id="islandClose">بستن</button></div>
+<main id="workspace">
+ <section class="panel" id="gptPanel">
+  <div class="panel-head"><div class="panel-title"><span class="dot gptdot"></span>ChatGPT</div><div class="tools"><button class="btn iconbtn" id="reloadGpt" title="تازه‌سازی ChatGPT">↻ تازه‌سازی</button></div></div>
+  <webview id="gpt" src="https://chatgpt.com/" partition="persist:chatgpt" allowpopups></webview>
+ </section>
+ <div id="splitter" role="separator" tabindex="0" aria-orientation="vertical" aria-label="تغییر اندازهٔ پنل‌ها" title="برای تغییر اندازه بکشید"></div>
+ <section class="panel" id="tgPanel">
+  <div class="panel-head"><div class="panel-title"><span class="dot"></span>Telegram</div><div class="tools"><button class="btn iconbtn" id="reloadTg" title="تازه‌سازی تلگرام">↻ تازه‌سازی</button></div></div>
+  <webview id="tg" src="https://web.telegram.org/k/" partition="persist:telegram" allowpopups></webview>
+ </section>
+</main>
+<button id="exitFocus">✕ خروج از حالت متمرکز</button>
+<div id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+ <div class="settings-card">
+  <div class="settings-title"><span id="settingsTitle">تنظیمات TwinPanel</span><button class="btn iconbtn" id="closeSettings" aria-label="بستن">✕</button></div>
+  <div class="setting-row"><div class="setting-copy"><strong>تم برنامه</strong><small>رنگ‌بندی دلخواه را انتخاب کن.</small></div><select id="themeSelect"><option value="purple">01 · بنفش</option><option value="midnight">02 · آبی نیمه‌شب</option><option value="graphite">03 · گرافیتی</option><option value="light">04 · روشن</option><option value="glass">05 · شیشه‌ای iOS</option><option value="oled">06 · مشکی OLED</option><option value="ocean">07 · اقیانوس</option><option value="emerald">08 · زمردی</option><option value="rose">09 · رز</option><option value="sunset">10 · غروب</option><option value="cyber">11 · سایبر</option><option value="nord">12 · نورد</option><option value="dracula">13 · دراکولا</option><option value="lavender">14 · اسطوخودوسی</option><option value="crimson">15 · زرشکی</option><option value="amber">16 · کهربایی</option><option value="forest">17 · جنگلی</option><option value="slate">18 · اسلیت</option><option value="mint">19 · نعناعی</option><option value="sakura">20 · ساکورا</option><option value="sand">21 · شنی</option><option value="cobalt">22 · کبالت</option><option value="copper">23 · مسی</option><option value="mono">24 · تک‌رنگ</option><option value="aurora">25 · شفق قطبی</option></select></div>
+  <div class="setting-row"><div class="setting-copy"><strong>چیدمان پنل‌ها</strong><small>اندازهٔ پنل‌ها با کشیدن جداکننده تغییر می‌کند و ذخیره می‌شود.</small></div><button class="btn" id="resetLayout">بازنشانی</button></div>
+  <div class="setting-row"><div class="setting-copy"><strong>به‌روزرسانی TwinPanel</strong><small>نسخهٔ جدید را بررسی کن؛ دریافت آپدیت به انتشار رسمی نسخه در GitHub نیاز دارد.</small></div><button class="btn primary" id="checkUpdates">بررسی آپدیت</button></div>
+  <div class="setting-row"><div class="setting-copy"><strong>افکت صوتی Dynamic Island</strong><small>با شروع صدای ChatGPT یا تلگرام یک افکت کوتاه و ملایم پخش می‌شود.</small></div><button class="btn" id="soundToggle" aria-pressed="true">صدا روشن</button></div>
+  <div class="setting-row"><div class="setting-copy"><strong>Dynamic Island</strong><small>کپسول بالای پنجره هنگام تشخیص پخش صدا متحرک می‌شود.</small></div><button class="btn" id="islandToggle" aria-pressed="true">نمایش روشن</button></div>
+  <div class="update-status" id="updateStatus" aria-live="polite">نسخهٔ فعلی: 1.3.5</div>
+  <div class="settings-actions"><button class="btn" id="closeSettingsBottom">بستن</button></div>
+ </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const fullBtn=$('fullBtn'),settingsOverlay=$('settingsOverlay'),splitter=$('splitter'),workspace=$('workspace');
+function setFocusMode(on){document.body.classList.toggle('focus',on);fullBtn.textContent=on?'⤢ خروج از تمرکز':'⛶ تمرکز';fullBtn.title=on?'بازگشت به پنجرهٔ عادی':'ورود به حالت متمرکز تمام‌صفحه';localStorage.setItem('twinpanel.focus',on?'1':'0');}
+function setMode(mode,save=true){
+ const allowed=['both','telegram','chatgpt']; mode=allowed.includes(mode)?mode:'both';
+ document.body.dataset.mode=mode;
+ document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+ if(save)localStorage.setItem('twinpanel.mode',mode);
+ requestAnimationFrame(()=>{if(splitter)splitter.setAttribute('aria-valuenow',String(Math.round(parseFloat(getComputedStyle(workspace).getPropertyValue('--left-width'))||30)));});
+}
+document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+$('openNativeTelegram').addEventListener('click',async()=>{try{if(window.twinPanel?.openNativeTelegram)await window.twinPanel.openNativeTelegram();else alert('این قابلیت فقط در نسخهٔ دسکتاپ فعال است.');}catch{alert('پنجرهٔ آزمایشی تلگرام باز نشد.');}});
+function openSettings(){settingsOverlay.classList.add('open');}
+function closeSettings(){settingsOverlay.classList.remove('open');}
+function applyTheme(theme){const allowed=['purple','midnight','graphite','light','glass','oled','ocean','emerald','rose','sunset','cyber','nord','dracula','lavender','crimson','amber','forest','slate','mint','sakura','sand','cobalt','copper','mono','aurora'];document.body.dataset.theme=allowed.includes(theme)?theme:'purple';$('themeSelect').value=document.body.dataset.theme;localStorage.setItem('twinpanel.theme',document.body.dataset.theme);}
+function applyLeftWidth(value,save=true){const width=Math.max(22,Math.min(55,Number(value)||30));workspace.style.setProperty('--left-width',width+'%');splitter.setAttribute('aria-valuenow',String(Math.round(width)));if(save)localStorage.setItem('twinpanel.leftWidth',String(width));}
+function loadSettings(){applyTheme(localStorage.getItem('twinpanel.theme')||'purple');applyLeftWidth(localStorage.getItem('twinpanel.leftWidth')||30,false);setMode(localStorage.getItem('twinpanel.mode')||'both',false);setFocusMode(false);setSoundEnabled(localStorage.getItem('twinpanel.sound')!=='0');setIslandEnabled(localStorage.getItem('twinpanel.island')!=='0');}
+
+$('exitFocus').addEventListener('click',async()=>{if(window.twinPanel)await window.twinPanel.toggleFullscreen();else setFocusMode(false);});
+$('settingsBtn').addEventListener('click',openSettings);
+$('closeSettings').addEventListener('click',closeSettings);$('closeSettingsBottom').addEventListener('click',closeSettings);
+settingsOverlay.addEventListener('click',e=>{if(e.target===settingsOverlay)closeSettings();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&settingsOverlay.classList.contains('open'))closeSettings();});
+$('themeSelect').addEventListener('change',e=>applyTheme(e.target.value));
+let soundEnabled=true,islandEnabled=true,audioCtx=null,activeAudioSource=null,pendingIslandCue=false;
+document.addEventListener('pointerdown',unlockIslandAudio,true);
+document.addEventListener('keydown',unlockIslandAudio,true);
+const island=$('dynamicIsland'),islandPopover=$('islandPopover');
+const mediaStates={chatgpt:{audible:false,title:'ChatGPT'},telegram:{audible:false,title:'پیام صوتی تلگرام'}};
+function sourceName(source){return source==='telegram'?'تلگرام':'ChatGPT';}
+function currentMedia(){return activeAudioSource&&mediaStates[activeAudioSource]?.audible?mediaStates[activeAudioSource]:null;}
+function refreshIsland(){
+ const current=currentMedia();
+ const icon=$('islandAppIcon');
+ island.classList.toggle('speaking',!!current);
+ island.classList.toggle('telegram',!!current&&activeAudioSource==='telegram');
+ icon.textContent=current?(activeAudioSource==='telegram'?'➤':'✳'):'✳';
+ icon.classList.toggle('telegram',!!current&&activeAudioSource==='telegram');
+ const label=current?(current.title|| (activeAudioSource==='telegram'?'پیام صوتی تلگرام':'ChatGPT در حال صحبت است')):'TwinPanel آماده است';
+ $('islandLabel').textContent=label;
+ $('islandPopoverTitle').textContent=current?sourceName(activeAudioSource)+' · '+label:'پخش فعالی شناسایی نشده';
+ $('islandSwitch').disabled=!current;
+ $('islandSwitch').textContent=current?'رفتن به '+sourceName(activeAudioSource):'برنامه‌ای در حال پخش نیست';
+ island.title=current?'در حال پخش: '+sourceName(activeAudioSource)+' — برای کنترل کلیک کن':'باز کردن کنترل‌های Dynamic Island';
+}
+function setSoundEnabled(value){soundEnabled=!!value;localStorage.setItem('twinpanel.sound',soundEnabled?'1':'0');const b=$('soundToggle');if(b){b.textContent=soundEnabled?'صدا روشن':'صدا خاموش';b.setAttribute('aria-pressed',String(soundEnabled));}$('islandSound').textContent='افکت صوتی: '+(soundEnabled?'روشن':'خاموش');}
+function setIslandEnabled(value){islandEnabled=!!value;localStorage.setItem('twinpanel.island',islandEnabled?'1':'0');island.style.display=islandEnabled?'flex':'none';if(!islandEnabled)islandPopover.hidden=true;const b=$('islandToggle');if(b){b.textContent=islandEnabled?'نمایش روشن':'نمایش خاموش';b.setAttribute('aria-pressed',String(islandEnabled));}}
+function scheduleSoftCue(){if(!soundEnabled||!audioCtx||audioCtx.state!=='running')return;const now=audioCtx.currentTime;[523.25,659.25,783.99].forEach((hz,i)=>{const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type='sine';osc.frequency.setValueAtTime(hz,now+i*.075);gain.gain.setValueAtTime(.0001,now+i*.075);gain.gain.exponentialRampToValueAtTime(.028,now+i*.075+.045);gain.gain.exponentialRampToValueAtTime(.0001,now+i*.075+.31);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now+i*.075);osc.stop(now+i*.075+.34);});}
+async function unlockIslandAudio(){if(!soundEnabled)return;try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;audioCtx=audioCtx||new Ctx();if(audioCtx.state!=='running')await audioCtx.resume();if(audioCtx.state==='running'&&pendingIslandCue){pendingIslandCue=false;scheduleSoftCue();}}catch{}}
+function playSoftCue(){if(!soundEnabled)return;try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;audioCtx=audioCtx||new Ctx();if(audioCtx.state!=='running'){pendingIslandCue=true;return;}scheduleSoftCue();}catch{}}
+function toggleIslandPopover(force){const open=typeof force==='boolean'?force:islandPopover.hidden;islandPopover.hidden=!open;island.setAttribute('aria-expanded',String(open));}
+island.addEventListener('click',()=>toggleIslandPopover());
+island.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleIslandPopover();}});
+$('islandClose').addEventListener('click',()=>toggleIslandPopover(false));
+$('islandSwitch').addEventListener('click',()=>{if(activeAudioSource&&mediaStates[activeAudioSource]?.audible){setMode(activeAudioSource==='telegram'?'telegram':'chatgpt');toggleIslandPopover(false);}});
+$('islandSound').addEventListener('click',()=>setSoundEnabled(!soundEnabled));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!islandPopover.hidden)toggleIslandPopover(false);});
+document.addEventListener('click',e=>{if(!island.contains(e.target)&&!islandPopover.contains(e.target))toggleIslandPopover(false);});
+$('soundToggle').addEventListener('click',()=>{setSoundEnabled(!soundEnabled);if(soundEnabled)playSoftCue();});
+$('islandToggle').addEventListener('click',()=>setIslandEnabled(!islandEnabled));
+function handleMediaState(state){
+ if(!state||!['chatgpt','telegram'].includes(state.source))return;
+ const source=state.source,wasAudible=mediaStates[source].audible;
+ mediaStates[source].audible=!!state.audible;
+ if(state.title)mediaStates[source].title=state.title;
+ if(state.audible&&!wasAudible){activeAudioSource=source;playSoftCue();}
+ else if(state.audible&&source===activeAudioSource&&state.title){mediaStates[source].title=state.title;}
+ if(!state.audible&&activeAudioSource===source){
+   const other=source==='telegram'?'chatgpt':'telegram';
+   activeAudioSource=mediaStates[other].audible?other:null;
+ }
+ if(state.audible&&activeAudioSource!==source&&(!activeAudioSource||!mediaStates[activeAudioSource].audible))activeAudioSource=source;
+ refreshIsland();
+}
+if(window.twinPanel&&window.twinPanel.onMediaState)window.twinPanel.onMediaState(handleMediaState);
+
+$('resetLayout').addEventListener('click',()=>applyLeftWidth(30));
+$('reloadGpt').addEventListener('click',()=>$('gpt').reload());
+$('reloadTg').addEventListener('click',()=>$('tg').reload());
+fullBtn.addEventListener('click',async()=>{if(window.twinPanel)await window.twinPanel.toggleFullscreen();else setFocusMode(!document.body.classList.contains('focus'));});
+if(window.twinPanel){
+ window.twinPanel.onFullscreenChanged(isFullscreen=>{setFocusMode(isFullscreen);});
+ window.twinPanel.onCommand(command=>{if(command==='toggle-focus')setFocusMode(!document.body.classList.contains('focus'));if(command==='open-settings')openSettings();if(command==='reload-gpt')$('gpt').reload();if(command==='reload-telegram')$('tg').reload();if(command==='reload-both'){$('gpt').reload();$('tg').reload();}});
+ window.twinPanel.onUpdateStatus(data=>{const status=$('updateStatus');status.textContent=data.message||'وضعیت به‌روزرسانی تغییر کرد.';if(data.state==='available')$('checkUpdates').textContent='دریافت آپدیت';else if(data.state==='downloaded')$('checkUpdates').textContent='نصب و راه‌اندازی مجدد';else if(data.state==='downloading')$('checkUpdates').textContent='در حال دریافت…';else $('checkUpdates').textContent='بررسی آپدیت';});
+}
+$('checkUpdates').addEventListener('click',async()=>{const button=$('checkUpdates');button.disabled=true;try{const state=button.textContent;if(state==='دریافت آپدیت'&&window.twinPanel)await window.twinPanel.downloadUpdate();else if(state==='نصب و راه‌اندازی مجدد'&&window.twinPanel)await window.twinPanel.installUpdate();else if(window.twinPanel){$('updateStatus').textContent='در حال بررسی نسخهٔ جدید…';await window.twinPanel.checkForUpdates();}}catch(error){$('updateStatus').textContent='بررسی آپدیت انجام نشد: '+(error?.message||'خطای نامشخص');}finally{button.disabled=false;}});
+let dragging=false;
+function setWidthFromPointer(e){const rect=workspace.getBoundingClientRect();if(document.body.dataset.mode!=='both')return;const pct=((e.clientX-rect.left)/rect.width)*100;applyLeftWidth(pct);}
+splitter.addEventListener('pointerdown',e=>{dragging=true;splitter.classList.add('dragging');splitter.setPointerCapture(e.pointerId);setWidthFromPointer(e);});
+splitter.addEventListener('pointermove',e=>{if(dragging)setWidthFromPointer(e);});
+function endDrag(){dragging=false;splitter.classList.remove('dragging');}
+splitter.addEventListener('pointerup',endDrag);splitter.addEventListener('pointercancel',endDrag);
+splitter.addEventListener('keydown',e=>{const current=parseFloat(getComputedStyle(workspace).getPropertyValue('--left-width'))||30;if(e.key==='ArrowLeft'){e.preventDefault();applyLeftWidth(current+2);}if(e.key==='ArrowRight'){e.preventDefault();applyLeftWidth(current-2);}});
+loadSettings();
+</script>
+</body>
+</html>

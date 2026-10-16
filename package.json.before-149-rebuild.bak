@@ -1,0 +1,44 @@
+{
+  "name": "twinpanel-desktop",
+  "version": "1.2.0",
+  "private": true,
+  "description": "TwinPanel desktop workspace for Telegram and ChatGPT",
+  "author": "TwinPanel",
+  "main": "main.js",
+  "scripts": {
+    "start": "node scripts/make-icon.js && electron .",
+    "dist": "node scripts/make-icon.js && electron-builder --win nsis",
+    "dist:portable": "node scripts/make-icon.js && electron-builder --win portable",
+    "publish:win": "node scripts/make-icon.js && electron-builder --win nsis --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "35.7.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.mmdibot.twinpanel",
+    "productName": "TwinPanel",
+    "directories": { "output": "release" },
+    "files": ["main.js", "preload.js", "index.html", "package.json", "assets/**/*"],
+    "win": {
+      "target": ["nsis"],
+      "artifactName": "TwinPanel-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": [{
+      "provider": "github",
+      "owner": "darabiabolfazl37-spec",
+      "repo": "mmdibot",
+      "releaseType": "release"
+    }]
+  }
+}
+

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TwinPanel · Telegram Native Preview</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#111827;--head:#151f31;--line:#26334b;--text:#eef2ff;--muted:#91a1bf;--accent:#7c5cff;--blue:#55b9ff;--green:#48d6a0}
+*{box-sizing:border-box}[hidden]{display:none !important}body{margin:0;height:100vh;overflow:hidden;background:radial-gradient(ellipse at 80% 0,#20204b 0,transparent 35%),var(--bg);color:var(--text);font:14px "Segoe UI",Tahoma,system-ui,sans-serif}
+.app{height:100%;display:grid;grid-template-columns:72px 290px minmax(0,1fr);gap:10px;padding:10px}
+.rail,.list,.conversation{min-height:0;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 94%,transparent);border-radius:18px;overflow:hidden;box-shadow:0 14px 40px #0002}
+.rail{display:flex;flex-direction:column;align-items:center;gap:9px;padding:13px 8px}.brand{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#9b87ff,#4d46cf);display:grid;place-items:center;font-size:21px;font-weight:800;margin-bottom:12px}
+.rail button{width:44px;height:44px;border:0;border-radius:13px;background:transparent;color:var(--muted);font-size:19px;cursor:pointer}.rail button.active,.rail button:hover{background:#7c5cff25;color:#c8bcff}.rail .bottom{margin-top:auto}
+.list{display:flex;flex-direction:column}.list-head{padding:18px 15px 12px;border-bottom:1px solid var(--line)}.heading{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:17px}.tag{font-size:10px;padding:4px 7px;border-radius:7px;background:#7c5cff24;color:#c8bcff;font-weight:600}
+.search{width:100%;margin-top:14px;background:#080d19;border:1px solid var(--line);color:var(--text);padding:11px 12px;border-radius:12px;outline:none;font:inherit}.search:focus{border-color:var(--accent)}
+.filters{display:flex;gap:6px;overflow:auto;padding:10px 12px;border-bottom:1px solid var(--line)}.filter{white-space:nowrap;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:6px 10px;font:inherit;font-size:11px;cursor:pointer}.filter.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.chats{overflow:auto;padding:6px}.chat{width:100%;display:flex;align-items:center;gap:10px;text-align:right;padding:11px 9px;border:1px solid transparent;border-radius:13px;background:transparent;color:inherit;cursor:pointer;font:inherit}.chat:hover{background:#ffffff08}.chat.active{background:#7c5cff1c;border-color:#7c5cff3d}.avatar{width:43px;height:43px;flex:none;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#253a60,#1a2542);font-weight:800;color:#dce7ff}.chat-copy{min-width:0;flex:1}.chat-title{font-weight:700;display:flex;align-items:center;gap:6px}.preview{margin-top:5px;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sample{font-size:9px;color:#ffcf8a;background:#4b321b;border-radius:5px;padding:3px 5px}
+.conversation{display:flex;flex-direction:column;position:relative;background:radial-gradient(ellipse at 50% 10%,#1b2141 0,transparent 50%),var(--panel)}
+.chat-head{display:flex;align-items:center;gap:12px;padding:14px 19px;border-bottom:1px solid var(--line);background:#121a2bcc}.head-copy{flex:1}.head-title{font-size:15px;font-weight:800}.head-sub{font-size:11px;color:var(--muted);margin-top:4px}.head-actions{display:flex;gap:7px}.small-btn{border:1px solid var(--line);background:#ffffff06;color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer;font:inherit;font-size:11px}.small-btn:hover{border-color:var(--accent)}
+.notice{margin:14px auto 0;max-width:calc(100% - 30px);padding:9px 13px;background:#4b321b88;border:1px solid #8a623c66;border-radius:11px;color:#ffd9a5;font-size:11px;text-align:center;line-height:1.7}
+.messages{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:18px;background-image:radial-gradient(#ffffff07 1px,transparent 1px);background-size:20px 20px}
+.empty{margin:auto;text-align:center;max-width:380px;color:var(--muted);line-height:1.9}.empty strong{display:block;color:var(--text);font-size:17px;margin-bottom:8px}
+.bubble{max-width:min(78%,600px);align-self:flex-start;background:#1a2940;border:1px solid #2c3d5b;border-radius:14px 14px 14px 5px;padding:10px 13px;line-height:1.8}.bubble.mine{align-self:flex-end;background:#40316d;border-color:#594492;border-radius:14px 14px 5px 14px}.bubble small{display:block;color:#a8b8d4;text-align:left;font-size:9px;margin-top:3px}
+.composer{padding:12px 15px;border-top:1px solid var(--line);display:flex;gap:8px;background:#101827}.composer input{flex:1;min-width:0;background:#080d19;border:1px solid var(--line);border-radius:12px;color:var(--text);padding:12px;font:inherit;outline:none}.composer button{border:0;border-radius:12px;background:var(--accent);color:#fff;padding:0 17px;font:inherit;font-weight:700;cursor:pointer}.composer button:disabled,.composer input:disabled{opacity:.45;cursor:not-allowed}
+.status{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);padding:9px 16px;border-top:1px solid var(--line)}.status-dot{width:7px;height:7px;border-radius:50%;background:#e8a04d}.status strong{color:#ffd9a5}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);padding:10px 16px;background:#252e44;border:1px solid #4a5a79;border-radius:12px;box-shadow:0 8px 30px #0005;font-size:12px;display:none;max-width:90vw}
+@media(max-width:780px){.app{grid-template-columns:48px minmax(190px,35%) minmax(0,1fr);gap:6px;padding:6px}.rail{padding:9px 2px}.rail button{width:38px;height:38px}.list-head{padding:12px 9px}.chat{padding:9px 5px;gap:7px}.avatar{width:34px;height:34px;border-radius:10px}.head-actions .small-btn{padding:7px}.chat-head{padding:11px}.messages{padding:10px}.notice{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+ <nav class="rail" aria-label="بخش‌ها"><div class="brand">T</div><button class="active" title="همه گفتگوها" aria-label="همه گفتگوها">▤</button><button title="درسی" aria-label="درسی" data-category="study">⌘</button><button title="شخصی" aria-label="شخصی" data-category="personal">♧</button><button title="کانال‌ها" aria-label="کانال‌ها" data-category="channels">◉</button><button class="bottom" title="ذخیره‌شده‌ها" aria-label="ذخیره‌شده‌ها" id="savedRail">▣</button></nav>
+ <aside class="list"><div class="list-head"><div class="heading"><span>گفتگوها</span><span class="tag">پیش‌نمایش UI</span></div><input id="search" class="search" type="search" placeholder="جست‌وجوی گفتگو…" aria-label="جست‌وجوی گفتگو"></div><div class="filters"><button class="filter active" data-filter="all">همه</button><button class="filter" data-filter="study">درسی</button><button class="filter" data-filter="personal">شخصی</button><button class="filter" data-filter="channels">کانال‌ها</button></div><div id="chats" class="chats"></div></aside>
+ <section class="conversation"><header class="chat-head"><div class="avatar" id="activeAvatar">T</div><div class="head-copy"><div class="head-title" id="activeTitle">پیش‌نمایش کلاینت تلگرام</div><div class="head-sub" id="activeSubtitle">حساب تلگرام متصل نیست</div></div><div class="head-actions"><button class="small-btn" id="previewBtn">پیش‌نمایش</button><button class="small-btn" id="attachBtn">فایل</button><button class="small-btn" id="muteBtn">بی‌صدا</button><button class="small-btn" id="savedBtn">Saved Messages</button></div></header>
+ <div class="notice" id="connectionNotice">برای اتصال واقعی، API ID و API Hash خودت را وارد کن. این اطلاعات به سرور TwinPanel فرستاده نمی‌شود.
+<form id="connectForm" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
+<div style="display:flex;gap:14px;flex-wrap:wrap;width:100%;align-items:center">
+<label style="display:flex;gap:6px;align-items:center"><input type="radio" name="loginMethod" value="phone"> ورود با شماره</label>
+<label style="display:flex;gap:6px;align-items:center"><input type="radio" name="loginMethod" value="qr" checked> ورود با QR کد</label>
+</div>
+<input id="apiId" inputmode="numeric" placeholder="API ID" required style="min-width:100px;flex:1;padding:8px;border-radius:8px">
+<input id="apiHash" type="password" placeholder="API Hash" required autocomplete="off" style="min-width:140px;flex:1;padding:8px;border-radius:8px">
+<button id="connectButton" type="submit">اتصال به تلگرام</button>
+<button id="cancelConnectButton" type="button" hidden>لغو اتصال</button>
+<button id="diagnosticsButton" type="button">کپی گزارش اتصال</button>
+<div id="connectionProgress" role="status" aria-live="polite" style="width:100%;margin-top:5px;line-height:1.8;color:#d9e3ff">در انتظار آماده‌شدن موتور تلگرام…</div>
+</form></div>
+<div id="authOverlay" hidden style="position:fixed;inset:0;z-index:20;background:#050812dd;place-items:center;padding:20px"><form id="authForm" style="width:min(400px,100%);padding:22px;border-radius:16px;background:#121b2c;border:1px solid #354664"><h3 id="authTitle">ورود به تلگرام</h3><p id="authDescription">اطلاعات ورود را وارد کن.</p>
+<img id="authQr" hidden alt="کد QR ورود تلگرام" style="width:min(280px,100%);height:auto;margin:12px auto;padding:10px;background:#fff;border-radius:12px">
+<input id="authValue" autocomplete="off" required style="width:100%;padding:12px;margin:8px 0 12px" />
+<div style="display:flex;gap:8px"><button id="authSubmit" type="submit">ادامه</button><button type="button" id="cancelAuth">لغو اتصال</button></div></form></div>
+ <div class="messages" id="messages"><div class="empty"><strong>کلاینت اختصاصی تلگرام</strong>این محیط برای جایگزینی تدریجی Telegram Web ساخته می‌شود. اتصال واقعی پس از آماده‌شدن موتور TDLib اضافه خواهد شد.</div></div>
+ <form class="composer" id="composer"><input id="messageInput" disabled placeholder="ارسال پیام پس از اتصال TDLib فعال می‌شود" aria-label="متن پیام"><button disabled type="submit">ارسال</button></form>
+ <footer class="status" id="statusBar"><span class="status-dot"></span><span id="statusText"><strong>حالت آزمایشی</strong> · در حال آماده‌سازی موتور TDLib.</span></footer>
+ </section>
+</div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const demoChats=[{id:'saved',name:'Saved Messages',avatar:'▣',category:'personal',preview:'یادداشت‌ها و فایل‌های ذخیره‌شده',sample:true},{id:'biology',name:'زیست‌شناسی · کلاس',avatar:'ز',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'physics',name:'فیزیک · کلاس',avatar:'ف',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'math',name:'ریاضی · کلاس',avatar:'∑',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'friends',name:'گفتگوی شخصی',avatar:'✦',category:'personal',preview:'دادهٔ نمایشی',sample:true},{id:'channel',name:'کانال نمونه',avatar:'◉',category:'channels',preview:'دادهٔ نمایشی',sample:true}];
+const api=window.twinPanel&&window.twinPanel.telegramNative;
+let active='saved',filter='all',realChats=null,pendingPrompt=null;
+const chats=document.getElementById('chats'),search=document.getElementById('search'),messages=document.getElementById('messages'),toast=document.getElementById('toast');
+let connectUiActive=false,lastConnectionStatusAt=Date.now(),lastDiagnosticStage='idle';
+function showToast(s){toast.textContent=s;toast.style.display='block';clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.style.display='none',3000)}
+function setStatus(s){
+ const connected=!!(s&&s.connected), message=(s&&s.message)||'تلگرام متصل نیست.';
+ const statusText=document.getElementById('statusText'),progress=document.getElementById('connectionProgress');
+ statusText.textContent=message;
+ if(progress) progress.textContent=s&&s.diagnosticStage ? message+' · مرحله: '+s.diagnosticStage : message;
+ if(s&&s.diagnosticStage) lastDiagnosticStage=s.diagnosticStage;
+ if(s&&s.connecting) lastConnectionStatusAt=Date.now();
+ if(connected) connectUiActive=false;
+ document.getElementById('connectionNotice').hidden=connected;
+ document.getElementById('messageInput').disabled=!connected;
+ document.querySelector('.composer button').disabled=!connected;
+ document.getElementById('attachBtn').disabled=!connected;
+ document.getElementById('muteBtn').disabled=!connected;
+ const button=document.getElementById('connectButton');
+ if(connectUiActive&&s&&s.connecting){
+   button.textContent=lastDiagnosticStage==='awaiting-qr-confirmation'?'منتظر اسکن QR…':(message.length>42?message.slice(0,39)+'…':message);
+ }
+}
+window.setInterval(()=>{
+ if(!connectUiActive||!document.getElementById('authOverlay').hidden)return;
+ if(Date.now()-lastConnectionStatusAt>20000){
+   const message='۲۰ ثانیه است وضعیت جدیدی از موتور تلگرام نرسیده. مرحلهٔ آخر: '+lastDiagnosticStage+'؛ گزارش اتصال را کپی کن.';
+   document.getElementById('connectionProgress').textContent=message;
+   document.getElementById('statusText').textContent=message;
+ }
+},3000);
+function rows(){const q=search.value.trim().toLocaleLowerCase();return(realChats||demoChats).filter(c=>(filter==='all'||(c.category||'personal')===filter)&&String((c.title||c.name||'')+' '+(c.lastMessage||c.preview||'')).toLocaleLowerCase().includes(q))}
+function renderChats(){chats.replaceChildren();for(const c of rows()){const id=String(c.id),name=c.title||c.name||'گفتگو',b=document.createElement('button');b.className='chat'+(id===String(active)?' active':'');const av=document.createElement('span');av.className='avatar';av.textContent=name==='Saved Messages'?'▣':name.slice(0,1);const copy=document.createElement('span');copy.className='chat-copy';const title=document.createElement('span');title.className='chat-title';title.textContent=name;const p=document.createElement('span');p.className='preview';p.textContent=c.lastMessage||c.preview||'بدون پیش‌نمایش';copy.append(title,p);b.append(av,copy);if(!realChats){const demo=document.createElement('span');demo.className='sample';demo.textContent='دمو';b.append(demo)}b.addEventListener('click',()=>selectChat(id,false));chats.append(b)}if(!rows().length){const e=document.createElement('div');e.className='empty';e.textContent='گفتگویی پیدا نشد.';chats.append(e)}}
+function empty(title,body){messages.replaceChildren();const e=document.createElement('div');e.className='empty';const strong=document.createElement('strong');strong.textContent=title;e.append(strong,document.createTextNode(body));messages.append(e)}
+function renderMessages(list,preview){messages.replaceChildren();if(!list||!list.length){empty('پیامی برای نمایش نیست','تاریخچه‌ای برای این گفتگو دریافت نشد.');return}for(const m of [...list].reverse()){const b=document.createElement('div');b.className='bubble'+(m.outgoing?' mine':'');b.textContent=m.text||'پیام رسانه‌ای';const time=document.createElement('small');time.textContent=m.date?new Date(m.date*1000).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}):'';b.append(time);messages.append(b)}if(preview){const n=document.createElement('div');n.className='notice';n.textContent='پیش‌نمایش: عملیات openChat یا علامت‌گذاری خوانده‌شدن اجرا نشد.';messages.prepend(n)}}
+async function selectChat(id,preview=false){active=String(id);const c=(realChats||demoChats).find(x=>String(x.id)===active),name=c&&(c.title||c.name)||'گفتگو';document.getElementById('activeTitle').textContent=name;document.getElementById('activeAvatar').textContent=name==='Saved Messages'?'▣':name.slice(0,1);document.getElementById('activeSubtitle').textContent=realChats?'تاریخچه بدون فراخوانی read-marking':'نمونهٔ نمایشی · حساب متصل نیست';renderChats();if(!api||!realChats){empty('هنوز به تلگرام متصل نیست','پیام‌های نمونه واقعی نیستند. برای دریافت اطلاعات واقعی، TDLib را متصل کن.');return}try{const list=preview?await api.preview(active,30):await api.history(active,50);renderMessages(list,preview)}catch(e){showToast(e.message||'دریافت تاریخچه ناموفق بود');empty('خطا در دریافت پیام‌ها','وضعیت اتصال را بررسی کن.')}}
+async function loadChats(q=''){try{realChats=q.trim()?await api.searchChats(q.trim()):await api.listChats(80);renderChats()}catch(e){showToast(e.message||'دریافت گفتگوها ناموفق بود')}}
+async function authPrompt(p){
+ if(p&&p.type==='cancelled'){pendingPrompt=null;document.getElementById('authOverlay').hidden=true;return}
+ pendingPrompt=p;
+ const overlay=document.getElementById('authOverlay');overlay.hidden=false;overlay.style.display='grid';
+ const isQr=p.type==='qr';
+ document.getElementById('authTitle').textContent=isQr?'ورود امن با QR تلگرام':(p.label||'ورود به تلگرام');
+ document.getElementById('authDescription').textContent=isQr
+  ?'در تلگرام گوشی به Settings ← Devices ← Link Desktop Device برو و این کد را اسکن کن. کد فقط همین‌جا روی دستگاهت ساخته می‌شود.'
+  :p.type==='password'?'رمز تأیید دومرحله‌ای را وارد کن.':p.type==='code'?'کد ورود تلگرام را وارد کن.':p.type==='email'?'ایمیل حساب تلگرام را وارد کن.':p.type==='email-code'?'کد تأیید ایمیل را وارد کن.':'اطلاعات لازم برای ورود را وارد کن.';
+ const input=document.getElementById('authValue'),qr=document.getElementById('authQr');
+ const submit=document.getElementById('authSubmit');
+ input.hidden=isQr;input.required=!isQr;input.type=p.type==='password'?'password':'text';input.value='';
+ submit.hidden=isQr;qr.hidden=!isQr;qr.removeAttribute('src');
+ if(isQr){
+   try{
+     document.getElementById('connectionProgress').textContent='لینک QR دریافت شد؛ در حال ساخت تصویر…';
+     qr.onload=()=>{
+       if(pendingPrompt===p&&!overlay.hidden){
+         document.getElementById('connectionProgress').textContent='تصویر QR نمایش داده شد؛ با تلگرام گوشی اسکنش کن.';
+         void api.qrImageStatus('loaded').catch(()=>{});
+       }
+     };
+     qr.onerror=()=>{
+       if(pendingPrompt===p&&!overlay.hidden){
+         const message='تصویر QR ساخته شد اما نمایش آن ناموفق بود. گزارش اتصال را کپی کن.';
+         document.getElementById('connectionProgress').textContent=message;
+         document.getElementById('statusText').textContent=message;
+         showToast(message);
+         void api.qrImageStatus('load-error').catch(()=>{});
+       }
+     };
+     const src=await api.qrDataUrl(p.link);
+     if(pendingPrompt===p&&!overlay.hidden)qr.src=src;
+     lastConnectionStatusAt=Date.now();
+   }catch(error){
+     const msg=error.message||'ساخت QR ناموفق بود';
+     showToast(msg);
+     document.getElementById('statusText').textContent='خطای نمایش QR: '+msg;
+     document.getElementById('connectionProgress').textContent='خطای نمایش QR؛ اتصال لغو شد.';
+     pendingPrompt=null;
+     overlay.hidden=true;
+     try{await api.cancelConnect()}catch{}
+   }
+ }else{input.focus()}
+}
+if(api){api.onAuthPrompt(authPrompt);api.onStatus(setStatus)}
+document.getElementById('authForm').addEventListener('submit',e=>{e.preventDefault();if(!pendingPrompt)return;api.submitAuthInput(pendingPrompt.type,document.getElementById('authValue').value);pendingPrompt=null;document.getElementById('authOverlay').hidden=true});
+document.getElementById('cancelAuth').addEventListener('click',async()=>{pendingPrompt=null;document.getElementById('authOverlay').hidden=true;try{await api.cancelConnect()}catch(e){showToast(e.message||'لغو اتصال ناموفق بود')}});
+document.getElementById('connectForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const btn=document.getElementById('connectButton'),cancel=document.getElementById('cancelConnectButton');
+ connectUiActive=true;lastConnectionStatusAt=Date.now();btn.disabled=true;btn.textContent='در حال راه‌اندازی موتور…';cancel.hidden=false;
+ document.getElementById('connectionProgress').textContent='اتصال آغاز شد؛ منتظر وضعیت موتور تلگرام هستم…';
+ try{
+   const s=await api.connect({apiId:document.getElementById('apiId').value,apiHash:document.getElementById('apiHash').value,loginMethod:document.querySelector('input[name="loginMethod"]:checked')?.value||'qr'});
+   setStatus(s);realChats=[];await loadChats();showToast('اتصال برقرار شد.');
+ }catch(err){
+   const msg=err.message||'اتصال برقرار نشد';
+   showToast(msg);document.getElementById('statusText').textContent='خطای اتصال: '+msg;
+   document.getElementById('connectionProgress').textContent='خطای اتصال: '+msg;
+ }finally{
+   connectUiActive=false;btn.disabled=false;btn.textContent='اتصال به تلگرام';cancel.hidden=true;
+ }
+});
+document.getElementById('cancelConnectButton').addEventListener('click',async()=>{try{await api.cancelConnect();showToast('تلاش اتصال لغو شد.')}catch(e){showToast(e.message||'لغو اتصال ناموفق بود')}});
+document.getElementById('diagnosticsButton').addEventListener('click',async()=>{
+ try{
+   const log=await api.diagnostics();
+   try{await navigator.clipboard.writeText(log);showToast('گزارش تشخیصی کپی شد؛ اطلاعات ورود در آن ثبت نمی‌شود.')}
+   catch{window.prompt('گزارش تشخیصی را کپی کن:',log)}
+ }catch(e){showToast(e.message||'خواندن گزارش ناموفق بود')}
+});
+document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));renderChats()}));
+document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.category;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x.dataset.filter===filter));renderChats()}));
+let searchTimer;search.addEventListener('input',()=>{renderChats();clearTimeout(searchTimer);searchTimer=setTimeout(()=>{if(realChats)loadChats(search.value)},250)});
+document.getElementById('savedRail').addEventListener('click',()=>{const c=(realChats||demoChats).find(x=>(x.title||x.name)==='Saved Messages');if(c)selectChat(c.id);else showToast('Saved Messages پیدا نشد')});
+document.getElementById('savedBtn').addEventListener('click',()=>document.getElementById('savedRail').click());
+document.getElementById('previewBtn').addEventListener('click',()=>selectChat(active,true));
+document.getElementById('composer').addEventListener('submit',async e=>{e.preventDefault();const input=document.getElementById('messageInput'),body=input.value.trim();if(!body||!realChats)return;try{await api.sendText(active,body);input.value='';await selectChat(active,false)}catch(err){showToast(err.message||'ارسال پیام ناموفق بود')}});
+document.getElementById('attachBtn').addEventListener('click',async()=>{if(!realChats)return;try{const f=await api.selectMedia();if(!f)return;const caption=window.prompt('توضیح فایل (اختیاری):','')||'';await api.sendMedia(active,f.path,caption);showToast('درخواست ارسال فایل ثبت شد')}catch(e){showToast(e.message||'ارسال فایل ناموفق بود')}});
+document.getElementById('muteBtn').addEventListener('click',async()=>{if(!realChats)return;try{await api.muteChat(active,true);showToast('درخواست بی‌صداکردن گفتگو ارسال شد')}catch(e){showToast(e.message||'تغییر اعلان ناموفق بود')}});
+renderChats();selectChat('saved');if(api)api.status().then(setStatus).catch(()=>{});
+</script></body></html>
