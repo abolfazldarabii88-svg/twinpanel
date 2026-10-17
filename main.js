@@ -314,7 +314,7 @@ ipcMain.handle('telegram-native:get-privacy-settings', () => tdlibService.getPri
 ipcMain.handle('telegram-native:set-privacy-setting', (_event, name, choice) => tdlibService.setPrivacySetting(name, choice));
 ipcMain.handle('telegram-native:get-chat-info', (_event, chatId) => tdlibService.getChatInfo(chatId));
 ipcMain.handle('telegram-native:get-chat-members', (_event, chatId) => tdlibService.getChatMembers(chatId));
-ipcMain.handle('telegram-native:export-chat-invite-link', (_event, chatId) => tdlibService.exportChatInviteLink(chatId));
+// One IPC handler accepts optional invite-link expiry and usage-limit arguments.
 ipcMain.handle('telegram-native:export-chat-invite-link', (_event, chatId, expireSeconds, usageLimit) => tdlibService.exportChatInviteLink(chatId, expireSeconds, usageLimit));
 ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
 ipcMain.handle('telegram-native:search-global-messages', (_event, query, limit) => tdlibService.searchGlobalMessages(query, limit));
