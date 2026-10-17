@@ -203,6 +203,31 @@ async def handle(method, args):
         return status("درخواست اتصال لغو شد.")
     if method == "diagnostics":
         return {"stage": diagnostic_stage, "message": last_message, "engine": "Telethon"}
+    if method == "search-global-messages":
+        query = str(args.get("query") or "").strip()
+        if len(query) < 2:
+            raise RuntimeError("برای جستجوی سراسری حداقل دو نویسه وارد کن.")
+        limit = max(1, min(int(args.get("limit") or 30), 100))
+        found = []
+        async for msg in client.iter_messages(None, search=query, limit=limit):
+            try:
+                chat = await msg.get_chat()
+                chat_id = str(get_peer_id(chat)) if chat else str(msg.chat_id or "")
+                if chat:
+                    dialogs_cache[chat_id] = chat
+                text_body = (msg.message or "").strip()
+                found.append({
+                    "id": str(msg.id),
+                    "chatId": chat_id,
+                    "title": get_display_name(chat) if chat else "گفتگو",
+                    "date": int(msg.date.timestamp()) if msg.date else int(time.time()),
+                    "outgoing": bool(msg.out),
+                    "text": text_body[:4096] or ("رسانه / فایل" if msg.media else ""),
+                    "contentType": type(msg.media).__name__ if msg.media else "text"
+                })
+            except Exception:
+                continue
+        return found
     if method in ("list-chats", "search-chats"):
         limit = args.get("limit", 80 if method == "list-chats" else 30)
         rows = await ensure_dialogs(1000)
