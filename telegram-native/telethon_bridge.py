@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji
@@ -339,6 +339,22 @@ async def handle(method, args):
                         pass
             result.append(item)
         return result
+    if method == "list-scheduled-messages":
+        entity = entity_for(args.get("chatId"))
+        peer = await client.get_input_entity(entity)
+        result = await client(GetScheduledHistoryRequest(peer=peer, hash=0))
+        items = []
+        for msg in getattr(result, "messages", []) or []:
+            items.append({"id": str(msg.id), "text": (getattr(msg, "message", "") or "")[:500], "date": int(msg.date.timestamp()) if getattr(msg, "date", None) else None})
+        return items
+    if method == "cancel-scheduled-message":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام زمان‌بندی‌شده معتبر نیست.")
+        peer = await client.get_input_entity(entity)
+        await client(DeleteScheduledMessagesRequest(peer=peer, id=[message_id]))
+        return {"ok": True, "id": str(message_id)}
     if method == "schedule-message":
         entity = entity_for(args.get("chatId"))
         body = str(args.get("text") or "").strip()
