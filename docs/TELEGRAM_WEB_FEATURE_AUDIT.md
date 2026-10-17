@@ -379,3 +379,8 @@ Do not create a release or installer while this parity work is in progress unles
 
 ### Release v1.6.1 startup hotfix
 - Removed duplicate Electron `ipcMain.handle` registration for `telegram-native:export-chat-invite-link`; the single handler supports optional expiry and usage-limit parameters.
+
+
+### v1.6.2 reliability and interface polish
+- Python bridge emits JSON with ASCII escapes so Windows code pages cannot crash while returning Persian or emoji text.
+- Native chat view uses a compact, edge-to-edge Telegram Web-inspired layout with reduced panel rounding, spacing, and shadows.
