@@ -52,7 +52,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Profile / chat info / members | Partial | Summary dialogs only; no full profile editor or complete group/channel administration pages |
 | Client settings | Partial | Auto-refresh, compact mode, light/dark theme, font size, Telegram privacy controls and a connected-device/session manager with remote logout are in code; comprehensive notification controls remain missing |
 | Connection / QR / phone authorization | In code | Authentication screens exist; QR/phone login still requires Windows and real-account acceptance testing |
-| Scheduled messages | Partial | A dedicated manager now lists scheduled messages with inline edit/cancel actions; scheduling still uses a text date/time prompt instead of a native date/time picker |
+| Scheduled messages | Partial | A dedicated manager lists scheduled messages with inline edit/cancel/send-now actions; scheduling uses a native date/time picker |
 | Stories | Partial | Active stories list and viewer are in code; reading/view counters are requested when opening a story; publishing, story privacy controls, archive and real-account behavior remain unverified |
 | Voice/video and group calls | Partial | Can send an existing audio file as a Telegram voice note; recording from microphone, playback parity, voice/video calls and group calls are missing |
 | Group/channel management and topics | Partial | Group info/member lists/invite links exist; forum topic listing, topic history, sending messages, creating/renaming topics and closing/reopening topics are in code; admin permissions and recent actions remain missing |
