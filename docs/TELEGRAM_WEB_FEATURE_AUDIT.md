@@ -240,3 +240,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Group/channel member inspection added through Telethon. The native pane can request up to 100 participants and show names, usernames, and bot flags. Availability depends on Telegram permissions and group/channel type; real-account verification remains pending.
 
 - Added server-side search within the active conversation using Telegram message search (up to 100 matches), with a return-to-chat action. This is distinct from local filtering over the messages already loaded. Search behavior and pagination should still be confirmed against a live account.
+
+- Group/channel invite link export added for accounts with the required Telegram permissions. The renderer displays the generated link in a selectable prompt and warns users to share it only with trusted people. Live permission/error handling still needs account testing.
