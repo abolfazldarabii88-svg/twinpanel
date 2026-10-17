@@ -327,3 +327,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Chat list now visibly marks pinned and muted conversations alongside unread counts.
 
 - Reply previews: native message serialization now carries the replied-to message ID in history/search/live updates where the underlying Telegram message exposes it. The bubble shows a compact reply reference; selecting it loads nearby history and highlights the original message when returned. The quoted original text is not fetched per message, avoiding one network request for every bubble.
+
+- In-chat search navigation: previous/next controls cycle through matching messages already loaded in the active conversation, move focus/scroll to the selected bubble, and Enter / Shift+Enter provide keyboard navigation. This remains local-history search unless the explicit full-chat search action is used.
