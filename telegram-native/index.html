@@ -6,7 +6,18 @@
 <style>
 :root{color-scheme:dark;--bg:#090d18;--panel:#111827;--head:#151f31;--line:#26334b;--text:#eef2ff;--muted:#91a1bf;--accent:#7c5cff;--blue:#55b9ff;--green:#48d6a0}
 *{box-sizing:border-box}[hidden]{display:none !important}body{margin:0;height:100vh;overflow:hidden;background:radial-gradient(ellipse at 80% 0,#20204b 0,transparent 35%),var(--bg);color:var(--text);font:14px "Segoe UI",Tahoma,system-ui,sans-serif}
-.app{height:100%;display:grid;grid-template-columns:72px 290px minmax(0,1fr);gap:10px;padding:10px}
+body.host-themed{background:var(--bg)!important;color:var(--text)!important}
+body.host-themed .rail,body.host-themed .list,body.host-themed .conversation{background:var(--panel)!important;border-color:var(--line)!important;box-shadow:none}
+body.host-themed .list-head,body.host-themed .chat-head,body.host-themed .composer{background:var(--head)!important;border-color:var(--line)!important}
+body.host-themed .search,body.host-themed .composer input{background:color-mix(in srgb,var(--panel) 78%,var(--bg))!important;border-color:var(--line)!important;color:var(--text)!important}
+body.host-themed .rail button{color:var(--muted)}body.host-themed .rail button.active,body.host-themed .rail button:hover{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--text)}
+body.host-themed .filter{border-color:var(--line);color:var(--muted)}body.host-themed .filter.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+body.host-themed .chat.active{background:color-mix(in srgb,var(--accent) 15%,transparent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+body.host-themed .avatar{background:color-mix(in srgb,var(--accent) 30%,var(--panel));color:var(--text)}
+body.host-themed .bubble{background:color-mix(in srgb,var(--panel) 85%,var(--bg));border-color:var(--line);color:var(--text)}body.host-themed .bubble.mine{background:color-mix(in srgb,var(--accent) 28%,var(--panel));border-color:var(--accent)}
+body.host-themed .composer button{background:var(--accent);color:#fff}body.host-themed .tag{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--text)}
+body.host-themed .small-btn{background:color-mix(in srgb,var(--panel) 70%,var(--bg));border-color:var(--line);color:var(--text)}body.host-themed .status{border-color:var(--line);color:var(--muted)}
+ .app{height:100%;display:grid;grid-template-columns:72px 290px minmax(0,1fr);gap:10px;padding:10px}
 .rail,.list,.conversation{min-height:0;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 94%,transparent);border-radius:18px;overflow:hidden;box-shadow:0 14px 40px #0002}
 .rail{display:flex;flex-direction:column;align-items:center;gap:9px;padding:13px 8px}.brand{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#9b87ff,#4d46cf);display:grid;place-items:center;font-size:21px;font-weight:800;margin-bottom:12px}
 .rail button{width:44px;height:44px;border:0;border-radius:13px;background:transparent;color:var(--muted);font-size:19px;cursor:pointer}.rail button.active,.rail button:hover{background:#7c5cff25;color:#c8bcff}.rail .bottom{margin-top:auto}
@@ -29,7 +40,7 @@
 <body>
 <div class="app">
  <nav class="rail" aria-label="بخش‌ها"><div class="brand">T</div><button class="active" title="همه گفتگوها" aria-label="همه گفتگوها">▤</button><button title="درسی" aria-label="درسی" data-category="study">⌘</button><button title="شخصی" aria-label="شخصی" data-category="personal">♧</button><button title="کانال‌ها" aria-label="کانال‌ها" data-category="channels">◉</button><button class="bottom" title="ذخیره‌شده‌ها" aria-label="ذخیره‌شده‌ها" id="savedRail">▣</button></nav>
- <aside class="list"><div class="list-head"><div class="heading"><span>گفتگوها</span><span class="tag">پیش‌نمایش UI</span></div><input id="search" class="search" type="search" placeholder="جست‌وجوی گفتگو…" aria-label="جست‌وجوی گفتگو"></div><div class="filters"><button class="filter active" data-filter="all">همه</button><button class="filter" data-filter="study">درسی</button><button class="filter" data-filter="personal">شخصی</button><button class="filter" data-filter="channels">کانال‌ها</button></div><div id="chats" class="chats"></div></aside>
+ <aside class="list"><div class="list-head"><div class="heading"><span>گفتگوها</span><span class="tag">کلاینت اختصاصی · آزمایشی</span></div><input id="search" class="search" type="search" placeholder="جست‌وجوی گفتگو…" aria-label="جست‌وجوی گفتگو"></div><div class="filters"><button class="filter active" data-filter="all">همه</button><button class="filter" data-filter="study">درسی</button><button class="filter" data-filter="personal">شخصی</button><button class="filter" data-filter="channels">کانال‌ها</button></div><div id="chats" class="chats"></div></aside>
  <section class="conversation"><header class="chat-head"><div class="avatar" id="activeAvatar">T</div><div class="head-copy"><div class="head-title" id="activeTitle">پیش‌نمایش کلاینت تلگرام</div><div class="head-sub" id="activeSubtitle">حساب تلگرام متصل نیست</div></div><div class="head-actions"><button class="small-btn" id="previewBtn">پیش‌نمایش</button><button class="small-btn" id="attachBtn">فایل</button><button class="small-btn" id="muteBtn">بی‌صدا</button><button class="small-btn" id="savedBtn">Saved Messages</button></div></header>
  <div class="notice" id="connectionNotice">برای اتصال واقعی، API ID و API Hash خودت را وارد کن. این اطلاعات به سرور TwinPanel فرستاده نمی‌شود.
 <form id="connectForm" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
@@ -37,8 +48,11 @@
 <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="loginMethod" value="phone"> ورود با شماره</label>
 <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="loginMethod" value="qr" checked> ورود با QR کد</label>
 </div>
+<div id="apiCredentialSetup" style="display:flex;gap:7px;flex-wrap:wrap;width:100%">
 <input id="apiId" inputmode="numeric" placeholder="API ID" required style="min-width:100px;flex:1;padding:8px;border-radius:8px">
 <input id="apiHash" type="password" placeholder="API Hash" required autocomplete="off" style="min-width:140px;flex:1;padding:8px;border-radius:8px">
+</div>
+<button id="apiCredentialEdit" type="button" hidden style="width:100%">ویرایش اعتبارهای API</button>
 <div style="display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-top:4px">
  <select id="proxyType" aria-label="نوع پروکسی" style="min-width:145px;flex:1;padding:8px;border-radius:8px">
   <option value="">اتصال مستقیم</option><option value="socks5">پروکسی SOCKS5</option><option value="http">پروکسی HTTP</option><option value="mtproto">پروکسی MTProto</option>
@@ -67,7 +81,9 @@
 <script>
 const demoChats=[{id:'saved',name:'Saved Messages',avatar:'▣',category:'personal',preview:'یادداشت‌ها و فایل‌های ذخیره‌شده',sample:true},{id:'biology',name:'زیست‌شناسی · کلاس',avatar:'ز',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'physics',name:'فیزیک · کلاس',avatar:'ف',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'math',name:'ریاضی · کلاس',avatar:'∑',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'friends',name:'گفتگوی شخصی',avatar:'✦',category:'personal',preview:'دادهٔ نمایشی',sample:true},{id:'channel',name:'کانال نمونه',avatar:'◉',category:'channels',preview:'دادهٔ نمایشی',sample:true}];
 const api=window.twinPanel&&window.twinPanel.telegramNative;
-let active='saved',filter='all',realChats=null,pendingPrompt=null;
+let active='saved',filter='all',realChats=null,pendingPrompt=null,apiCredentialsSaved=false;
+function setApiCredentialUi(saved){apiCredentialsSaved=!!saved;const wrap=document.getElementById('apiCredentialSetup'),id=document.getElementById('apiId'),hash=document.getElementById('apiHash'),edit=document.getElementById('apiCredentialEdit');wrap.hidden=apiCredentialsSaved;id.disabled=apiCredentialsSaved;hash.disabled=apiCredentialsSaved;id.required=!apiCredentialsSaved;hash.required=!apiCredentialsSaved;edit.hidden=!apiCredentialsSaved;document.getElementById('connectionNotice').textContent=apiCredentialsSaved?'ورود امن با QR آماده است. اعتبار API فقط روی همین دستگاه و با رمزگذاری سیستم‌عامل نگه‌داری می‌شود؛ برای ورود روزمره فقط QR لازم است.':'برای راه‌اندازی اول، API ID و API Hash خودت را یک بار وارد کن. پس از آن TwinPanel آن‌ها را رمزگذاری‌شده نگه می‌دارد و ورودهای بعدی مستقیماً با QR انجام می‌شود.';}
+window.applyTwinPanelTheme=function(values){if(!values)return;const root=document.documentElement;for(const key of ['bg','panel','head','line','muted','text','accent','accent2'])if(values[key])root.style.setProperty('--'+key,values[key]);document.body.classList.add('host-themed');};
 const chats=document.getElementById('chats'),search=document.getElementById('search'),messages=document.getElementById('messages'),toast=document.getElementById('toast');
 let connectUiActive=false,lastConnectionStatusAt=Date.now(),lastDiagnosticStage='idle';
 function showToast(s){toast.textContent=s;toast.style.display='block';clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.style.display='none',3000)}
@@ -148,7 +164,8 @@ async function authPrompt(p){
    }
  }else{input.focus()}
 }
-if(api){api.onAuthPrompt(authPrompt);api.onStatus(setStatus)}
+if(api){api.onAuthPrompt(authPrompt);api.onStatus(setStatus);api.credentialsStatus().then(state=>setApiCredentialUi(!!state.saved)).catch(()=>setApiCredentialUi(false));}
+document.getElementById('apiCredentialEdit').addEventListener('click',()=>{setApiCredentialUi(false);document.getElementById('apiId').value='';document.getElementById('apiHash').value='';document.getElementById('apiId').focus();});
 document.getElementById('authForm').addEventListener('submit',e=>{e.preventDefault();if(!pendingPrompt)return;api.submitAuthInput(pendingPrompt.type,document.getElementById('authValue').value);pendingPrompt=null;document.getElementById('authOverlay').hidden=true});
 document.getElementById('cancelAuth').addEventListener('click',async()=>{pendingPrompt=null;document.getElementById('authOverlay').hidden=true;try{await api.cancelConnect()}catch(e){showToast(e.message||'لغو اتصال ناموفق بود')}});
  const proxyTypeSelect=document.getElementById('proxyType');
@@ -171,7 +188,7 @@ document.getElementById('connectForm').addEventListener('submit',async e=>{
  try{
     const proxy={type:proxyTypeSelect.value,server:document.getElementById('proxyServer').value,port:document.getElementById('proxyPort').value,username:document.getElementById('proxyUsername').value,password:document.getElementById('proxyPassword').value,secret:document.getElementById('proxySecret').value};
     const s=await api.connect({apiId:document.getElementById('apiId').value,apiHash:document.getElementById('apiHash').value,loginMethod:document.querySelector('input[name="loginMethod"]:checked')?.value||'qr',proxy});
-   setStatus(s);realChats=[];await loadChats();showToast('اتصال برقرار شد.');
+   setStatus(s);if(api.credentialsStatus)api.credentialsStatus().then(state=>setApiCredentialUi(!!state.saved)).catch(()=>{});document.getElementById('apiId').value='';document.getElementById('apiHash').value='';realChats=[];await loadChats();showToast('اتصال برقرار شد.');
  }catch(err){
    const msg=err.message||'اتصال برقرار نشد';
    showToast(msg);document.getElementById('statusText').textContent='خطای اتصال: '+msg;
