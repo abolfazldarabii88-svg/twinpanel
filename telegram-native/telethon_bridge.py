@@ -9,6 +9,7 @@ from pathlib import Path
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -302,6 +303,14 @@ async def handle(method, args):
             raise RuntimeError("فایل انتخاب‌شده پیدا نشد.")
         msg = await client.send_file(entity, str(file_path), caption=str(args.get("caption") or "")[:1024])
         return {"id": str(msg.id)}
+    if method == "set-chat-unread":
+        entity = entity_for(args.get("chatId"))
+        unread = bool(args.get("unread", False))
+        if unread:
+            await client(MarkDialogUnreadRequest(peer=entity, unread=True))
+        else:
+            await client.send_read_acknowledge(entity)
+        return {"ok": True, "chatId": str(args.get("chatId")), "unread": unread}
     if method == "mute-chat":
         entity = entity_for(args.get("chatId"))
         mute_until = int(time.time()) + 31536000 if args.get("muted") else 0
