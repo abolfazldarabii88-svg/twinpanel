@@ -382,7 +382,8 @@ document.addEventListener('keydown',event=>{
   if(key==='f'&&!event.shiftKey){event.preventDefault();messageSearch.focus();messageSearch.select();return}
   if(key==='enter'&&(!typing||target.id==='messageInput')){event.preventDefault();event.stopPropagation();document.getElementById('composer').requestSubmit();return}
  }
- if(event.key==='F1'){event.preventDefault();showToast('میانبرها: Ctrl+K گفتگوها · Ctrl+F جست‌وجوی همین گفتگو · Ctrl+Shift+F جست‌وجوی سراسری · Alt+↑ قدیمی‌تر · Alt+↓ جدیدترین · Esc بستن/پاک‌کردن')}
+ if(event.key==='F1'){event.preventDefault();showToast('میانبرها: Ctrl+K گفتگوها · Ctrl+F جست‌وجوی همین گفتگو · Ctrl+Shift+F جست‌وجوی سراسری · Alt+↑ قدیمی‌تر · Alt+↓ جدیدترین · Alt+Shift+↑/↓ گفتگوی خوانده‌نشده · Esc بستن/پاک‌کردن')}
+ if(event.altKey&&event.shiftKey&&!event.ctrlKey&&!event.metaKey&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();const unread=(realChats||[]).filter(c=>!c.archived&&Number(c.unreadCount||0)>0);if(!unread.length){showToast('گفتگوی خوانده‌نشده‌ای پیدا نشد');return}const current=unread.findIndex(c=>String(c.id)===String(active));const delta=event.key==='ArrowDown'?1:-1;const next=unread[(current+(current<0?(delta>0?0:unread.length-1):delta)+unread.length)%unread.length];globalSearchResults=null;document.getElementById('clearGlobalSearchBtn').hidden=true;selectChat(String(next.id),false);return;}
  if(event.altKey&&!event.ctrlKey&&!event.metaKey&&event.key==='ArrowUp'){event.preventDefault();if(!document.getElementById('olderBtn').disabled)loadOlderMessages();return}
  if(event.altKey&&!event.ctrlKey&&!event.metaKey&&event.key==='ArrowDown'){event.preventDefault();document.getElementById('jumpLatestBtn').click();return}
  if(event.key==='Escape'){
