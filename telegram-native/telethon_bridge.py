@@ -1082,6 +1082,19 @@ async def handle(method, args):
                 sent = [sent]
             sent_ids.extend(str(item.id) for item in sent)
         return {"ids": sent_ids, "count": len(sent_ids)}
+    if method == "send-voice":
+        entity = entity_for(args.get("chatId"))
+        file_path = Path(str(args.get("filePath") or "")).resolve()
+        if not file_path.is_file():
+            raise RuntimeError("فایل صوتی انتخاب‌شده پیدا نشد.")
+        suffix = file_path.suffix.lower()
+        if suffix not in {".ogg", ".oga", ".opus", ".mp3", ".m4a", ".wav", ".aac", ".flac"}:
+            raise RuntimeError("فایل صوتی با فرمت پشتیبانی‌شده انتخاب کن.")
+        caption = str(args.get("caption") or "")[:1024]
+        def progress(current, total):
+            event("upload-progress", {"chatId": str(args.get("chatId")), "fileName": file_path.name, "fileIndex": 1, "fileCount": 1, "current": int(current), "total": int(total or 0), "percent": int(current * 100 / total) if total else 0})
+        msg = await client.send_file(entity, str(file_path), voice_note=True, caption=caption, progress_callback=progress)
+        return {"id": str(msg.id), "contentType": "voice"}
     if method == "send-media":
         entity = entity_for(args.get("chatId"))
         file_path = Path(str(args.get("filePath") or "")).resolve()
