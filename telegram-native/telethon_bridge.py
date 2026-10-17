@@ -18,6 +18,7 @@ connected = False
 connecting = False
 me = None
 dialogs_cache = {}
+media_data_cache = {}
 pending_auth = asyncio.Queue()
 tasks = set()
 diagnostic_stage = "ready"
@@ -191,23 +192,27 @@ async def handle(method, args):
                 "text": text[:4096],
                 "contentType": type(msg.media).__name__ if msg.media else "text"
             }
-            if msg.photo or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("image/")):
-                try:
-                    media_bytes = await client.download_media(msg, file=bytes)
-                    if media_bytes and len(media_bytes) <= 4 * 1024 * 1024:
-                        mime = getattr(msg.file, "mime_type", None) or "image/jpeg"
-                        item["mediaDataUrl"] = "data:" + mime + ";base64," + base64.b64encode(media_bytes).decode("ascii")
-                except Exception:
-                    pass
-            elif msg.video or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("video/")):
+            cache_key = str(args.get("chatId")) + ":" + str(msg.id)
+            is_image = bool(msg.photo or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("image/")))
+            is_video = bool(msg.video or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("video/")))
+            if is_video:
                 item["contentType"] = "video"
-                try:
-                    media_bytes = await client.download_media(msg, file=bytes)
-                    if media_bytes and len(media_bytes) <= 8 * 1024 * 1024:
-                        mime = getattr(msg.file, "mime_type", None) or "video/mp4"
-                        item["mediaDataUrl"] = "data:" + mime + ";base64," + base64.b64encode(media_bytes).decode("ascii")
-                except Exception:
-                    pass
+            if is_image or is_video:
+                if cache_key in media_data_cache:
+                    item["mediaDataUrl"] = media_data_cache[cache_key]
+                else:
+                    try:
+                        media_bytes = await client.download_media(msg, file=bytes)
+                        max_size = 8 * 1024 * 1024 if is_video else 4 * 1024 * 1024
+                        if media_bytes and len(media_bytes) <= max_size:
+                            mime = getattr(msg.file, "mime_type", None) or ("video/mp4" if is_video else "image/jpeg")
+                            data_url = "data:" + mime + ";base64," + base64.b64encode(media_bytes).decode("ascii")
+                            media_data_cache[cache_key] = data_url
+                            item["mediaDataUrl"] = data_url
+                            if len(media_data_cache) > 150:
+                                media_data_cache.pop(next(iter(media_data_cache)))
+                    except Exception:
+                        pass
             result.append(item)
         return result
     if method == "send-text":
