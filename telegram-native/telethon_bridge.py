@@ -477,7 +477,10 @@ async def handle(method, args):
         for offset in range(0, len(paths), 10):
             batch = paths[offset:offset + 10]
             captions = [caption] + [""] * (len(batch) - 1) if offset == 0 else None
-            sent = await client.send_file(entity, [str(item) for item in batch], caption=captions)
+            for item_index, item in enumerate(batch):
+                def progress(current, total, file_name=item.name, item_number=offset + item_index + 1):
+                    event("upload-progress", {"chatId": str(args.get("chatId")), "fileName": file_name, "fileIndex": item_number, "fileCount": len(paths), "current": int(current), "total": int(total or 0), "percent": int(current * 100 / total) if total else 0})
+            sent = await client.send_file(entity, [str(item) for item in batch], caption=captions, progress_callback=progress)
             if not isinstance(sent, list):
                 sent = [sent]
             sent_ids.extend(str(item.id) for item in sent)
@@ -487,7 +490,9 @@ async def handle(method, args):
         file_path = Path(str(args.get("filePath") or "")).resolve()
         if not file_path.is_file():
             raise RuntimeError("فایل انتخاب‌شده پیدا نشد.")
-        msg = await client.send_file(entity, str(file_path), caption=str(args.get("caption") or "")[:1024])
+        def progress(current, total):
+            event("upload-progress", {"chatId": str(args.get("chatId")), "fileName": file_path.name, "fileIndex": 1, "fileCount": 1, "current": int(current), "total": int(total or 0), "percent": int(current * 100 / total) if total else 0})
+        msg = await client.send_file(entity, str(file_path), caption=str(args.get("caption") or "")[:1024], progress_callback=progress)
         return {"id": str(msg.id)}
     if method == "set-chat-pinned":
         entity = entity_for(args.get("chatId"))
