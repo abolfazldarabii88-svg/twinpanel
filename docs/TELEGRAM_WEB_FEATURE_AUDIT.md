@@ -252,3 +252,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Chat information panel added for users, groups, and channels; it displays available usernames, descriptions, verification status, and group/channel participant/admin counts. Availability depends on Telegram's returned full-chat data and permissions.
 
 - Group/channel invite-link generation added. The UI requests a link through Telegram and copies/displays it; Telegram permissions may restrict this to admins or existing invite links. Live-account verification is still pending.
+
+- Added a native save-dialog workflow to export up to 2,000 recent messages from the active chat to UTF-8 `.txt`, in chronological order. Media is represented by a short placeholder rather than embedded. Export scope is bounded and does not yet support full account-wide export.
