@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     searchGlobalMessages: (query, limit) => ipcRenderer.invoke('telegram-native:search-global-messages', query, limit),
     history: (chatId, limit) => ipcRenderer.invoke('telegram-native:history', chatId, limit),
     searchChatMessages: (chatId, query, limit) => ipcRenderer.invoke('telegram-native:search-chat-messages', chatId, query, limit),
+    listPinnedMessages: chatId => ipcRenderer.invoke('telegram-native:list-pinned-messages', chatId),
     historyBefore: (chatId, offsetId, limit) => ipcRenderer.invoke('telegram-native:history-before', chatId, offsetId, limit),
     historyAround: (chatId, messageId) => ipcRenderer.invoke('telegram-native:history-around', chatId, messageId),
     preview: (chatId, limit) => ipcRenderer.invoke('telegram-native:preview', chatId, limit),
