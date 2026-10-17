@@ -56,7 +56,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Stories | Missing | No stories strip, viewer, publishing or privacy controls |
 | Voice/video and group calls | Missing | No calling UI/runtime |
 | Group/channel management and topics | Missing | No full admin screens, topic navigation, permissions or recent actions |
-| Polls, stickers, GIFs, bots and mini apps | Partial | Native poll creation now supports 2–10 options, anonymous/public voting and multiple choice; poll result interactions, stickers/GIFs, bot menus and mini apps remain missing |
+| Polls, stickers, GIFs, bots and mini apps | Partial | Native poll creation supports 2–10 options, anonymous/public voting and multiple choice; GIF search/send through Telegram's inline GIF bot is in code; poll voting/result interactions, sticker browsing, bot menus and mini apps remain missing |
 | Multiple accounts and Secret Chats | Missing / protocol-dependent | Not implemented; Secret Chats cannot be treated as ordinary cloud chats |
 
 ## Feature-by-feature parity inventory
