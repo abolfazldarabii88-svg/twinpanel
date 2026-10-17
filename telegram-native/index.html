@@ -886,4 +886,16 @@ composerTextarea.addEventListener('keydown',event=>{if(event.key==='Enter'&&!eve
 
 document.addEventListener('keydown',event=>{if(!(event.ctrlKey||event.metaKey)||event.altKey||event.key!=='Tab')return;const items=[...chats.querySelectorAll('button.chat')];if(items.length<2)return;event.preventDefault();const current=items.findIndex(item=>item.classList.contains('active'));const delta=event.shiftKey?-1:1;items[(current+delta+items.length)%items.length].click()});
 
-</script></body></html>
+</script>
+<script>
+/* Consistent accessible names for compact icon-only Telegram-style controls. */
+(()=>{const labels={
+globalSearchBtn:'جست‌وجوی سراسری',publicSearchBtn:'جست‌وجوی عمومی تلگرام',manageFoldersBtn:'مدیریت پوشه‌های گفتگو',clearGlobalSearchBtn:'بازگشت به گفتگوها',addContactBtn:'افزودن مخاطب',
+olderBtn:'پیام‌های قدیمی‌تر',jumpLatestBtn:'رفتن به آخر گفتگو',chatInfoBtn:'اطلاعات گفتگو',chatMembersBtn:'اعضای گروه یا کانال',inviteLinkBtn:'لینک دعوت',exportHistoryBtn:'خروجی گرفتن از تاریخچه',pinnedMessagesBtn:'پیام‌های سنجاق‌شده',
+refreshBtn:'تازه‌سازی گفتگوها',profileBtn:'پروفایل حساب',settingsBtn:'تنظیمات',adminLogBtn:'گزارش فعالیت مدیران',botCommandsBtn:'دستورهای ربات',topicsBtn:'موضوعات گروه',privacyBtn:'حریم خصوصی',sessionsBtn:'دستگاه‌های متصل',previewBtn:'پیش‌نمایش گفتگو',
+archiveChatBtn:'انتقال به آرشیو',unarchiveChatBtn:'بازگرداندن از آرشیو',pinChatBtn:'سنجاق گفتگو',unpinChatBtn:'برداشتن سنجاق گفتگو',markReadBtn:'علامت‌گذاری خوانده‌شده',markUnreadBtn:'علامت‌گذاری خوانده‌نشده',muteBtn:'بی‌صدا کردن گفتگو',savedBtn:'پیام‌های ذخیره‌شده',
+emojiPickerBtn:'افزودن ایموجی',pollBtn:'ساخت نظرسنجی',gifBtn:'جست‌وجوی GIF',stickersBtn:'استیکرها',voiceBtn:'ارسال پیام صوتی',scheduleBtn:'زمان‌بندی پیام',scheduledListBtn:'پیام‌های زمان‌بندی‌شده',attachBtn:'افزودن پیوست'
+};for(const [id,label] of Object.entries(labels)){const el=document.getElementById(id);if(el){if(!el.hasAttribute('title'))el.title=label;if(!el.hasAttribute('aria-label'))el.setAttribute('aria-label',label)}}})();
+</script>
+
+</body></html>
