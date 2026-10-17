@@ -127,7 +127,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Unread counts and unread markers | Partial | Dialog unread counts are rendered as badges and can be toggled read/unread; refresh consistency and real-account behavior unverified |
 | Archived chats | Partial | Archive/unarchive actions and an archived filter exist; folder behavior and complete archive-page parity still need verification |
 | Pinned chats and custom order | Partial | Pin/unpin chat actions and pinned-first sorting exist; drag-and-drop custom ordering is missing |
-| Chat folders and include/exclude rules | Partial | Telegram custom folder filters are fetched and displayed read-only; creating/editing rules and shared folders are missing |
+| Chat folders and include/exclude rules | Partial | Can create/edit/delete Telegram folders with category flags, exclude-muted/read/archived rules, and explicit include/exclude chat IDs; shared folder links and pinned order editing remain missing |
 | Shared folders / folder invite links | Missing | No folder support |
 | Chat list search | Partial | Local title/last-message substring match |
 | Mark read/unread, clear history, delete chat, leave chat | Missing | No chat management actions |
