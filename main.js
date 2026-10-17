@@ -353,7 +353,7 @@ ipcMain.handle('telegram-native:select-media', async () => {
   const result = await dialog.showOpenDialog(nativeTelegramWindow && !nativeTelegramWindow.isDestroyed() ? nativeTelegramWindow : mainWindow, {
     title: 'انتخاب یک یا چند فایل برای تلگرام',
     properties: ['openFile', 'multiSelections'],
-    filters: [{ name: 'Media and documents', extensions: ['png','jpg','jpeg','webp','gif','mp4','mp3','ogg','opus','pdf','txt','zip','doc','docx'] }]
+    filters: [{ name: 'Media and documents', extensions: ['png','jpg','jpeg','webp','gif','mp4','mp3','ogg','oga','opus','m4a','wav','aac','flac','pdf','txt','zip','doc','docx'] }]
   });
   if (result.canceled || !result.filePaths.length) return null;
   const crypto = require('node:crypto');
