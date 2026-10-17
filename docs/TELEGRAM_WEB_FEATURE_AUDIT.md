@@ -56,7 +56,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Stories | Missing | No stories strip, viewer, publishing or privacy controls |
 | Voice/video and group calls | Missing | No calling UI/runtime |
 | Group/channel management and topics | Partial | Group info/member lists/invite links exist; forum topic listing, opening topic history and sending messages into a topic are in code; admin permissions, topic creation/editing and recent actions remain missing |
-| Polls, stickers, GIFs, bots and mini apps | Partial | Native poll creation supports 2–10 options, anonymous/public voting and multiple choice; GIF search/send through Telegram's inline GIF bot is in code; poll creation and single-option voting/result display are in code; multiple-choice vote submission, sticker browsing, bot menus and mini apps remain missing |
+| Polls, stickers, GIFs, bots and mini apps | Partial | Native poll creation supports 2–10 options, anonymous/public voting and multiple choice; GIF search/send through Telegram's inline GIF bot is in code; poll creation, single- and multiple-choice voting, and result display are in code; sticker browsing, bot menus and mini apps remain missing |
 | Multiple accounts and Secret Chats | Missing / protocol-dependent | Not implemented; Secret Chats cannot be treated as ordinary cloud chats |
 
 ## Feature-by-feature parity inventory
@@ -80,7 +80,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Search in current conversation | Partial | Local search filters only currently loaded message text; older unloaded history, media captions and server-side search are not included |
 | Global Telegram search | Missing | No server-side message/user/channel search |
 | Search by date / hashtag / public posts | Missing | No search workflows |
-| Multi-select / bulk actions | Partial — added in code, unverified | Selection mode supports copying selected text, saving selected messages to Saved Messages, and forwarding selected messages to a chat; no bulk delete; Shift-click range selection is supported in the loaded message list. CI and real-account behavior still need verification |
+| Multi-select / bulk actions | Partial — added in code, unverified | Selection mode supports copying selected text, saving selected messages to Saved Messages, and forwarding selected messages to a chat; bulk delete of selected outgoing messages is supported with confirmation; Shift-click range selection is limited to the loaded message list. CI and real-account behavior still need verification |
 | Copy text / message link | Partial | Copy selected message text and direct link where supported implemented; context menu and links for every peer type remain missing |
 | Report message / user | Missing | No reporting flow |
 | Save/forward attribution choices | Partial | Basic forward-to-chat flow exists; attribution choices and save/copy workflows remain missing |
