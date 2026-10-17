@@ -106,6 +106,24 @@ def entity_for(chat_id):
         raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
     return int(key)
 
+def serialize_reactions(message):
+    summary = []
+    raw = getattr(message, "reactions", None)
+    for item in (getattr(raw, "results", None) or [])[:12]:
+        reaction = getattr(item, "reaction", None)
+        emoji = getattr(reaction, "emoticon", None)
+        if not emoji and type(reaction).__name__ == "ReactionCustomEmoji":
+            emoji = "✨"
+        if not emoji:
+            continue
+        summary.append({
+            "emoji": str(emoji),
+            "count": int(getattr(item, "count", 0) or 0),
+            "chosen": bool(getattr(item, "chosen", False))
+        })
+    return summary
+
+
 def serialize_entities(message):
     result = []
     for entity in getattr(message, "entities", None) or []:
@@ -250,6 +268,7 @@ async def handle(method, args):
                     "outgoing": bool(message.out),
                     "text": (message.message or "")[:4096] if message.message else body[:4096],
                     "entities": serialize_entities(message),
+                    "reactions": serialize_reactions(message),
                     "contentType": type(message.media).__name__ if message.media else "text"
                 }
                 event("update", item)
@@ -388,6 +407,7 @@ async def handle(method, args):
                 "outgoing": bool(msg.out),
                 "text": body[:4096],
                 "entities": serialize_entities(msg),
+                "reactions": serialize_reactions(msg),
                 "contentType": type(msg.media).__name__ if msg.media else "text"
             })
             if len(result) >= limit:
@@ -404,7 +424,7 @@ async def handle(method, args):
             text = msg.message or ""
             if not text and msg.media:
                 text = "رسانه / فایل"
-            item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "contentType": type(msg.media).__name__ if msg.media else "text"}
+            item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text"}
             result.append(item)
         return result
     if method == "list-pinned-messages":
@@ -442,7 +462,7 @@ async def handle(method, args):
             text = msg.message or ""
             if not text and msg.media:
                 text = "رسانه / فایل"
-            result.append({"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "contentType": type(msg.media).__name__ if msg.media else "text", "searchResult": True})
+            result.append({"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text", "searchResult": True})
         return result
     if method in ("history", "preview", "history-before"):
         entity = entity_for(args.get("chatId"))
@@ -461,6 +481,7 @@ async def handle(method, args):
                 "outgoing": bool(msg.out),
                 "text": text[:4096],
                 "entities": serialize_entities(msg),
+                "reactions": serialize_reactions(msg),
                 "contentType": type(msg.media).__name__ if msg.media else "text"
             }
             cache_key = str(args.get("chatId")) + ":" + str(msg.id)
