@@ -374,7 +374,7 @@ class TdlibService {
     if (proxyType) {
       const server = String(proxy?.server || '').trim();
       const port = Number(proxy?.port);
-      if (!server || server.length > 253 || /[\\s/]/.test(server) || !Number.isInteger(port) || port < 1 || port > 65535) {
+      if (!server || server.length > 253 || /[\s/]/.test(server) || !Number.isInteger(port) || port < 1 || port > 65535) {
         throw new Error('میزبان و درگاه پروکسی معتبر نیست؛ آدرس را بدون http:// یا socks5:// و درگاه را بین ۱ تا ۶۵۵۳۵ وارد کن.');
       }
       const username = String(proxy?.username || '');
