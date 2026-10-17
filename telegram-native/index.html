@@ -423,6 +423,31 @@ body:not(.is-connected) #connectionNotice:after{content:"";position:absolute;top
 @media(max-width:650px){.app{grid-template-columns:minmax(0,1fr)}.conversation{display:none}.app.mobile-chat-open .conversation{display:flex;grid-column:1}.app.mobile-chat-open .list{display:none}.list{grid-column:1}.chat-head{padding:8px}.head-actions{max-width:44%}.message-search small{display:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
+
+/* Final control polish: compact, icon-led composer like Telegram clients. */
+#composer{direction:rtl;gap:5px;padding:9px 12px}
+#composer button{font-size:0!important;line-height:1}
+#composer button:before{font-size:20px;line-height:1}
+#composer #emojiPickerBtn:before{content:"☺"}
+#composer #attachBtn:before{content:"＋"}
+#composer #pollBtn:before{content:"▥"}
+#composer #gifBtn:before{content:"GIF";font-size:11px;font-weight:700}
+#composer #stickersBtn:before{content:"▧"}
+#composer #voiceBtn:before{content:"♬"}
+#composer #scheduleBtn:before{content:"◷"}
+#composer #scheduledListBtn:before{content:"☷"}
+#composer button[type=submit]{font-size:0!important;background:var(--accent);color:#fff}
+#composer button[type=submit]:before{content:"➤";font-size:19px}
+#composer textarea{min-height:40px}
+#composer #attachBtn{background:transparent!important;color:#718090!important}
+#composer #attachBtn:hover{background:#e9f3fc!important;color:var(--accent)!important}
+#multiSelectToolbar{display:flex;align-items:center;gap:4px;padding:7px 10px;overflow-x:auto;scrollbar-width:none}
+#multiSelectToolbar[hidden]{display:none!important}
+#multiSelectToolbar .small-btn{flex:0 0 34px;width:34px;height:34px;padding:0;border:0;border-radius:8px;background:transparent;color:#6c7b8b;font-size:0!important}
+#multiSelectToolbar .small-btn:before{font-size:18px}
+#multiSelectToggle:before{content:"☑"}#multiCopyBtn:before{content:"▣"}#multiSaveBtn:before{content:"▤"}#multiForwardBtn:before{content:"➦"}#multiDeleteBtn:before{content:"⌫"}#multiSelectClearBtn:before{content:"×"}
+#multiSelectCount{white-space:nowrap;color:#6e7b88;font-size:11px}
+
 </style>
 </head>
 <body>
@@ -471,6 +496,12 @@ body:not(.is-connected) #connectionNotice:after{content:"";position:absolute;top
 <script>
 const demoChats=[];
 const api=window.twinPanel&&window.twinPanel.telegramNative;
+const attachButton=document.getElementById('attachBtn');
+const messageComposer=document.getElementById('composer');
+if(attachButton&&messageComposer){attachButton.type='button';messageComposer.insertBefore(attachButton,document.getElementById('messageInput'));attachButton.title='پیوست فایل';attachButton.setAttribute('aria-label','پیوست فایل')}
+for(const [id,label] of [['emojiPickerBtn','افزودن ایموجی'],['pollBtn','ساخت نظرسنجی'],['gifBtn','جست‌وجوی GIF'],['stickersBtn','استیکرها'],['voiceBtn','ارسال فایل صوتی'],['scheduleBtn','زمان‌بندی پیام'],['scheduledListBtn','پیام‌های زمان‌بندی‌شده']]){const b=document.getElementById(id);if(b){b.title=label;b.setAttribute('aria-label',label)}}
+const sendButton=document.querySelector('#composer button[type="submit"]');if(sendButton){sendButton.title='ارسال پیام';sendButton.setAttribute('aria-label','ارسال پیام')}
+for(const [id,label] of [['multiSelectToggle','انتخاب چند پیام'],['multiCopyBtn','کپی متن‌ها'],['multiSaveBtn','ذخیره پیام‌ها'],['multiForwardBtn','فوروارد پیام‌ها'],['multiDeleteBtn','حذف پیام‌های خودم'],['multiSelectClearBtn','لغو انتخاب']]){const b=document.getElementById(id);if(b){b.title=label;b.setAttribute('aria-label',label)}}
 let active='saved',filter='all',realChats=null,pendingPrompt=null,apiCredentialsSaved=false,currentMessages=[],hasOlderMessages=true,selectedMessageId=null,replyTargetMessageId=null;
 let globalSearchResults=null,globalSearchQuery='',customFolders=[],publicPeerCache=[],realContacts=[];
 let multiSelectMode=false,multiSelectChatId=null,multiSelectAnchorId=null,activeTopicId=null,activeTopicTitle='';const selectedMessageIds=new Set();
