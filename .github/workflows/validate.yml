@@ -37,10 +37,11 @@ jobs:
           node --check scripts/make-icon.js
           node --check scripts/check-inline-scripts.js
           node --check telegram-native/tdlib-service.js
+          node --check telegram-native/gramjs-service.js
           node --check telegram-native/tdlib-bridge.js
           node scripts/check-inline-scripts.js
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies and resolve experimental GramJS lockfile
+        run: npm install
       - name: Build NSIS installer without publishing
         run: npm run dist:ci
       - name: Upload installer as a short-lived CI artifact
@@ -51,5 +52,6 @@ jobs:
             release/TwinPanel-Setup-*.exe
             release/TwinPanel-Setup-*.exe.blockmap
             release/latest.yml
+            package-lock.json
           if-no-files-found: error
           retention-days: 14
