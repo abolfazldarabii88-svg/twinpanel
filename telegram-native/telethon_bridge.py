@@ -477,9 +477,9 @@ async def handle(method, args):
         for offset in range(0, len(paths), 10):
             batch = paths[offset:offset + 10]
             captions = [caption] + [""] * (len(batch) - 1) if offset == 0 else None
-            for item_index, item in enumerate(batch):
-                def progress(current, total, file_name=item.name, item_number=offset + item_index + 1):
-                    event("upload-progress", {"chatId": str(args.get("chatId")), "fileName": file_name, "fileIndex": item_number, "fileCount": len(paths), "current": int(current), "total": int(total or 0), "percent": int(current * 100 / total) if total else 0})
+            album_label = "آلبوم: " + ", ".join(item.name for item in batch[:3])
+            def progress(current, total):
+                event("upload-progress", {"chatId": str(args.get("chatId")), "fileName": album_label, "fileIndex": offset + 1, "fileCount": len(paths), "current": int(current), "total": int(total or 0), "percent": int(current * 100 / total) if total else 0})
             sent = await client.send_file(entity, [str(item) for item in batch], caption=captions, progress_callback=progress)
             if not isinstance(sent, list):
                 sent = [sent]
