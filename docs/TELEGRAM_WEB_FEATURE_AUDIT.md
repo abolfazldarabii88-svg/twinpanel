@@ -341,3 +341,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Unread-chat navigation: Alt+Shift+Down/Up cycles through unread, non-archived conversations without marking them read; it clears global-search mode before opening the selected conversation. If there are no unread chats, it reports that instead of changing selection.
 
 - Per-chat draft previews: locally saved drafts appear in the corresponding chat-list row with a distinct preview style, update while typing, and revert to the latest known message preview when cleared. Drafts stay local to the device; this does not send or sync them to Telegram.
+
+- Private per-chat notes: each conversation has an optional local notes panel with character count and clear action. Notes are stored in localStorage under a conversation-specific key, loaded when switching chats, and are never sent to Telegram. The chat-list search also matches local notes; these notes remain device-local and are not synced or encrypted by this feature.
