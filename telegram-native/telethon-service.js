@@ -126,6 +126,7 @@ class TelethonService {
   saveDialogFolder(folder) { return this.request('save-dialog-folder', folder || {}); }
   deleteDialogFolder(id) { return this.request('delete-dialog-folder', { id: Number(id) }); }
   getProfile() { return this.request('profile'); }
+  getBotCommands(chatId) { return this.request('get-bot-commands', { chatId: String(chatId) }); }
   listStories() { return this.request('list-stories'); }
   openStory(token) { return this.request('open-story', { token: String(token || '') }); }
   getAuthorizations() { return this.request('list-authorizations'); }
