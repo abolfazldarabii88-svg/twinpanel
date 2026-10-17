@@ -5,6 +5,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from datetime import datetime, timezone
 
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
@@ -292,6 +293,18 @@ async def handle(method, args):
                         pass
             result.append(item)
         return result
+    if method == "schedule-message":
+        entity = entity_for(args.get("chatId"))
+        body = str(args.get("text") or "").strip()
+        schedule_at = int(args.get("scheduleAt") or 0)
+        if not body:
+            raise RuntimeError("متن پیام خالی است.")
+        if len(body) > 4096:
+            raise RuntimeError("متن پیام از ۴۰۹۶ نویسه بیشتر است.")
+        if schedule_at < int(time.time()) + 60:
+            raise RuntimeError("زمان ارسال باید دست‌کم یک دقیقه در آینده باشد.")
+        msg = await client.send_message(entity, body, schedule=datetime.fromtimestamp(schedule_at, timezone.utc))
+        return {"id": str(msg.id), "scheduleAt": schedule_at}
     if method == "send-text":
         entity = entity_for(args.get("chatId"))
         body = str(args.get("text") or "").strip()
