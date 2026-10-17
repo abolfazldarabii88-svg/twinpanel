@@ -13,9 +13,9 @@ from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivac
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -494,6 +494,30 @@ async def handle(method, args):
                 matched.append(cid)
             result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched, "contacts": bool(getattr(folder, "contacts", False)), "nonContacts": bool(getattr(folder, "non_contacts", False)), "groups": bool(getattr(folder, "groups", False)), "broadcasts": bool(getattr(folder, "broadcasts", False)), "bots": bool(getattr(folder, "bots", False)), "excludeMuted": bool(getattr(folder, "exclude_muted", False)), "excludeRead": bool(getattr(folder, "exclude_read", False)), "excludeArchived": bool(getattr(folder, "exclude_archived", False)), "includeIds": sorted(included), "excludeIds": sorted(excluded)})
         return result
+    if method == "list-forum-topics":
+        entity = await client.get_entity(entity_for(args.get("chatId")))
+        if not getattr(entity, "megagroup", False) or not getattr(entity, "forum", False):
+            raise RuntimeError("این گروه موضوعات (Topics) را فعال نکرده است.")
+        channel = InputChannel(channel_id=entity.id, access_hash=entity.access_hash)
+        response = await client(GetForumTopicsRequest(channel=channel, offset_date=0, offset_id=0, offset_topic=0, limit=100, q=None))
+        rows = []
+        for topic in getattr(response, "topics", []) or []:
+            rows.append({"id": str(getattr(topic, "id", "")), "title": str(getattr(topic, "title", "") or "موضوع"), "date": int(getattr(topic, "date", datetime.now(timezone.utc)).timestamp()) if getattr(topic, "date", None) else 0, "unreadCount": int(getattr(topic, "unread_count", 0) or 0), "closed": bool(getattr(topic, "closed", False)), "pinned": bool(getattr(topic, "pinned", False)), "iconColor": int(getattr(topic, "icon_color", 0) or 0)})
+        return rows
+    if method == "topic-history":
+        entity = entity_for(args.get("chatId"))
+        topic_id = int(args.get("topicId") or 0)
+        if topic_id <= 0:
+            raise RuntimeError("شناسهٔ موضوع معتبر نیست.")
+        limit = max(1, min(int(args.get("limit") or 50), 100))
+        rows = []
+        async for msg in client.iter_messages(entity, reply_to=topic_id, limit=limit):
+            body = msg.message or ""
+            if not body and msg.media:
+                body = "رسانه / فایل"
+            rows.append({"id": str(msg.id), "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": body[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text"})
+        rows.reverse()
+        return rows
     if method == "clear-chat-history":
         entity = entity_for(args.get("chatId"))
         peer = await client.get_input_entity(entity)
@@ -790,7 +814,8 @@ async def handle(method, args):
         body = str(args.get("text") or "").strip()
         if not body or len(body) > 4096:
             raise RuntimeError("متن پیام خالی است یا بیش از حد طولانی است.")
-        msg = await client.send_message(entity, body)
+        topic_id = int(args.get("topicId") or 0)
+        msg = await client.send_message(entity, body, reply_to=topic_id if topic_id > 0 else None)
         return {"id": str(msg.id),
                 "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "text": body}
     if method == "reply-text":
