@@ -114,6 +114,7 @@ class TelethonService {
   // Polling and profile helpers are exposed by the native service.
   listChats(limit = 60) { return this.request('list-chats', { limit }); }
   listContacts() { return this.request('list-contacts'); }
+  addContact(phone, firstName, lastName = '') { return this.request('add-contact', { phone: String(phone || ''), firstName: String(firstName || ''), lastName: String(lastName || '') }); }
   listDialogFolders() { return this.request('list-dialog-folders'); }
   getProfile() { return this.request('profile'); }
   getPrivacySettings() { return this.request('get-privacy-settings'); }
