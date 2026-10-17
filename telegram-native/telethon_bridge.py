@@ -322,6 +322,14 @@ async def handle(method, args):
             raise RuntimeError("شناسهٔ پیام معتبر نیست.")
         await client.delete_messages(entity, [message_id], revoke=True)
         return {"ok": True, "id": str(message_id)}
+    if method == "save-message":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام معتبر نیست.")
+        saved = await client.forward_messages("me", message_id, entity)
+        saved_items = saved if isinstance(saved, list) else [saved]
+        return {"ok": True, "ids": [str(item.id) for item in saved_items if item]}
     if method == "forward-message":
         source = entity_for(args.get("chatId"))
         target = entity_for(args.get("targetChatId"))
