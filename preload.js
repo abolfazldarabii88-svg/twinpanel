@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     deleteMessage: (chatId, messageId) => ipcRenderer.invoke('telegram-native:delete-message', chatId, messageId),
     forwardMessage: (chatId, messageId, targetChatId) => ipcRenderer.invoke('telegram-native:forward-message', chatId, messageId, targetChatId),
     pinMessage: (chatId, messageId, pinned) => ipcRenderer.invoke('telegram-native:pin-message', chatId, messageId, pinned),
+    reactMessage: (chatId, messageId, emoji) => ipcRenderer.invoke('telegram-native:react-message', chatId, messageId, emoji),
     selectMedia: () => ipcRenderer.invoke('telegram-native:select-media'),
     sendMedia: (chatId, filePath, caption) => ipcRenderer.invoke('telegram-native:send-media', chatId, filePath, caption),
     muteChat: (chatId, muted) => ipcRenderer.invoke('telegram-native:mute-chat', chatId, muted),
