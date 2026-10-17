@@ -1,8 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('twinPanel', {
   openNativeTelegram: () => ipcRenderer.invoke('twinpanel:open-native-telegram'),
+  getNativeTelegramViewConfig: () => ipcRenderer.invoke('twinpanel:open-native-telegram'),
   telegramNative: {
     status: () => ipcRenderer.invoke('telegram-native:status'),
+    credentialsStatus: () => ipcRenderer.invoke('telegram-native:credentials-status'),
     connect: credentials => ipcRenderer.invoke('telegram-native:connect', credentials),
     cancelConnect: () => ipcRenderer.invoke('telegram-native:cancel-connect'),
     diagnostics: () => ipcRenderer.invoke('telegram-native:diagnostics'),

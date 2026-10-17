@@ -1,15 +1,16 @@
 {
   "name": "twinpanel-desktop",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "private": true,
   "description": "TwinPanel desktop workspace for Telegram and ChatGPT",
   "author": "TwinPanel",
   "main": "main.js",
   "scripts": {
     "start": "node scripts/make-icon.js && electron .",
-    "dist": "node scripts/make-icon.js && electron-builder --win nsis",
-    "dist:portable": "node scripts/make-icon.js && electron-builder --win portable",
-    "publish:win": "node scripts/make-icon.js && electron-builder --win nsis --publish always"
+    "dist": "node scripts/make-icon.js && electron-builder --win nsis --publish never",
+    "dist:portable": "node scripts/make-icon.js && electron-builder --win portable --publish never",
+    "dist:ci": "node scripts/make-icon.js && electron-builder --win nsis --publish never",
+    "publish:win": "npm run dist:ci"
   },
   "dependencies": {
     "electron-updater": "^6.6.2",

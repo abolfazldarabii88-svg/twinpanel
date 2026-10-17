@@ -26,11 +26,32 @@ jobs:
           node --check main.js
           node --check preload.js
           node --check scripts/make-icon.js
+          node --check scripts/check-inline-scripts.js
           node --check telegram-native/tdlib-service.js
           node --check telegram-native/tdlib-bridge.js
+          node scripts/check-inline-scripts.js
       - name: Install dependencies
         run: npm ci
-      - name: Build and publish installer and updater metadata
-        run: npm run publish:win
+      - name: Build installer and updater metadata without publishing
+        run: npm run dist:ci
+      - name: Resolve release version
+        id: version
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Publish installer and all updater assets together
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: TwinPanel ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          make_latest: true
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: |
+            release/TwinPanel-Setup-*.exe
+            release/TwinPanel-Setup-*.exe.blockmap
+            release/latest.yml
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

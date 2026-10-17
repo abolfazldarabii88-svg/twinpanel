@@ -1,0 +1,49 @@
+name: Validate TwinPanel (no publishing)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - "work/**"
+      - "feature/**"
+      - "fix/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Validate JavaScript syntax
+        run: |
+          node --check main.js
+          node --check preload.js
+          node --check scripts/make-icon.js
+          node --check scripts/check-inline-scripts.js
+          node --check telegram-native/tdlib-service.js
+          node --check telegram-native/tdlib-bridge.js
+          node scripts/check-inline-scripts.js
+      - name: Install dependencies
+        run: npm ci
+      - name: Build NSIS installer without publishing
+        run: npm run dist:ci
+      - name: Upload installer as a short-lived CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TwinPanel-Windows-CI
+          path: |
+            release/TwinPanel-Setup-*.exe
+            release/TwinPanel-Setup-*.exe.blockmap
+            release/latest.yml
+          if-no-files-found: error
+          retention-days: 3
