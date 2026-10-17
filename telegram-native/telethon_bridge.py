@@ -264,6 +264,7 @@ async def handle(method, args):
                     "kind": kind,
                     "chatId": str(chat_id or ""),
                     "id": str(message.id),
+                    "replyToId": str(getattr(getattr(message, "reply_to", None), "reply_to_msg_id", "") or "") or None,
                     "date": int(message.date.timestamp()) if message.date else int(time.time()),
                     "outgoing": bool(message.out),
                     "text": (message.message or "")[:4096] if message.message else body[:4096],
