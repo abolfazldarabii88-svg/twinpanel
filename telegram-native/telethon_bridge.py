@@ -15,9 +15,9 @@ from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.bots import GetBotInfoRequest
 from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, GetRecentStickersRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser, InputDocument, InputMediaDocument
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -30,6 +30,7 @@ dialogs_cache = {}
 media_data_cache = {}
 inline_gif_cache = {}
 story_cache = {}
+sticker_cache = {}
 pending_auth = asyncio.Queue()
 tasks = set()
 diagnostic_stage = "ready"
@@ -205,6 +206,27 @@ async def handle(method, args):
             username = getattr(user, "username", None)
             members.append({"id": str(user.id), "name": name, "username": username, "bot": bool(getattr(user, "bot", False)), "verified": bool(getattr(user, "verified", False))})
         return {"members": members, "count": len(members), "limited": len(members) >= 100}
+    if method == "list-stickers":
+        response = await client(GetRecentStickersRequest(attached=False, hash=0))
+        rows = []
+        for index, document in enumerate((getattr(response, "stickers", None) or [])[:40]):
+            token = str(getattr(document, "id", "")) + ":" + str(index)
+            sticker_cache[token] = document
+            alt = ""
+            for attribute in getattr(document, "attributes", []) or []:
+                if type(attribute).__name__ == "DocumentAttributeSticker":
+                    alt = str(getattr(attribute, "alt", "") or "")
+                    break
+            rows.append({"token": token, "alt": alt or "استیکر", "mimeType": str(getattr(document, "mime_type", "") or ""), "id": str(getattr(document, "id", ""))})
+        return rows
+    if method == "send-sticker":
+        entity = entity_for(args.get("chatId"))
+        document = sticker_cache.get(str(args.get("token") or ""))
+        if document is None:
+            raise RuntimeError("استیکر در فهرست اخیر پیدا نشد؛ دوباره فهرست را باز کن.")
+        media = InputMediaDocument(id=InputDocument(id=document.id, access_hash=document.access_hash, file_reference=document.file_reference))
+        await client(SendMediaRequest(peer=await client.get_input_entity(entity), media=media, message=""))
+        return {"ok": True}
     if method == "get-bot-commands":
         entity = await client.get_entity(entity_for(args.get("chatId")))
         if not getattr(entity, "bot", False):
