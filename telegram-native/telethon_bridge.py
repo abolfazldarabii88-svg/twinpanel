@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
-from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest
+from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
@@ -201,6 +201,38 @@ async def handle(method, args):
             username = getattr(user, "username", None)
             members.append({"id": str(user.id), "name": name, "username": username, "bot": bool(getattr(user, "bot", False)), "verified": bool(getattr(user, "verified", False))})
         return {"members": members, "count": len(members), "limited": len(members) >= 100}
+    if method == "list-authorizations":
+        result = await client(GetAuthorizationsRequest())
+        rows = []
+        for auth in getattr(result, "authorizations", []) or []:
+            rows.append({
+                "hash": str(getattr(auth, "hash", "")),
+                "current": bool(getattr(auth, "current", False)),
+                "appName": str(getattr(auth, "app_name", "") or ""),
+                "appVersion": str(getattr(auth, "app_version", "") or ""),
+                "device": str(getattr(auth, "device_model", "") or ""),
+                "platform": str(getattr(auth, "platform", "") or ""),
+                "systemVersion": str(getattr(auth, "system_version", "") or ""),
+                "ip": str(getattr(auth, "ip", "") or ""),
+                "country": str(getattr(auth, "country", "") or ""),
+                "region": str(getattr(auth, "region", "") or ""),
+                "dateActive": int(getattr(auth, "date_active", 0) or 0),
+                "dateCreated": int(getattr(auth, "date_created", 0) or 0),
+            })
+        rows.sort(key=lambda item: (not item["current"], -item["dateActive"]))
+        return rows
+    if method == "reset-authorization":
+        auth_hash = int(args.get("hash") or 0)
+        if not auth_hash:
+            raise RuntimeError("شناسهٔ نشست معتبر نیست.")
+        result = await client(GetAuthorizationsRequest())
+        auth = next((item for item in (getattr(result, "authorizations", []) or []) if int(getattr(item, "hash", 0) or 0) == auth_hash), None)
+        if auth is None:
+            raise RuntimeError("این نشست دیگر وجود ندارد.")
+        if bool(getattr(auth, "current", False)):
+            raise RuntimeError("نشست فعلی را نمی‌توان از همین نشست بست.")
+        await client(ResetAuthorizationRequest(hash=auth_hash))
+        return {"ok": True, "hash": str(auth_hash)}
     if method == "get-privacy-settings":
         keys = {
             "lastSeen": InputPrivacyKeyStatusTimestamp(),
