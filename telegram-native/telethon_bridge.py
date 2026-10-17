@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest
-from telethon.tl.functions.channels import GetFullChannelRequest
+from telethon.tl.functions.channels import GetFullChannelRequest, GetAdminLogRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.bots import GetBotInfoRequest
 from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
@@ -592,6 +592,25 @@ async def handle(method, args):
                 matched.append(cid)
             result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched, "contacts": bool(getattr(folder, "contacts", False)), "nonContacts": bool(getattr(folder, "non_contacts", False)), "groups": bool(getattr(folder, "groups", False)), "broadcasts": bool(getattr(folder, "broadcasts", False)), "bots": bool(getattr(folder, "bots", False)), "excludeMuted": bool(getattr(folder, "exclude_muted", False)), "excludeRead": bool(getattr(folder, "exclude_read", False)), "excludeArchived": bool(getattr(folder, "exclude_archived", False)), "includeIds": sorted(included), "excludeIds": sorted(excluded)})
         return result
+    if method == "get-admin-log":
+        entity = await client.get_entity(entity_for(args.get("chatId")))
+        if not (getattr(entity, "broadcast", False) or getattr(entity, "megagroup", False)):
+            raise RuntimeError("گزارش اقدامات مدیران فقط برای گروه‌ها و کانال‌هاست.")
+        channel = InputChannel(channel_id=entity.id, access_hash=entity.access_hash)
+        result = await client(GetAdminLogRequest(channel=channel, q="", events_filter=None, admins=None, max_id=0, min_id=0, limit=50))
+        rows = []
+        for event_item in (getattr(result, "events", None) or [])[:50]:
+            action = getattr(event_item, "action", None)
+            action_type = type(action).__name__ if action else "Action"
+            details = []
+            for field in ("title", "about", "username", "message", "prev_message", "new_message", "prev_value", "new_value", "rank", "duration"):
+                value = getattr(action, field, None) if action else None
+                if value is not None:
+                    if hasattr(value, "message"):
+                        value = getattr(value, "message", "") or ""
+                    details.append(str(value)[:180])
+            rows.append({"id": str(getattr(event_item, "id", "")), "date": int(getattr(event_item, "date", 0) or 0), "userId": str(getattr(event_item, "user_id", "") or ""), "action": action_type, "details": " · ".join(details)[:300]})
+        return rows
     if method == "list-forum-topics":
         entity = await client.get_entity(entity_for(args.get("chatId")))
         if not getattr(entity, "megagroup", False) or not getattr(entity, "forum", False):
