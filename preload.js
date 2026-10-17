@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     sendMedia: (chatId, filePath, caption) => ipcRenderer.invoke('telegram-native:send-media', chatId, filePath, caption),
     muteChat: (chatId, muted) => ipcRenderer.invoke('telegram-native:mute-chat', chatId, muted),
     setChatUnread: (chatId, unread) => ipcRenderer.invoke('telegram-native:set-chat-unread', chatId, unread),
+    setChatArchived: (chatId, archived) => ipcRenderer.invoke('telegram-native:set-chat-archived', chatId, archived),
     onAuthPrompt: callback => {
       let lastId = 0;
       const forward = packet => {
