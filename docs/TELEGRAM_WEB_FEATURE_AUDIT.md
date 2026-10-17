@@ -337,3 +337,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Multiline composer: the message field is now an auto-growing textarea capped at 140 px; Enter sends, Shift+Enter inserts a newline, restored per-chat drafts resize correctly, and the emoji picker still inserts at the current selection.
 
 - Chat switching shortcut: Ctrl+Tab advances to the next visible conversation and Ctrl+Shift+Tab moves to the previous one, wrapping around the currently displayed chat list.
+
+- Unread-chat navigation: Alt+Shift+Down/Up cycles through unread, non-archived conversations without marking them read; it clears global-search mode before opening the selected conversation. If there are no unread chats, it reports that instead of changing selection.
