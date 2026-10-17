@@ -12,10 +12,10 @@ from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned
-from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji
+from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
 
@@ -361,6 +361,11 @@ async def handle(method, args):
                 body = "رسانه / فایل"
             result.append({"id": str(msg.id), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "text": body[:500], "outgoing": bool(msg.out), "contentType": type(msg.media).__name__ if msg.media else "text"})
         return result
+    if method == "send-typing-action":
+        entity = entity_for(args.get("chatId"))
+        peer = await client.get_input_entity(entity)
+        await client(SetTypingRequest(peer=peer, action=SendMessageTypingAction()))
+        return {"ok": True}
     if method == "export-chat-history":
         entity = entity_for(args.get("chatId"))
         limit = max(1, min(int(args.get("limit") or 2000), 5000))
