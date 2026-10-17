@@ -273,3 +273,9 @@ Do not create a release or installer while this parity work is in progress unles
 - The renderer uses Telegram-provided entities for bold, italic, code/preformatted text, underline, strikethrough, URLs, mentions, and hashtags when present; plain-text detection remains the fallback for messages without entities.
 - Message text is no longer stripped in the history/search paths that return entities, so Telegram entity offsets remain aligned with the source text.
 - Automated JavaScript and Python syntax checks are being rerun after the renderer fixes. No live Telegram account has been used to verify rendering.
+
+
+### Message context menu — 2026-10-17
+- Added a right-click menu on messages with quick actions for copy, reply, forward, save, pin, edit, and delete; actions reuse the existing tested UI handlers rather than duplicating Telegram API calls.
+- Edit and delete are disabled for incoming messages, matching the existing UI permission guard. Menu placement is constrained to the visible window, and Escape, outside click, scrolling, and resize dismiss it.
+- Keyboard invocation is supported through Shift+F10 / Context Menu when a message bubble has focus. Live Telegram account behavior remains unverified.
