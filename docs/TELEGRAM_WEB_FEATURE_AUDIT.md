@@ -177,7 +177,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 
 | Area | TwinPanel status | Required work |
 |---|---|---|
-| Live event stream | Missing | Replace polling-only refresh with Telethon event handlers and a normalized event queue |
+| Live message event stream | Partial — code added, unverified | New/edit/delete events flow from Telethon through IPC to the native renderer; dialog metadata still refreshes separately |
 | Reconnect/backoff/offline state | Partial | Diagnostics exist; resilient reconnect and duplicate prevention needed |
 | Stable session restore / expired session | Partial | Test packaged restart, auth expiry, cancellation and re-login |
 | Message rendering fidelity | Missing | Render entities, service messages, replies, reactions, media groups and rich types |
