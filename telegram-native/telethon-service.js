@@ -114,6 +114,7 @@ class TelethonService {
   getProfile() { return this.request('profile'); }
   searchChats(query, limit = 30) { return this.request('search-chats', { query: String(query || ''), limit }); }
   getChatHistory(chatId, limit = 40) { return this.request('history', { chatId: String(chatId), limit }); }
+  getChatHistoryBefore(chatId, offsetId, limit = 50) { return this.request('history-before', { chatId: String(chatId), offsetId: Number(offsetId), limit }); }
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }
   sendTextMessage(chatId, text) { return this.request('send-text', { chatId: String(chatId), text: String(text || '') }); }
   sendMedia(chatId, filePath, caption = '') { return this.request('send-media', { chatId: String(chatId), filePath: String(filePath || ''), caption: String(caption || '') }); }
