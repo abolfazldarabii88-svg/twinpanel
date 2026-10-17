@@ -141,7 +141,8 @@ async def handle(method, args):
             elif getattr(full_entity, "title", None) is not None:
                 result = await client(GetFullChatRequest(chat_id=int(full_entity.id)))
                 full_chat = result.full_chat
-                participants_count = len(getattr(full_chat, "participants", []) or [])
+                participants = getattr(full_chat, "participants", None)
+                participants_count = len(getattr(participants, "participants", []) or [])
                 about = getattr(full_chat, "about", "") or ""
                 admins_count = None
             else:
