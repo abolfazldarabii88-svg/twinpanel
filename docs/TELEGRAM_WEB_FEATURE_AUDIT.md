@@ -67,14 +67,14 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 
 | Telegram Web capability | TwinPanel status | Notes / required work |
 |---|---|---|
-| Single photo display | Partial | Limited download size and inline preview |
+| Single photo display | Partial | Limited download size and inline preview; loaded photo/video can now be saved from the selected message |
 | Photo albums / grouped media | Missing | Album grouping and layout absent |
 | Full-screen photo viewer, zoom, next/previous | Missing | No media viewer |
 | Video thumbnail, seeking, speed, fullscreen | Partial | Basic HTML video playback only |
 | Voice messages / audio notes | Missing | No voice playback UI/waveform/recording |
 | Round video notes | Missing | No dedicated display/recording |
 | Music/audio files | Missing | Generic file label only |
-| Documents and arbitrary files | Partial | Sending one selected file; received files not properly downloadable/openable |
+| Documents and arbitrary files | Partial | Sending one selected file; received documents still lack a proper download/open flow. Loaded inline photo/video can be saved |
 | Upload/download progress, retry, cancel | Missing | No transfer queue |
 | Multiple attachments / drag-drop | Missing | One file per chooser action |
 | Send as photo vs file | Missing | No send-mode choice |
