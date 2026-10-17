@@ -12,6 +12,7 @@ from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
+from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
@@ -27,6 +28,7 @@ me = None
 dialogs_cache = {}
 media_data_cache = {}
 inline_gif_cache = {}
+story_cache = {}
 pending_auth = asyncio.Queue()
 tasks = set()
 diagnostic_stage = "ready"
@@ -201,6 +203,68 @@ async def handle(method, args):
             username = getattr(user, "username", None)
             members.append({"id": str(user.id), "name": name, "username": username, "bot": bool(getattr(user, "bot", False)), "verified": bool(getattr(user, "verified", False))})
         return {"members": members, "count": len(members), "limited": len(members) >= 100}
+    if method == "list-stories":
+        response = await client(GetAllStoriesRequest(hidden=False))
+        rows = []
+        for peer_pack in getattr(response, "peer_stories", []) or []:
+            peer = getattr(peer_pack, "peer", None)
+            try:
+                entity = await client.get_entity(peer)
+                peer_id = str(get_peer_id(entity))
+            except Exception:
+                continue
+            dialogs_cache[peer_id] = entity
+            title = get_display_name(entity) or str(getattr(entity, "username", "") or "استوری")
+            for story in (getattr(peer_pack, "stories", []) or [])[:20]:
+                if type(story).__name__ not in {"StoryItem", "StoryItemSkipped"}:
+                    continue
+                story_id = int(getattr(story, "id", 0) or 0)
+                if story_id <= 0:
+                    continue
+                token = peer_id + ":" + str(story_id)
+                story_cache[token] = (entity, story)
+                caption = str(getattr(story, "caption", "") or "")
+                media = getattr(story, "media", None)
+                rows.append({"token": token, "peerId": peer_id, "peerTitle": str(title), "storyId": str(story_id), "caption": caption[:300], "date": int(getattr(story, "date", 0) or 0), "expireDate": int(getattr(story, "expire_date", 0) or 0), "hasMedia": bool(media), "skipped": type(story).__name__ == "StoryItemSkipped"})
+        rows.sort(key=lambda row: row["date"], reverse=True)
+        return rows[:100]
+    if method == "open-story":
+        token = str(args.get("token") or "")
+        cached = story_cache.get(token)
+        if not cached:
+            raise RuntimeError("استوری منقضی شده یا از فهرست حذف شده؛ دوباره فهرست را باز کن.")
+        entity, story = cached
+        peer = await client.get_input_entity(entity)
+        story_id = int(getattr(story, "id", 0) or 0)
+        if type(story).__name__ == "StoryItemSkipped" or not getattr(story, "media", None):
+            full = await client(GetStoriesByIDRequest(peer=peer, id=[story_id]))
+            story = next((item for item in (getattr(full, "stories", []) or []) if int(getattr(item, "id", 0) or 0) == story_id), story)
+        data_url = None
+        file_name = ""
+        content_type = "image"
+        media = getattr(story, "media", None)
+        if media:
+            document = getattr(media, "document", None)
+            content_type = "video" if document and str(getattr(document, "mime_type", "") or "").startswith("video/") else "image"
+            file_name = str(getattr(getattr(media, "document", None), "mime_type", "") or "")
+            try:
+                raw = await client.download_media(media, file=bytes)
+                max_size = 8 * 1024 * 1024 if content_type == "video" else 4 * 1024 * 1024
+                if raw and len(raw) <= max_size:
+                    mime = file_name or ("video/mp4" if content_type == "video" else "image/jpeg")
+                    data_url = "data:" + mime + ";base64," + base64.b64encode(raw).decode("ascii")
+            except Exception:
+                data_url = None
+        try:
+            await client(ReadStoriesRequest(peer=peer, max_id=story_id))
+        except Exception:
+            pass
+        try:
+            await client(IncrementStoryViewsRequest(peer=peer, id=[story_id]))
+        except Exception:
+            pass
+        caption = str(getattr(story, "caption", "") or "")
+        return {"peerTitle": get_display_name(entity) or "استوری", "storyId": str(story_id), "caption": caption, "date": int(getattr(story, "date", 0) or 0), "contentType": content_type, "mediaDataUrl": data_url}
     if method == "list-authorizations":
         result = await client(GetAuthorizationsRequest())
         rows = []
