@@ -1,9 +1,6 @@
 name: Build and publish TwinPanel for Windows
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
