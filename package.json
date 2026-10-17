@@ -59,7 +59,13 @@
       "node_modules/prebuilt-tdlib/**/*",
       "node_modules/@prebuilt-tdlib/**/*"
     ],
-    "npmRebuild": false
+    "npmRebuild": false,
+    "extraResources": [
+      {
+        "from": "build-secret/telegram-app-credentials.json",
+        "to": "telegram-native/app-credentials.json"
+      }
+    ]
   },
   "allowScripts": {
     "electron@35.7.5": true,
