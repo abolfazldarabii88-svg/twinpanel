@@ -403,7 +403,7 @@ async def handle(method, args):
             raise RuntimeError("برای جست‌وجو دست‌کم دو نویسه وارد کن.")
         result = []
         async for msg in client.iter_messages(entity, search=query, limit=max(1, min(int(args.get("limit") or 50), 100))):
-            text = (msg.message or "").strip()
+            text = msg.message or ""
             if not text and msg.media:
                 text = "رسانه / فایل"
             result.append({"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "contentType": type(msg.media).__name__ if msg.media else "text", "searchResult": True})
@@ -415,7 +415,7 @@ async def handle(method, args):
         messages = await client.get_messages(entity, limit=limit, offset_id=offset_id)
         result = []
         for msg in messages:
-            text = (msg.message or "").strip()
+            text = msg.message or ""
             if not text and msg.media:
                 text = "رسانه / فایل"
             item = {
