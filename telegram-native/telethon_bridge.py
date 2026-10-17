@@ -175,10 +175,11 @@ async def handle(method, args):
             rows = [r for r in rows if q in r["title"].casefold() or q in r["lastMessage"].casefold()]
             return rows[:max(1, min(int(limit or 30), 100))]
         return rows[:max(1, min(int(limit or 80), 1000))]
-    if method in ("history", "preview"):
+    if method in ("history", "preview", "history-before"):
         entity = entity_for(args.get("chatId"))
         limit = max(1, min(int(args.get("limit") or 40), 100))
-        messages = await client.get_messages(entity, limit=limit)
+        offset_id = int(args.get("offsetId") or 0)
+        messages = await client.get_messages(entity, limit=limit, offset_id=offset_id)
         result = []
         for msg in messages:
             text = (msg.message or "").strip()
