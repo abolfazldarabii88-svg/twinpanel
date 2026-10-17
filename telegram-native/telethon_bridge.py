@@ -378,6 +378,27 @@ async def handle(method, args):
             raise RuntimeError("شناسهٔ پیام معتبر نیست.")
         await client.pin_message(entity, message_id, notify=False) if pinned else await client.unpin_message(entity, message_id)
         return {"ok": True, "id": str(message_id), "pinned": pinned}
+    if method == "send-media-batch":
+        entity = entity_for(args.get("chatId"))
+        raw_paths = args.get("filePaths") or []
+        if not isinstance(raw_paths, list) or not raw_paths:
+            raise RuntimeError("فایلی برای ارسال انتخاب نشده است.")
+        if len(raw_paths) > 30:
+            raise RuntimeError("در هر نوبت حداکثر ۳۰ فایل انتخاب کن.")
+        paths = [Path(str(item or "")).resolve() for item in raw_paths]
+        for item in paths:
+            if not item.is_file():
+                raise RuntimeError(f"فایل انتخاب‌شده پیدا نشد: {item.name}")
+        caption = str(args.get("caption") or "")[:1024]
+        sent_ids = []
+        for offset in range(0, len(paths), 10):
+            batch = paths[offset:offset + 10]
+            captions = [caption] + [""] * (len(batch) - 1) if offset == 0 else None
+            sent = await client.send_file(entity, [str(item) for item in batch], caption=captions)
+            if not isinstance(sent, list):
+                sent = [sent]
+            sent_ids.extend(str(item.id) for item in sent)
+        return {"ids": sent_ids, "count": len(sent_ids)}
     if method == "send-media":
         entity = entity_for(args.get("chatId"))
         file_path = Path(str(args.get("filePath") or "")).resolve()
