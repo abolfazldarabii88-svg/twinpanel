@@ -12,10 +12,10 @@ from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned
-from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction
+from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
 
@@ -576,6 +576,23 @@ async def handle(method, args):
         msg = await client.send_message(entity, body, schedule=datetime.fromtimestamp(schedule_at, timezone.utc))
         return {"id": str(msg.id),
                 "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "scheduleAt": schedule_at}
+    if method == "send-poll":
+        entity = entity_for(args.get("chatId"))
+        question = str(args.get("question") or "").strip()
+        options = args.get("options") or []
+        if not question or len(question) > 300:
+            raise RuntimeError("سؤال نظرسنجی باید بین ۱ تا ۳۰۰ نویسه باشد.")
+        if not isinstance(options, list):
+            raise RuntimeError("گزینه‌های نظرسنجی معتبر نیستند.")
+        options = [str(item or "").strip() for item in options]
+        if len(options) < 2 or len(options) > 10 or any(not item or len(item) > 100 for item in options):
+            raise RuntimeError("نظرسنجی باید ۲ تا ۱۰ گزینه داشته باشد؛ هر گزینه حداکثر ۱۰۰ نویسه.")
+        if len({item.casefold() for item in options}) != len(options):
+            raise RuntimeError("گزینه‌های نظرسنجی نباید تکراری باشند.")
+        poll = Poll(id=int(time.time() * 1000), question=TextWithEntities(text=question, entities=[]), answers=[PollAnswer(text=TextWithEntities(text=item, entities=[]), option=bytes([index])) for index, item in enumerate(options)], closed=False, public_voters=not bool(args.get("anonymous", True)), multiple_choice=bool(args.get("multipleChoice", False)), quiz=False)
+        media = InputMediaPoll(poll=poll, correct_answers=None, solution=None, solution_entities=[])
+        await client(SendMediaRequest(peer=await client.get_input_entity(entity), media=media, message=""))
+        return {"ok": True, "question": question, "options": len(options)}
     if method == "send-text":
         entity = entity_for(args.get("chatId"))
         body = str(args.get("text") or "").strip()
