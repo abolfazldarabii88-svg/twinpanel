@@ -370,6 +370,7 @@ async def handle(method, args):
             if not body and msg.media:
                 body = "[رسانه / فایل: " + type(msg.media).__name__ + "]"
             rows.append({"id": str(msg.id), "date": msg.date.isoformat() if msg.date else "", "outgoing": bool(msg.out), "text": body[:4096]})
+        rows.reverse()
         return {"messages": rows, "count": len(rows), "limited": len(rows) >= limit}
     if method == "search-chat-messages":
         entity = entity_for(args.get("chatId"))
