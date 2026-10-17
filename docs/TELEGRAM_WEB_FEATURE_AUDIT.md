@@ -310,3 +310,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Global message search results now highlight the searched phrase safely in the message snippet and show the message date/time when returned by Telegram.
 - Highlighting uses text nodes and mark elements rather than injecting message text as HTML.
 - Search remains bounded to the configured result count; grouping duplicate results by conversation and server-side pagination are future improvements.
+
+- Message context menu also includes copy-message-link and save-media actions, gated by the same per-message availability checks as the existing toolbar.
