@@ -18,6 +18,8 @@ contextBridge.exposeInMainWorld('twinPanel', {
     historyBefore: (chatId, offsetId, limit) => ipcRenderer.invoke('telegram-native:history-before', chatId, offsetId, limit),
     preview: (chatId, limit) => ipcRenderer.invoke('telegram-native:preview', chatId, limit),
     sendText: (chatId, body) => ipcRenderer.invoke('telegram-native:send-text', chatId, body),
+    editMessage: (chatId, messageId, body) => ipcRenderer.invoke('telegram-native:edit-message', chatId, messageId, body),
+    deleteMessage: (chatId, messageId) => ipcRenderer.invoke('telegram-native:delete-message', chatId, messageId),
     selectMedia: () => ipcRenderer.invoke('telegram-native:select-media'),
     sendMedia: (chatId, filePath, caption) => ipcRenderer.invoke('telegram-native:send-media', chatId, filePath, caption),
     muteChat: (chatId, muted) => ipcRenderer.invoke('telegram-native:mute-chat', chatId, muted),
