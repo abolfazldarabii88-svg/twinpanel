@@ -87,6 +87,7 @@ async def ensure_dialogs(limit=1000):
             "title": title,
             "unreadCount": int(dialog.unread_count or 0),
             "archived": bool(getattr(dialog, "folder_id", 0) == 1),
+            "isPinned": bool(getattr(dialog, "is_pinned", False)),
             "muted": bool(getattr(getattr(dialog, "notify_settings", None), "mute_until", 0) and int(getattr(dialog.notify_settings, "mute_until", 0)) > int(time.time())),
             "lastMessage": preview,
             "isSavedMessages": bool(getattr(entity, "id", None) == getattr(me, "id", None)),
@@ -427,6 +428,14 @@ async def handle(method, args):
             raise RuntimeError("فایل انتخاب‌شده پیدا نشد.")
         msg = await client.send_file(entity, str(file_path), caption=str(args.get("caption") or "")[:1024])
         return {"id": str(msg.id)}
+    if method == "set-chat-pinned":
+        entity = entity_for(args.get("chatId"))
+        pinned = bool(args.get("pinned", True))
+        if pinned:
+            await client.pin_dialog(entity)
+        else:
+            await client.unpin_dialog(entity)
+        return {"ok": True, "chatId": str(args.get("chatId")), "pinned": pinned}
     if method == "set-chat-archived":
         entity = entity_for(args.get("chatId"))
         input_peer = await client.get_input_entity(entity)
