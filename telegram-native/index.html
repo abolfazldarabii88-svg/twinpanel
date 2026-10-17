@@ -375,7 +375,7 @@ body:not(.is-connected) .app{display:block;background:#f3f5f7}
 body:not(.is-connected) .rail,body:not(.is-connected) .list{display:none!important}
 body:not(.is-connected) .conversation{position:fixed;inset:0;z-index:10;display:flex;width:100%;height:100%;background:#f3f5f7;align-items:center;justify-content:center}
 body:not(.is-connected) .conversation>*:not(#connectionNotice):not(#authOverlay){display:none!important}
-body:not(.is-connected) #connectionNotice{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:14px;width:min(390px,calc(100vw - 36px));min-height:360px;margin:0;padding:30px 28px;background:#fff;border:1px solid #e5e9ed;border-radius:14px;color:#667382;box-shadow:0 8px 30px #15283b0a;font-size:13px;line-height:1.7;text-align:center}
+body:not(.is-connected) #connectionNotice{position:relative;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:14px;width:min(390px,calc(100vw - 36px));min-height:360px;margin:0;padding:30px 28px;background:#fff;border:1px solid #e5e9ed;border-radius:14px;color:#667382;box-shadow:0 8px 30px #15283b0a;font-size:13px;line-height:1.7;text-align:center}
 body:not(.is-connected) #connectionNotice:before{content:"➤";display:grid;place-items:center;width:68px;height:68px;border-radius:50%;background:#3390ec;color:#fff;font-size:30px;box-shadow:none}
 #connectionNoticeText{max-width:280px;font-size:14px;color:#536170}
 #connectForm{width:100%;display:flex;align-items:center;justify-content:center;gap:8px!important;margin-top:4px!important}
@@ -631,7 +631,7 @@ document.getElementById('connectForm').addEventListener('submit',async e=>{
  try{
     const proxy={type:proxyTypeSelect.value,server:document.getElementById('proxyServer').value,port:document.getElementById('proxyPort').value,username:document.getElementById('proxyUsername').value,password:document.getElementById('proxyPassword').value,secret:document.getElementById('proxySecret').value};
     const s=await api.connect({apiId:document.getElementById('apiId').value,apiHash:document.getElementById('apiHash').value,loginMethod:document.querySelector('input[name="loginMethod"]:checked')?.value||'qr',proxy});
-   setStatus(s);if(api.credentialsStatus)api.credentialsStatus().then(state=>setApiCredentialUi(!!state.saved)).catch(()=>{});document.getElementById('apiId').value='';document.getElementById('apiHash').value='';realChats=[];await loadChats();showToast('اتصال برقرار شد.');
+   setStatus(s);if(api.credentialsStatus)api.credentialsStatus().then(state=>setApiCredentialUi(!!state.saved)).catch(()=>{});document.getElementById('apiId').value='';document.getElementById('apiHash').value='';realChats=[];await loadChats();if(realChats&&realChats.length)await selectChat(String(realChats[0].id));else{document.getElementById('activeTitle').textContent='Telegram';document.getElementById('activeSubtitle').textContent='گفتگویی برای نمایش وجود ندارد';messages.innerHTML='<div class="empty"><strong>گفتگویی وجود ندارد</strong>گفتگوهای حساب پس از همگام‌سازی اینجا نمایش داده می‌شوند.</div>';}showToast('اتصال برقرار شد.');
  }catch(err){
    const msg=err.message||'اتصال برقرار نشد';
    showToast(msg);document.getElementById('statusText').textContent='خطای اتصال: '+msg;
@@ -744,7 +744,7 @@ document.getElementById('unarchiveChatBtn').addEventListener('click',async()=>{i
 document.getElementById('markReadBtn').addEventListener('click',async()=>{if(!realChats||!api)return;try{await api.setChatUnread(active,false);const c=realChats.find(x=>String(x.id)===String(active));if(c)c.unreadCount=0;renderChats();showToast('گفتگو به‌عنوان خوانده‌شده علامت خورد')}catch(e){showToast(e.message||'علامت‌گذاری گفتگو ناموفق بود')}});
 document.getElementById('markUnreadBtn').addEventListener('click',async()=>{if(!realChats||!api)return;try{await api.setChatUnread(active,true);const c=realChats.find(x=>String(x.id)===String(active));if(c)c.unreadCount=Math.max(1,Number(c.unreadCount)||0);renderChats();showToast('گفتگو به‌عنوان خوانده‌نشده علامت خورد')}catch(e){showToast(e.message||'علامت‌گذاری گفتگو ناموفق بود')}});
 document.getElementById('muteBtn').addEventListener('click',async()=>{if(!realChats||!api)return;const c=realChats.find(x=>String(x.id)===String(active));if(!c)return;let seconds=0;if(!c.muted){const choice=window.prompt('مدت بی‌صداکردن را انتخاب کن:\n1 = یک ساعت\n8 = هشت ساعت\n48 = دو روز\n365 = یک سال\n0 = لغو بی‌صداکردن','8');if(choice===null)return;const map={'0':0,'1':3600,'8':28800,'48':172800,'365':31536000};if(!(choice.trim() in map)){showToast('مدت انتخاب‌شده معتبر نیست');return}seconds=map[choice.trim()]}try{await api.muteChatUntil(active,seconds);c.muted=seconds>0;document.getElementById('muteBtn').textContent=c.muted?'فعال‌کردن اعلان':'بی‌صدا';showToast(c.muted?'اعلان‌ها برای مدت انتخاب‌شده بی‌صدا شدند':'اعلان گفتگو فعال شد')}catch(e){showToast(e.message||'تغییر اعلان ناموفق بود')}});
-renderChats();if(api)api.status().then(setStatus).catch(()=>{});
+renderChats();if(api)api.status().then(async status=>{setStatus(status);if(status&&status.connected){await loadChats();if(realChats&&realChats.length)await selectChat(String(realChats[0].id));}}).catch(()=>{});
 
 /* Keyboard navigation: shortcuts avoid stealing keys from normal text entry. */
 document.addEventListener('keydown',event=>{
