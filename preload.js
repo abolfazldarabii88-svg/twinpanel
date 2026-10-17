@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     listPinnedMessages: chatId => ipcRenderer.invoke('telegram-native:list-pinned-messages', chatId),
     historyBefore: (chatId, offsetId, limit) => ipcRenderer.invoke('telegram-native:history-before', chatId, offsetId, limit),
     historyAround: (chatId, messageId) => ipcRenderer.invoke('telegram-native:history-around', chatId, messageId),
+    messagesOnDate: (chatId, startTimestamp, endTimestamp, limit) => ipcRenderer.invoke('telegram-native:messages-on-date', chatId, startTimestamp, endTimestamp, limit),
     preview: (chatId, limit) => ipcRenderer.invoke('telegram-native:preview', chatId, limit),
     sendText: (chatId, body) => ipcRenderer.invoke('telegram-native:send-text', chatId, body),
     scheduleMessage: (chatId, body, scheduleAt) => ipcRenderer.invoke('telegram-native:schedule-message', chatId, body, scheduleAt),
