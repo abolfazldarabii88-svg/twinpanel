@@ -130,7 +130,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Chat folders and include/exclude rules | Partial | Can create/edit/delete Telegram folders with category flags, exclude-muted/read/archived rules, and explicit include/exclude chat IDs; shared folder links and pinned order editing remain missing |
 | Shared folders / folder invite links | Missing | No folder support |
 | Chat list search | Partial | Local title/last-message substring match |
-| Mark read/unread, clear history, delete chat, leave chat | Missing | No chat management actions |
+| Mark read/unread, clear history, delete chat, leave chat | Partial | Mark read/unread, clear local-account history and leave groups/channels are in code; delete entire chat and confirmation UX need further parity testing |
 | Chat info and shared media tabs | Missing | No details pane or shared media browser |
 | Group creation/editing/photo/title/description | Missing | No group-management UI |
 | Members/admins/permissions/banned users | Missing | No members or permissions screens |
