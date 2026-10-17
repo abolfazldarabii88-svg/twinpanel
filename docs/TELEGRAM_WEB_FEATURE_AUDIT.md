@@ -322,3 +322,6 @@ Do not create a release or installer while this parity work is in progress unles
 - Validation boundary: these UI additions are covered by repository CI syntax checks; they have not yet been exercised against a live Telegram account or a Windows device in this turn.
 
 - Quick reactions: connected chats expose a compact set of common reactions on message hover/focus, including touch devices. Actions call the existing Telegram reaction API and report errors instead of silently pretending success.
+
+- Chat-list context actions: right-click (or Shift+F10 / Context Menu key on a focused chat) offers mark unread/read, mute/unmute notifications, pin/unpin, and archive/unarchive. These call the existing native API and refresh the chat list only after the action resolves; failures are shown to the user.
+- Chat list now visibly marks pinned and muted conversations alongside unread counts.
