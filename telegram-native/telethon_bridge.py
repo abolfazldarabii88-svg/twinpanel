@@ -373,6 +373,25 @@ async def handle(method, args):
                 matched.append(cid)
             result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched})
         return result
+    if method == "list-contacts":
+        if not client or not connected:
+            raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
+        users = await client.get_contacts()
+        rows = []
+        for user in users:
+            try:
+                peer_id = str(get_peer_id(user))
+            except Exception:
+                peer_id = str(getattr(user, "id", ""))
+            if not peer_id:
+                continue
+            dialogs_cache[peer_id] = user
+            first = str(getattr(user, "first_name", "") or "").strip()
+            last = str(getattr(user, "last_name", "") or "").strip()
+            title = (first + " " + last).strip() or str(getattr(user, "username", "") or "مخاطب")
+            rows.append({"id": peer_id, "title": title, "name": title, "username": str(getattr(user, "username", "") or ""), "phone": str(getattr(user, "phone", "") or ""), "type": "user", "category": "contacts", "unreadCount": 0, "archived": False, "isPinned": False, "muted": False, "lastMessage": "مخاطب ذخیره‌شده"})
+        rows.sort(key=lambda row: row["title"].casefold())
+        return rows
     if method in ("list-chats", "search-chats"):
         limit = args.get("limit", 80 if method == "list-chats" else 30)
         rows = await ensure_dialogs(1000)
