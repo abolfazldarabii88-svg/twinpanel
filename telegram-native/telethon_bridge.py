@@ -86,6 +86,7 @@ async def ensure_dialogs(limit=1000):
             "title": title,
             "unreadCount": int(dialog.unread_count or 0),
             "archived": bool(getattr(dialog, "folder_id", 0) == 1),
+            "muted": bool(getattr(getattr(dialog, "notify_settings", None), "mute_until", 0) and int(getattr(dialog.notify_settings, "mute_until", 0)) > int(time.time())),
             "lastMessage": preview,
             "isSavedMessages": bool(getattr(entity, "id", None) == getattr(me, "id", None)),
             "type": "user" if getattr(entity, "first_name", None) is not None else ("channel" if getattr(entity, "broadcast", False) else "chat")
