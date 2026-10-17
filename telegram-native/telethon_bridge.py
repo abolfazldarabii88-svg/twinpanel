@@ -223,6 +223,14 @@ async def handle(method, args):
             raise RuntimeError("متن پیام خالی است یا بیش از حد طولانی است.")
         msg = await client.send_message(entity, body)
         return {"id": str(msg.id), "text": body}
+    if method == "reply-text":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        body = str(args.get("text") or "").strip()
+        if message_id <= 0 or not body or len(body) > 4096:
+            raise RuntimeError("شناسهٔ پیام یا متن پاسخ معتبر نیست.")
+        msg = await client.send_message(entity, body, reply_to=message_id)
+        return {"id": str(msg.id), "text": body, "replyToMessageId": str(message_id)}
     if method == "edit-message":
         entity = entity_for(args.get("chatId"))
         message_id = int(args.get("messageId") or 0)
