@@ -11,6 +11,7 @@ Rebuild the Telegram Web experience inside TwinPanel's native Telegram pane, usi
 - [x] Telethon-based account connection/authentication flow exists.
 - [x] Chat/dialog list and text history loading exist.
 - [x] Text message sending exists.
+- [x] Older-message pagination is wired through the native UI, Electron IPC, service and Telethon bridge; scroll position is retained when older messages are prepended (automated/build and real-account verification still pending).
 - [x] Account profile summary endpoint exists.
 - [x] Limited photo/video previews and manual/automatic refresh were added on the v1.5.9 work branch.
 - [ ] Full Telegram Web parity is not yet implemented or verified.
@@ -23,7 +24,8 @@ Rebuild the Telegram Web experience inside TwinPanel's native Telegram pane, usi
 - [ ] Dialog list: private chats, groups, supergroups, channels, bots, Saved Messages, archived chats, unread counters, drafts, pinned chats, mute indicators.
 - [ ] Chat folders: create/edit/reorder, include/exclude rules, shared folder links, pinned chats in folders.
 - [ ] Chat list search, global search, in-chat search, date search, hashtag search, public-post search where API permits.
-- [ ] Message history pagination, jump-to-date, unread divider, jump to latest, scroll restoration and efficient rendering of long histories.
+- [x] Basic older-message history pagination with scroll-position preservation (verification pending).
+- [ ] Jump-to-date, unread divider, jump to latest, and efficient rendering of very long histories.
 - [ ] Message send/edit/delete, reply/quote, forward, pin/unpin, copy text/link, select multiple, report, save/forward attribution choices.
 - [ ] Per-chat cloud drafts and local draft restoration.
 - [ ] Correct delivery/read states, typing indicators and read receipts where Telegram exposes them.
