@@ -11,10 +11,11 @@ from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
+from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -408,6 +409,25 @@ async def handle(method, args):
                 matched.append(cid)
             result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched})
         return result
+    if method == "add-contact":
+        phone = str(args.get("phone") or "").strip()
+        first_name = str(args.get("firstName") or "").strip()
+        last_name = str(args.get("lastName") or "").strip()
+        if not phone or len(phone) > 32 or not first_name or len(first_name) > 64 or len(last_name) > 64:
+            raise RuntimeError("شماره و نام معتبر وارد کن؛ نام حداکثر ۶۴ نویسه است.")
+        imported = await client(ImportContactsRequest(contacts=[InputPhoneContact(client_id=int(time.time() * 1000), phone=phone, first_name=first_name, last_name=last_name)]))
+        if not getattr(imported, "users", None):
+            raise RuntimeError("تلگرام مخاطبی برای این شماره برنگرداند؛ شماره را با کد کشور بررسی کن.")
+        rows = []
+        for user in imported.users:
+            try:
+                peer_id = str(get_peer_id(user))
+            except Exception:
+                peer_id = str(getattr(user, "id", ""))
+            if peer_id:
+                dialogs_cache[peer_id] = user
+                rows.append({"id": peer_id, "title": (str(getattr(user, "first_name", "") or "") + " " + str(getattr(user, "last_name", "") or "")).strip() or first_name, "username": str(getattr(user, "username", "") or ""), "phone": str(getattr(user, "phone", "") or ""), "type": "user", "category": "contacts", "unreadCount": 0, "archived": False, "isPinned": False, "muted": False, "lastMessage": "مخاطب ذخیره‌شده"})
+        return {"ok": True, "contacts": rows}
     if method == "list-contacts":
         if not client or not connected:
             raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
