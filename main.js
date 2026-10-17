@@ -287,6 +287,7 @@ ipcMain.handle('telegram-native:auth-input', (_event, payload) => tdlibService.s
 ipcMain.handle('telegram-native:list-chats', (_event, limit) => tdlibService.listChats(limit));
 ipcMain.handle('telegram-native:list-dialog-folders', () => tdlibService.listDialogFolders());
 ipcMain.handle('telegram-native:profile', (_event) => tdlibService.getProfile());
+ipcMain.handle('telegram-native:get-chat-info', (_event, chatId) => tdlibService.getChatInfo(chatId));
 ipcMain.handle('telegram-native:get-chat-members', (_event, chatId) => tdlibService.getChatMembers(chatId));
 ipcMain.handle('telegram-native:export-chat-invite-link', (_event, chatId, expireSeconds, usageLimit) => tdlibService.exportChatInviteLink(chatId, expireSeconds, usageLimit));
 ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
