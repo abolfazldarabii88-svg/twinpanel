@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('twinPanel', {
     addContact: (phone, firstName, lastName) => ipcRenderer.invoke('telegram-native:add-contact', phone, firstName, lastName),
     listDialogFolders: () => ipcRenderer.invoke('telegram-native:list-dialog-folders'),
     getProfile: () => ipcRenderer.invoke('telegram-native:profile'),
+    getAuthorizations: () => ipcRenderer.invoke('telegram-native:list-authorizations'),
+    resetAuthorization: hash => ipcRenderer.invoke('telegram-native:reset-authorization', hash),
     getPrivacySettings: () => ipcRenderer.invoke('telegram-native:get-privacy-settings'),
     setPrivacySetting: (name, choice) => ipcRenderer.invoke('telegram-native:set-privacy-setting', name, choice),
     getChatInfo: chatId => ipcRenderer.invoke('telegram-native:get-chat-info', chatId),
