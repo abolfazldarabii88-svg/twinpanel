@@ -120,6 +120,7 @@ class TelethonService {
   getChatHistoryAround(chatId, messageId) { return this.request('history-around', { chatId: String(chatId), messageId: Number(messageId) }); }
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }
   sendTextMessage(chatId, text) { return this.request('send-text', { chatId: String(chatId), text: String(text || '') }); }
+  scheduleMessage(chatId, text, scheduleAt) { return this.request('schedule-message', { chatId: String(chatId), text: String(text || ''), scheduleAt: Number(scheduleAt) }); }
   sendMedia(chatId, filePath, caption = '') { return this.request('send-media', { chatId: String(chatId), filePath: String(filePath || ''), caption: String(caption || '') }); }
   sendMediaBatch(chatId, filePaths, caption = '') { return this.request('send-media-batch', { chatId: String(chatId), filePaths: Array.isArray(filePaths) ? filePaths.map(String) : [], caption: String(caption || '') }); }
   replyTextMessage(chatId, messageId, text) { return this.request('reply-text', { chatId: String(chatId), messageId: String(messageId), text: String(text || '') }); }
