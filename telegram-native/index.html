@@ -606,6 +606,47 @@ body:not(.is-connected) #connectionNotice:before{background:linear-gradient(145d
 .ios-action-icon{width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;border-radius:9px;background:#e5f1ff;color:#248bf2;font-size:16px}
 @media(max-width:650px){.ios-action-sheet{align-items:end;padding:0}.ios-action-card{width:100%;max-height:88vh;border-radius:20px 20px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px))}}
 
+
+/* Preserve a real dark appearance when selected in settings; light iOS-like styling is the default. */
+html:not(.theme-light){color-scheme:dark;--bg:#11161d;--panel:#1c232c;--head:rgba(29,36,45,.9);--line:rgba(230,237,246,.1);--text:#f2f5f9;--muted:#9aa5b2;--accent:#58a6ff}
+html:not(.theme-light) body{background:#11161d!important;color:#f2f5f9!important}
+html:not(.theme-light) .app,html:not(.theme-light) .list,html:not(.theme-light) .chats{background:#171d25}
+html:not(.theme-light) .list{border-right-color:rgba(230,237,246,.1)}
+html:not(.theme-light) .list-head,html:not(.theme-light) .filters,html:not(.theme-light) .ios-story-strip{background:rgba(29,36,45,.94);border-color:rgba(230,237,246,.1)}
+html:not(.theme-light) .heading,html:not(.theme-light) .ios-story-label,html:not(.theme-light) .chat-title{color:#f1f4f8}
+html:not(.theme-light) .list-head #search,html:not(.theme-light) .message-search input{background:#111820;color:#f1f4f8;border-color:rgba(230,237,246,.08)}
+html:not(.theme-light) .filter{color:#a7b1bd}
+html:not(.theme-light) .filter.active{background:#17395a;color:#78bdff}
+html:not(.theme-light) .chat{color:#f1f4f8}
+html:not(.theme-light) .chat:hover{background:rgba(255,255,255,.045)}
+html:not(.theme-light) .chat.active{background:#1c3550}
+html:not(.theme-light) .preview,html:not(.theme-light) .head-sub,html:not(.theme-light) .ios-story-hint{color:#9aa5b2}
+html:not(.theme-light) .ios-story-ring{background:linear-gradient(#1d242d,#1d242d) padding-box,linear-gradient(135deg,#39c4fa,#248bf2,#a34df2) border-box}
+html:not(.theme-light) .conversation{background:#10161d}
+html:not(.theme-light) .chat-head,html:not(.theme-light) .composer,html:not(.theme-light) .status,html:not(.theme-light) .chat-notes{background:rgba(27,34,43,.91);border-color:rgba(230,237,246,.1);color:#e8edf3}
+html:not(.theme-light) .head-title,html:not(.theme-light) .empty strong{color:#f1f4f8}
+html:not(.theme-light) .head-actions .small-btn,html:not(.theme-light) .ios-toolbar .small-btn,html:not(.theme-light) .message-search .small-btn{color:#58a6ff}
+html:not(.theme-light) .message-search{background:rgba(29,36,45,.9);border-color:rgba(230,237,246,.1)}
+html:not(.theme-light) .messages{background-color:#101820;background-image:radial-gradient(rgba(190,210,235,.035) .65px,transparent .65px)}
+html:not(.theme-light) .empty{color:#9aa5b2}
+html:not(.theme-light) .date-separator{background:rgba(37,46,57,.85);border-color:rgba(230,237,246,.1);color:#c1cbd7}
+html:not(.theme-light) .bubble{background:#202a35;border-color:rgba(230,237,246,.07);color:#edf2f7}
+html:not(.theme-light) .bubble.mine{background:#214e3b;border-color:rgba(80,190,130,.1)}
+html:not(.theme-light) .composer textarea,html:not(.theme-light) .composer input{background:#101820;border-color:rgba(230,237,246,.08);color:#f1f4f8}
+html:not(.theme-light) .dialog-card,html:not(.theme-light) .ios-action-card{background:rgba(29,36,45,.97);border-color:rgba(230,237,246,.12);color:#f1f4f8}
+html:not(.theme-light) .dialog-card h3,html:not(.theme-light) .dialog-row,html:not(.theme-light) .ios-action-row{color:#f1f4f8}
+html:not(.theme-light) .dialog-row{border-color:rgba(230,237,246,.1)}
+html:not(.theme-light) .dialog-row select,html:not(.theme-light) .dialog-row input:not([type=checkbox]){background:#111820;color:#f1f4f8;border-color:rgba(230,237,246,.12)}
+html:not(.theme-light) .dialog-actions button{background:#303a46;color:#f1f4f8}
+html:not(.theme-light) .dialog-actions button:last-child{background:#248bf2;color:white}
+html:not(.theme-light) .ios-action-head{border-color:rgba(230,237,246,.1)}
+html:not(.theme-light) .ios-action-close{background:#303a46;color:#f1f4f8}
+html:not(.theme-light) .ios-action-row:hover{background:#263748}
+html:not(.theme-light) .ios-action-icon{background:#17395a;color:#78bdff}
+html:not(.theme-light) body:not(.is-connected) .app,html:not(.theme-light) body:not(.is-connected) .conversation{background:#111820}
+html:not(.theme-light) body:not(.is-connected) #connectionNotice,html:not(.theme-light) #authForm{background:rgba(29,36,45,.97)!important;border-color:rgba(230,237,246,.12)!important;color:#f1f4f8!important}
+html:not(.theme-light) #connectionNoticeText,html:not(.theme-light) #authDescription{color:#b6c0cc}
+
 </style>
 </head>
 <body>
