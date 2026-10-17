@@ -420,4 +420,8 @@ document.getElementById('messageSearchNext').addEventListener('click',()=>moveMe
 messageSearch.addEventListener('input',()=>{messageSearchCursor=-1;renderMessages(currentMessages,false)});
 messageSearch.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();moveMessageSearch(event.shiftKey?-1:1)}});
 
+
+let lastTypingActionAt=0;
+messageInput.addEventListener('input',()=>{if(!api||!realChats||!active||!messageInput.value.trim())return;const now=Date.now();if(now-lastTypingActionAt<3500)return;lastTypingActionAt=now;Promise.resolve(api.sendTypingAction(active)).catch(()=>{})});
+
 </script></body></html>
