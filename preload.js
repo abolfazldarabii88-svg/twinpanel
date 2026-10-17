@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     qrImageStatus: state => ipcRenderer.invoke('telegram-native:qr-image-status', state),
     submitAuthInput: (type, value) => ipcRenderer.invoke('telegram-native:auth-input', { type, value }),
     listChats: limit => ipcRenderer.invoke('telegram-native:list-chats', limit),
+    getAdminLog: chatId => ipcRenderer.invoke('telegram-native:get-admin-log', chatId),
     listForumTopics: chatId => ipcRenderer.invoke('telegram-native:list-forum-topics', chatId),
     createForumTopic: (chatId, title) => ipcRenderer.invoke('telegram-native:create-forum-topic', chatId, title),
     editForumTopic: (chatId, topicId, changes) => ipcRenderer.invoke('telegram-native:edit-forum-topic', chatId, topicId, changes),
