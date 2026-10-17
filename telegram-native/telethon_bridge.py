@@ -361,6 +361,16 @@ async def handle(method, args):
                 body = "رسانه / فایل"
             result.append({"id": str(msg.id), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "text": body[:500], "outgoing": bool(msg.out), "contentType": type(msg.media).__name__ if msg.media else "text"})
         return result
+    if method == "export-chat-history":
+        entity = entity_for(args.get("chatId"))
+        limit = max(1, min(int(args.get("limit") or 2000), 5000))
+        rows = []
+        async for msg in client.iter_messages(entity, limit=limit, reverse=True):
+            body = (msg.message or "").strip()
+            if not body and msg.media:
+                body = "[رسانه / فایل: " + type(msg.media).__name__ + "]"
+            rows.append({"id": str(msg.id), "date": msg.date.isoformat() if msg.date else "", "outgoing": bool(msg.out), "text": body[:4096]})
+        return {"messages": rows, "count": len(rows), "limited": len(rows) >= limit}
     if method == "search-chat-messages":
         entity = entity_for(args.get("chatId"))
         query = str(args.get("query") or "").strip()
