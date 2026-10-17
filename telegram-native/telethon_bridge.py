@@ -108,6 +108,18 @@ async def handle(method, args):
     global client, connected, connecting, me, diagnostic_stage, last_message
     if method == "status":
         return status()
+    if method == "get-chat-members":
+        entity = entity_for(args.get("chatId"))
+        members = []
+        try:
+            participants = await client.get_participants(entity, limit=100)
+        except Exception as exc:
+            raise RuntimeError("فهرست اعضا در دسترس نیست؛ شاید این گفتگو خصوصی باشد یا تلگرام اجازه ندهد.") from exc
+        for user in participants:
+            name = get_display_name(user) or "کاربر"
+            username = getattr(user, "username", None)
+            members.append({"id": str(user.id), "name": name, "username": username, "bot": bool(getattr(user, "bot", False)), "verified": bool(getattr(user, "verified", False))})
+        return {"members": members, "count": len(members), "limited": len(members) >= 100}
     if method == "profile":
         if not client or not connected or not me:
             raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
