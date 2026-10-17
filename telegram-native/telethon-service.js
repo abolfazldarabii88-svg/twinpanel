@@ -61,6 +61,7 @@ class TelethonService {
       let packet; try { packet = JSON.parse(line); } catch { continue; }
       if (packet.event === 'prompt') { this.onPrompt?.(packet.data || {}); continue; }
       if (packet.event === 'update') { this.onUpdate?.(packet.data || {}); continue; }
+      if (packet.event === 'upload-progress') { this.onProgress?.(packet.data || {}); continue; }
       if (packet.event === 'status') {
         const value = packet.data || {};
         this.connected = !!value.connected; this.connecting = !!value.connecting;
