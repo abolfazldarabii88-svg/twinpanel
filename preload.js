@@ -37,6 +37,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     muteChatUntil: (chatId, seconds) => ipcRenderer.invoke('telegram-native:mute-chat-until', chatId, seconds),
     setChatUnread: (chatId, unread) => ipcRenderer.invoke('telegram-native:set-chat-unread', chatId, unread),
     setChatArchived: (chatId, archived) => ipcRenderer.invoke('telegram-native:set-chat-archived', chatId, archived),
+    setChatPinned: (chatId, pinned) => ipcRenderer.invoke('telegram-native:set-chat-pinned', chatId, pinned),
     onAuthPrompt: callback => {
       let lastId = 0;
       const forward = packet => {
