@@ -79,7 +79,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Typing indicators / online status | Missing | No live updates |
 | Search in current conversation | Partial | Local search filters only currently loaded message text; older unloaded history, media captions and server-side search are not included |
 | Global Telegram search | Missing | No server-side message/user/channel search |
-| Search by date / hashtag / public posts | Missing | No search workflows |
+| Search by date / hashtag / public posts | Partial | Search by date and local hashtags exist; global public user/channel/group search is in code, but public-post search and complete hashtag workflows remain missing |
 | Multi-select / bulk actions | Partial — added in code, unverified | Selection mode supports copying selected text, saving selected messages to Saved Messages, and forwarding selected messages to a chat; bulk delete of selected outgoing messages is supported with confirmation; Shift-click range selection is limited to the loaded message list. CI and real-account behavior still need verification |
 | Copy text / message link | Partial | Copy selected message text and direct link where supported implemented; context menu and links for every peer type remain missing |
 | Report message / user | Partial | Report-message and report-chat actions are in code with reason and optional details; actual Telegram acceptance and account eligibility remain unverified |
