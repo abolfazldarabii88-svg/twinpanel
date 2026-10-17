@@ -448,6 +448,27 @@ body:not(.is-connected) #connectionNotice:after{content:"";position:absolute;top
 #multiSelectToggle:before{content:"☑"}#multiCopyBtn:before{content:"▣"}#multiSaveBtn:before{content:"▤"}#multiForwardBtn:before{content:"➦"}#multiDeleteBtn:before{content:"⌫"}#multiSelectClearBtn:before{content:"×"}
 #multiSelectCount{white-space:nowrap;color:#6e7b88;font-size:11px}
 
+
+/* Sidebar toolbar: Telegram-style search row with compact utility actions. */
+.list-head{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,36px);align-items:center;gap:7px;padding:14px 13px 10px;background:var(--panel,#fff);border-bottom:1px solid var(--line)}
+.list-head .heading{grid-column:1/-1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 2px}
+.list-head .heading>span:first-child{font-size:19px;font-weight:700;letter-spacing:-.25px}
+.list-head .tag{max-width:52%;overflow:hidden;text-overflow:ellipsis;font-size:10px;opacity:.62}
+.list-head #search{grid-column:1/-1;width:100%;min-width:0;margin:0;padding:10px 13px;border:1px solid var(--line);border-radius:11px;background:var(--input,#f2f4f6);color:var(--text,#202b36);outline:none}
+.list-head #search:focus{border-color:#83b9ec;box-shadow:0 0 0 2px #3390ec12}
+.list-head #globalSearchBtn,.list-head #publicSearchBtn,.list-head #manageFoldersBtn,.list-head #clearGlobalSearchBtn,.list-head #addContactBtn{width:36px!important;height:34px;min-width:36px;padding:0!important;margin:0!important;justify-self:center;border:0;border-radius:9px;background:transparent;color:var(--muted,#728091);font-size:18px;display:inline-flex;align-items:center;justify-content:center}
+.list-head #globalSearchBtn{grid-column:2;grid-row:3}
+.list-head #publicSearchBtn{grid-column:3;grid-row:3}
+.list-head #manageFoldersBtn{grid-column:4;grid-row:3}
+.list-head #clearGlobalSearchBtn{grid-column:5;grid-row:3}
+.list-head #addContactBtn{grid-column:1;grid-row:3}
+.list-head #globalSearchBtn:hover,.list-head #publicSearchBtn:hover,.list-head #manageFoldersBtn:hover,.list-head #clearGlobalSearchBtn:hover,.list-head #addContactBtn:hover{background:var(--hover,#edf4fa);color:var(--accent,#3390ec)}
+.list-head #globalSearchBtn[hidden],.list-head #publicSearchBtn[hidden],.list-head #manageFoldersBtn[hidden],.list-head #clearGlobalSearchBtn[hidden],.list-head #addContactBtn[hidden]{display:none!important}
+.filters{padding:8px 10px;gap:5px;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filters .filter{flex:0 0 auto;white-space:nowrap;border-radius:18px;padding:6px 11px;font-size:12px}
+@media(max-width:650px){.list-head{padding:11px 10px 8px}.list-head .heading>span:first-child{font-size:17px}}
+
 </style>
 </head>
 <body>
