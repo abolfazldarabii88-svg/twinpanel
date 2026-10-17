@@ -637,6 +637,14 @@ async def handle(method, args):
             rows.append({"id": str(msg.id), "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": body[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text"})
         rows.reverse()
         return rows
+    if method == "delete-chat":
+        peer_id = str(args.get("chatId") or "")
+        entity = entity_for(peer_id)
+        if getattr(entity, "first_name", None) is None or getattr(entity, "id", None) == getattr(me, "id", None):
+            raise RuntimeError("این عملیات فقط برای گفتگوی خصوصی با یک مخاطب قابل انجام است.")
+        await client.delete_dialog(entity)
+        dialogs_cache.pop(peer_id, None)
+        return {"ok": True, "chatId": peer_id}
     if method == "clear-chat-history":
         entity = entity_for(args.get("chatId"))
         peer = await client.get_input_entity(entity)
