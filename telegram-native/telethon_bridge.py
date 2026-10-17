@@ -248,7 +248,8 @@ async def handle(method, args):
                     "id": str(message.id),
                     "date": int(message.date.timestamp()) if message.date else int(time.time()),
                     "outgoing": bool(message.out),
-                    "text": body[:4096],
+                    "text": (message.message or "")[:4096] if message.message else body[:4096],
+                    "entities": serialize_entities(message),
                     "contentType": type(message.media).__name__ if message.media else "text"
                 }
                 event("update", item)
@@ -291,7 +292,7 @@ async def handle(method, args):
                 chat_id = str(get_peer_id(chat)) if chat else str(msg.chat_id or "")
                 if chat:
                     dialogs_cache[chat_id] = chat
-                text_body = (msg.message or "").strip()
+                text_body = msg.message or ""
                 found.append({
                     "id": str(msg.id),
                     "chatId": chat_id,
@@ -299,6 +300,7 @@ async def handle(method, args):
                     "date": int(msg.date.timestamp()) if msg.date else int(time.time()),
                     "outgoing": bool(msg.out),
                     "text": text_body[:4096] or ("رسانه / فایل" if msg.media else ""),
+                    "entities": serialize_entities(msg),
                     "contentType": type(msg.media).__name__ if msg.media else "text"
                 })
             except Exception:
@@ -365,10 +367,10 @@ async def handle(method, args):
         messages = await client.get_messages(entity, limit=50, min_id=max(0, target_id - 25), max_id=target_id + 25)
         result = []
         for msg in messages:
-            text = (msg.message or "").strip()
+            text = msg.message or ""
             if not text and msg.media:
                 text = "رسانه / فایل"
-            item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "contentType": type(msg.media).__name__ if msg.media else "text"}
+            item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "contentType": type(msg.media).__name__ if msg.media else "text"}
             result.append(item)
         return result
     if method == "list-pinned-messages":
