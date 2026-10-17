@@ -55,7 +55,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Scheduled messages | Partial | A dedicated manager lists scheduled messages with inline edit/cancel/send-now actions; scheduling uses a native date/time picker |
 | Stories | Partial | Active stories list and viewer are in code; reading/view counters are requested when opening a story; publishing, story privacy controls, archive and real-account behavior remain unverified |
 | Voice/video and group calls | Partial | Can send an existing audio file as a Telegram voice note; recording from microphone, playback parity, voice/video calls and group calls are missing |
-| Group/channel management and topics | Partial | Group info/member lists/invite links exist; forum topic listing, topic history, sending messages, creating/renaming topics and closing/reopening topics are in code; admin permissions and recent actions remain missing |
+| Group/channel management and topics | Partial | Group info/member lists/invite links, forum topic listing/history/sending/creation/rename/close-reopen, and recent admin-log viewing are in code; admin permissions and real-account access remain to verify |
 | Polls, stickers, GIFs, bots and mini apps | Partial | Native poll creation supports 2–10 options, anonymous/public voting and multiple choice; GIF search/send through Telegram's inline GIF bot is in code; poll creation, single- and multiple-choice voting, and result display are in code; sticker browsing, bot command menus are in code; recent sticker listing/sending and bot command menus are in code; full sticker search/packs and mini apps remain missing |
 | Multiple accounts and Secret Chats | Missing / protocol-dependent | Not implemented; Secret Chats cannot be treated as ordinary cloud chats |
 
@@ -135,7 +135,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Group creation/editing/photo/title/description | Missing | No group-management UI |
 | Members/admins/permissions/banned users | Missing | No members or permissions screens |
 | Invite links / join requests / join-to-send | Missing | No management actions |
-| Slow mode / anti-spam / recent actions | Missing | No admin tooling |
+| Slow mode / anti-spam / recent actions | Partial | Recent admin-log viewer is in code; setting slow mode, anti-spam rules and full admin permissions remain missing |
 | Group statistics / hidden members / content protection | Missing | No support in UI |
 | Channel info, comments/discussion links, signatures | Missing | No channel-specific view/actions |
 | Channel stats / subscriptions / monetization | Missing | No channel admin or monetization UI |
