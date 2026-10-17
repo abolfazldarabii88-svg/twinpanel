@@ -6,10 +6,10 @@ const { spawn } = require('node:child_process');
 class TelethonService {
   constructor() {
     this.child = null; this.buffer = ''; this.pending = new Map(); this.nextId = 0;
-    this.connected = false; this.connecting = false; this.onPrompt = null; this.onStatus = null;
+    this.connected = false; this.connecting = false; this.onPrompt = null; this.onStatus = null; this.onUpdate = null;
     this.diagnosticStage = 'ready'; this.lastMessage = 'برای اتصال، API ID و API Hash را وارد کن.';
   }
-  setCallbacks({ onPrompt, onStatus } = {}) { this.onPrompt = onPrompt; this.onStatus = onStatus; }
+  setCallbacks({ onPrompt, onStatus, onUpdate } = {}) { this.onPrompt = onPrompt; this.onStatus = onStatus; this.onUpdate = onUpdate; }
   status(message = '') {
     return { connected: this.connected, connecting: this.connecting, engine: 'Telethon',
       stage: this.connected ? 'connected' : (this.connecting ? 'authorizing' : 'ready'),
@@ -60,6 +60,7 @@ class TelethonService {
       if (!line) continue;
       let packet; try { packet = JSON.parse(line); } catch { continue; }
       if (packet.event === 'prompt') { this.onPrompt?.(packet.data || {}); continue; }
+      if (packet.event === 'update') { this.onUpdate?.(packet.data || {}); continue; }
       if (packet.event === 'status') {
         const value = packet.data || {};
         this.connected = !!value.connected; this.connecting = !!value.connecting;
