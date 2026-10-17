@@ -268,6 +268,30 @@ document.getElementById('inviteLinkBtn').addEventListener('click',async()=>{if(!
 document.getElementById('chatMembersBtn').addEventListener('click',async()=>{if(!api||!realChats)return;const chat=realChats.find(c=>String(c.id)===String(active));if(!chat)return;if(chat.type==='user'){showToast('فهرست اعضا برای گروه‌ها و کانال‌هاست');return}const button=document.getElementById('chatMembersBtn');button.disabled=true;button.textContent='در حال بارگذاری…';try{const result=await api.getChatMembers(active);const members=result.members||[];if(!members.length){showToast('عضوی پیدا نشد');return}const lines=members.map((m,i)=>(i+1)+'. '+m.name+(m.username?' (@'+m.username+')':'')+(m.bot?' · ربات':''));window.alert('اعضای '+(chat.title||'گروه')+' — '+result.count+(result.limited?' نفر اول (محدود به ۱۰۰)':'')+'\n\n'+lines.join('\n'))}catch(e){showToast(e.message||'دریافت اعضا ناموفق بود')}finally{button.disabled=false;button.textContent='اعضا'}});
 document.getElementById('scheduledListBtn').addEventListener('click',async()=>{if(!api||!realChats)return;try{const items=await api.listScheduledMessages(active);if(!items||!items.length){showToast('برای این گفتگو پیام زمان‌بندی‌شده‌ای نیست');return}const lines=items.map((m,i)=>{const date=m.date?new Date(m.date*1000).toLocaleString():'زمان نامشخص';return (i+1)+'. ['+m.id+'] '+date+' — '+(m.text||'پیام رسانه‌ای').replace(/\s+/g,' ').slice(0,100)});const answer=window.prompt('پیام‌های زمان‌بندی‌شدهٔ این گفتگو:\n'+lines.join('\n')+'\n\nشناسه را وارد کن تا لغو شود؛ برای ویرایش متن بنویس edit:شناسه','');if(!answer)return;const command=answer.trim();if(command.startsWith('edit:')){const id=command.slice(5).trim(),item=items.find(m=>String(m.id)===id);if(!item){showToast('شناسه در فهرست نیست');return}const text=window.prompt('متن جدید پیام زمان‌بندی‌شده:',item.text||'');if(text===null||!text.trim())return;await api.editScheduledMessage(active,id,text.trim());showToast('متن پیام زمان‌بندی‌شده ویرایش شد')}else{if(!items.some(m=>String(m.id)===command)){showToast('شناسه در فهرست نیست');return}await api.cancelScheduledMessage(active,command);showToast('پیام زمان‌بندی‌شده لغو شد')}}catch(e){showToast(e.message||'دریافت صف زمان‌بندی ناموفق بود')}});
 document.getElementById('scheduleBtn').addEventListener('click',async()=>{if(!api||!realChats)return;const input=document.getElementById('messageInput'),body=input.value.trim();if(!body){showToast('اول متن پیام را بنویس');return}const value=window.prompt('زمان محلی ارسال را وارد کن (مثلاً 2026-10-18 19:30):','');if(!value)return;const parsed=new Date(value.trim().replace(' ','T'));if(Number.isNaN(parsed.getTime())){showToast('فرمت زمان معتبر نیست');return}try{await api.scheduleMessage(active,body,Math.floor(parsed.getTime()/1000));input.value='';saveDraft(active,'');showToast('پیام برای زمان انتخاب‌شده زمان‌بندی شد')}catch(err){showToast(err.message||'زمان‌بندی پیام ناموفق بود')}});
+// TwinPanel keyboard shortcuts: Ctrl+F in-chat search, Ctrl+K chat search, Ctrl+Shift+F global search, Ctrl+Enter send, Escape dismiss search/reply.
+document.addEventListener('keydown',e=>{
+ const key=(e.key||'').toLowerCase();
+ if((e.ctrlKey||e.metaKey)&&!e.altKey&&key==='f'){
+  e.preventDefault();const target=document.getElementById('messageSearch');target?.focus();target?.select();return;
+ }
+ if((e.ctrlKey||e.metaKey)&&!e.altKey&&key==='k'){
+  e.preventDefault();const target=document.getElementById('search');target?.focus();target?.select();return;
+ }
+ if((e.ctrlKey||e.metaKey)&&e.shiftKey&&key==='f'){
+  e.preventDefault();document.getElementById('globalSearchBtn')?.click();return;
+ }
+ if((e.ctrlKey||e.metaKey)&&!e.altKey&&key==='enter'){
+  const input=document.getElementById('messageInput');
+  if(input&&!input.disabled&&realChats){e.preventDefault();document.getElementById('composer')?.requestSubmit();}
+  return;
+ }
+ if(key==='escape'){
+  const messageSearch=document.getElementById('messageSearch');
+  if(messageSearch&&messageSearch.value){messageSearch.value='';renderMessages(currentMessages,false);document.getElementById('clearChatSearchBtn').hidden=true;return;}
+  if(globalSearchResults){globalSearchResults=null;document.getElementById('clearGlobalSearchBtn').hidden=true;renderChats();return;}
+  if(replyTargetMessageId){replyTargetMessageId=null;const input=document.getElementById('messageInput');if(input)input.placeholder='پیام بنویس…';showToast('حالت پاسخ لغو شد');return;}
+ }
+});
 document.getElementById('composer').addEventListener('submit',async e=>{e.preventDefault();const input=document.getElementById('messageInput'),body=input.value.trim();if(!body||!realChats)return;try{if(replyTargetMessageId)await api.replyText(active,replyTargetMessageId,body);else await api.sendText(active,body);replyTargetMessageId=null;input.value='';saveDraft(active,'');input.placeholder='پیام بنویس…';await selectChat(active,false)}catch(err){showToast(err.message||'ارسال پیام ناموفق بود')}});
 document.getElementById('attachBtn').addEventListener('click',async()=>{if(!realChats||!api)return;try{const picked=await api.selectMedia();if(!picked)return;const files=picked.files||[{path:picked.path,name:picked.name}];if(!files.length)return;if(files.length===1){const caption=window.prompt('توضیح فایل (اختیاری):','')||'';await api.sendMedia(active,files[0].path,caption)}else{const caption=window.prompt('توضیح آلبوم (اختیاری):','')||'';await api.sendMediaBatch(active,files.map(f=>f.path),caption)}showToast(files.length>1?'آلبوم/فایل‌ها برای ارسال ثبت شدند':'فایل برای ارسال ثبت شد')}catch(e){showToast(e.message||'ارسال فایل ناموفق بود')}});
 document.getElementById('pinChatBtn').addEventListener('click',async()=>{if(!api||!realChats)return;const c=realChats.find(x=>String(x.id)===String(active));if(!c)return;try{await api.setChatPinned(active,true);c.isPinned=true;showToast('گفتگو سنجاق شد')}catch(e){showToast(e.message||'سنجاق گفتگو ناموفق بود')}});
