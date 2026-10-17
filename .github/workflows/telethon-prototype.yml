@@ -1,0 +1,30 @@
+name: Validate Telethon prototype
+
+on:
+  push:
+    branches:
+      - "experiment/telethon-client"
+  pull_request:
+    paths:
+      - "telegram-telethon/**"
+      - ".github/workflows/telethon-prototype.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate Python syntax
+        run: python -m py_compile telegram-telethon/main.py
+      - name: Install Telethon
+        run: python -m pip install -r telegram-telethon/requirements.txt
+      - name: Verify Telethon imports
+        run: python -c "from telethon import TelegramClient; from telethon.errors import SessionPasswordNeededError; print('Telethon import OK')"
