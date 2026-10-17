@@ -13,7 +13,7 @@ from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivac
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, SendVoteRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
@@ -504,6 +504,27 @@ async def handle(method, args):
         for topic in getattr(response, "topics", []) or []:
             rows.append({"id": str(getattr(topic, "id", "")), "title": str(getattr(topic, "title", "") or "موضوع"), "date": int(getattr(topic, "date", datetime.now(timezone.utc)).timestamp()) if getattr(topic, "date", None) else 0, "unreadCount": int(getattr(topic, "unread_count", 0) or 0), "closed": bool(getattr(topic, "closed", False)), "pinned": bool(getattr(topic, "pinned", False)), "iconColor": int(getattr(topic, "icon_color", 0) or 0)})
         return rows
+    if method in ("create-forum-topic", "edit-forum-topic"):
+        entity = await client.get_entity(entity_for(args.get("chatId")))
+        if not getattr(entity, "megagroup", False) or not getattr(entity, "forum", False):
+            raise RuntimeError("این گروه موضوعات (Topics) را فعال نکرده است.")
+        channel = InputChannel(channel_id=entity.id, access_hash=entity.access_hash)
+        if method == "create-forum-topic":
+            title = str(args.get("title") or "").strip()
+            if not title or len(title) > 128:
+                raise RuntimeError("عنوان موضوع باید بین ۱ تا ۱۲۸ نویسه باشد.")
+            await client(CreateForumTopicRequest(channel=channel, title=title, random_id=int(time.time() * 1000)))
+            return {"ok": True, "title": title}
+        topic_id = int(args.get("topicId") or 0)
+        title = args.get("title")
+        title = str(title).strip() if title is not None else None
+        if topic_id <= 0 or title is not None and (not title or len(title) > 128):
+            raise RuntimeError("شناسه یا عنوان موضوع معتبر نیست.")
+        closed = args.get("closed")
+        if title is None and closed is None:
+            raise RuntimeError("تغییری برای ذخیره انتخاب نشده است.")
+        await client(EditForumTopicRequest(channel=channel, topic_id=topic_id, title=title, closed=bool(closed) if closed is not None else None))
+        return {"ok": True, "topicId": str(topic_id), "title": title, "closed": closed}
     if method == "topic-history":
         entity = entity_for(args.get("chatId"))
         topic_id = int(args.get("topicId") or 0)
