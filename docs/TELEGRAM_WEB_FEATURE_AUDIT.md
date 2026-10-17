@@ -266,3 +266,10 @@ Do not create a release or installer while this parity work is in progress unles
 - Plain-text URLs beginning with `http://`, `https://`, or `www.` are rendered as links; `www.` URLs receive an HTTPS scheme. Links open in a new browsing context with `noopener noreferrer` and no referrer.
 - `@mentions` and `#hashtags` are visually highlighted in message text. These are presentation-only detections over the returned plain text; they do not yet use Telegram's server-provided entity offsets or resolve mention targets.
 - Automated CI and real-account behavior must be checked after this commit. No live Telegram account was used for validation.
+
+
+### Telegram formatting and entity-aware rendering — 2026-10-17
+- The Telethon bridge now includes message entity metadata (type, UTF-16-compatible offset/length, and optional URL/user ID) in chat history and in-chat search results.
+- The renderer uses Telegram-provided entities for bold, italic, code/preformatted text, underline, strikethrough, URLs, mentions, and hashtags when present; plain-text detection remains the fallback for messages without entities.
+- Message text is no longer stripped in the history/search paths that return entities, so Telegram entity offsets remain aligned with the source text.
+- Automated CI is the next validation gate. No live Telegram account has been used to verify rendering.
