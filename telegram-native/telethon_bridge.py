@@ -330,6 +330,18 @@ async def handle(method, args):
         forwarded = await client.forward_messages(target, [message_id], from_peer=source)
         item = forwarded[0] if isinstance(forwarded, list) else forwarded
         return {"ok": True, "id": str(item.id) if item else ""}
+    if method == "message-link":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام معتبر نیست.")
+        username = getattr(entity, "username", None)
+        if username:
+            return {"url": f"https://t.me/{username}/{message_id}"}
+        peer_id = str(args.get("chatId") or "")
+        if peer_id.startswith("-100") and getattr(entity, "broadcast", False) or peer_id.startswith("-100") and hasattr(entity, "megagroup"):
+            return {"url": f"https://t.me/c/{peer_id[4:]}/{message_id}"}
+        return {"url": None}
     if method == "react-message":
         entity = entity_for(args.get("chatId"))
         message_id = int(args.get("messageId") or 0)
