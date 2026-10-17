@@ -11,7 +11,7 @@ from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest, ReportPeerRequest
 from telethon.tl.functions.channels import GetFullChannelRequest, GetAdminLogRequest
-from telethon.tl.functions.contacts import ImportContactsRequest
+from telethon.tl.functions.contacts import ImportContactsRequest, SearchRequest
 from telethon.tl.functions.bots import GetBotInfoRequest
 from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
@@ -237,6 +237,28 @@ async def handle(method, args):
         for command in getattr(info, "commands", []) or []:
             commands.append({"command": str(getattr(command, "command", "") or "").strip(), "description": str(getattr(command, "description", "") or "")[:180]})
         return {"name": str(getattr(info, "name", "") or get_display_name(entity) or "ربات"), "description": str(getattr(info, "description", "") or "")[:1000], "commands": commands[:100]}
+    if method == "search-public-peers":
+        query = str(args.get("query") or "").strip()
+        if not query or len(query) > 100:
+            raise RuntimeError("عبارت جست‌وجوی افراد یا کانال‌ها را وارد کن.")
+        response = await client(SearchRequest(q=query, limit=50))
+        rows = []
+        for peer in getattr(response, "results", []) or []:
+            try:
+                entity = await client.get_entity(peer)
+                peer_id = str(get_peer_id(entity))
+            except Exception:
+                continue
+            dialogs_cache[peer_id] = entity
+            title = get_display_name(entity) or str(getattr(entity, "username", "") or "حساب تلگرام")
+            if getattr(entity, "first_name", None) is not None:
+                kind = "user"
+            elif getattr(entity, "broadcast", False):
+                kind = "channel"
+            else:
+                kind = "chat"
+            rows.append({"id": peer_id, "title": str(title), "name": str(title), "username": str(getattr(entity, "username", "") or ""), "type": kind, "isBot": bool(getattr(entity, "bot", False)), "category": "channels" if kind == "channel" else ("groups" if kind == "chat" else "personal"), "lastMessage": str(getattr(entity, "about", "") or "")[:180], "unreadCount": 0, "archived": False, "isPinned": False, "muted": False})
+        return rows
     if method == "list-stories":
         response = await client(GetAllStoriesRequest(hidden=False))
         rows = []
