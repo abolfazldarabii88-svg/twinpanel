@@ -44,7 +44,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 |---|---|---|
 | All chats / conversation list | In code | Dialog list exists; parity for every chat type and full contact directory is incomplete |
 | Study / personal / channel categories | In code | Local category filters; they are not Telegram cloud folders |
-| Contacts | Partial | Loads the account's actual Telegram contact list, opens contacts outside existing dialogs, and can add a contact by phone number; editing/deleting contacts and contact sharing are missing |
+| Contacts | Partial | Loads actual Telegram contacts, opens contacts outside existing dialogs, and can add/remove contacts by phone number/account; contact sharing and richer contact editing are missing |
 | Saved Messages | In code | Can open Saved Messages and save messages; no complete tags/collections/organization page |
 | Archived and unread chats | Partial | Filters/actions exist; exact Telegram Web archive UX and folder edge cases need testing |
 | Custom Telegram folders | Partial | Existing folders can be listed and selected; folder creation, editing and sharing are missing |
