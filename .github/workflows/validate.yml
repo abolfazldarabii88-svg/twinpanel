@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: twinpanel-validation-${{ github.ref }}
@@ -40,8 +40,8 @@ jobs:
           node --check telegram-native/gramjs-service.js
           node --check telegram-native/tdlib-bridge.js
           node scripts/check-inline-scripts.js
-      - name: Install dependencies and resolve experimental GramJS lockfile
-        run: npm install
+      - name: Install dependencies
+        run: npm ci
       - name: Build NSIS installer without publishing
         run: npm run dist:ci
       - name: Upload installer as a short-lived CI artifact
@@ -52,21 +52,5 @@ jobs:
             release/TwinPanel-Setup-*.exe
             release/TwinPanel-Setup-*.exe.blockmap
             release/latest.yml
-            package-lock.json
           if-no-files-found: error
           retention-days: 14
-
-      - name: Commit resolved lockfile on experiment branch
-        if: github.event_name == 'push'
-        shell: pwsh
-        run: |
-          git add package-lock.json
-          git diff --cached --quiet
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "package-lock.json is already synchronized."
-            exit 0
-          }
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: sync experimental GramJS lockfile"
-          git push origin "HEAD:$env:GITHUB_REF_NAME"
