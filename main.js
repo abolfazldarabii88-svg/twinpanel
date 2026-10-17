@@ -339,6 +339,7 @@ ipcMain.handle('telegram-native:search-gifs', (_event, query) => tdlibService.se
 ipcMain.handle('telegram-native:send-gif', (_event, chatId, token) => tdlibService.sendGif(chatId, token));
 ipcMain.handle('telegram-native:schedule-message', (_event, chatId, body, scheduleAt) => tdlibService.scheduleMessage(chatId, body, scheduleAt));
 ipcMain.handle('telegram-native:list-scheduled-messages', (_event, chatId) => tdlibService.listScheduledMessages(chatId));
+ipcMain.handle('telegram-native:send-scheduled-message-now', (_event, chatId, messageId) => tdlibService.sendScheduledMessageNow(chatId, messageId));
 ipcMain.handle('telegram-native:cancel-scheduled-message', (_event, chatId, messageId) => tdlibService.cancelScheduledMessage(chatId, messageId));
 ipcMain.handle('telegram-native:edit-scheduled-message', (_event, chatId, messageId, text) => tdlibService.editScheduledMessage(chatId, messageId, text));
 ipcMain.handle('telegram-native:reply-text', (_event, chatId, messageId, body) => tdlibService.replyTextMessage(chatId, messageId, body));
