@@ -522,8 +522,7 @@ class TdlibService {
         const proxyObject = proxyRequest.proxy;
         this.reportStage('test-proxy', 'در حال آزمایش دسترسی پروکسی به سرور تلگرام…');
         try {
-          // TDLib documents testProxy as callable before authorization. This verifies
-          // network reachability before we begin QR auth and wait for state updates.
+          // Test the exact endpoint and protocol supplied by the user before auth.
           await client.invoke({ _: 'testProxy', proxy: proxyObject, dc_id: 2, timeout: 10 });
           this.reportStage('proxy-test-success', 'آزمایش پروکسی موفق بود؛ در حال فعال‌کردن اتصال تلگرام…');
         } catch (error) {
@@ -548,6 +547,17 @@ class TdlibService {
           this.reportStage('proxy-enabled', 'پروکسی ثبت شد؛ در حال برقراری اتصال…');
         } catch {
           throw new Error('فعال‌سازی پروکسی ناموفق بود؛ نوع پروکسی، میزبان، درگاه و مشخصات آن را بررسی کن.');
+        }
+      } else {
+        // TDLib persists proxy settings in its local database. Explicitly disable
+        // any previously enabled proxy so "Direct connection" really is direct.
+        this.reportStage('disable-proxy', 'در حال غیرفعال‌کردن پروکسی قبلی و آماده‌سازی اتصال مستقیم…');
+        try {
+          await client.invoke({ _: 'disableProxy' });
+          this.reportStage('proxy-disabled', 'پروکسی قبلی غیرفعال شد؛ اتصال مستقیم انتخاب شده است.');
+        } catch {
+          this.appendSafeDiagnostic('disable-proxy-failed', 'TDLib could not disable the previously enabled proxy', attemptId);
+          throw new Error('غیرفعال‌کردن پروکسی قبلی ناموفق بود؛ اتصال مستقیم آغاز نشد. دوباره تلاش کن.');
         }
       }
 
