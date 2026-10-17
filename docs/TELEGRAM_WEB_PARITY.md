@@ -6,6 +6,10 @@ Rebuild the Telegram Web experience inside TwinPanel's native Telegram pane, usi
 
 **Status rule:** a checkbox is complete only after implementation, automated checks where possible, and a real-account test. This document is a backlog, not a claim that these features already work.
 
+## Full reference audit
+
+A source-based, feature-by-feature comparison against the official Telegram Web K feature inventory is maintained in [TELEGRAM_WEB_FEATURE_AUDIT.md](./TELEGRAM_WEB_FEATURE_AUDIT.md). It covers messaging, media, chat management, folders, groups/channels/topics, profiles, account/security, stories/calls, bots/Mini Apps, search, notifications, settings, performance and test gaps. The audit deliberately distinguishes code paths from verified behavior; no real-account acceptance test was performed for this audit.
+
 ## Current baseline (observed from TwinPanel source)
 
 - [x] Telethon-based account connection/authentication flow exists.
