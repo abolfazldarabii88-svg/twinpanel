@@ -64,7 +64,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Message effects / reactions / read-by list | Missing | No reaction or effect UI/API |
 | Per-chat cloud drafts | Missing | Composer draft is not saved per chat |
 | Context menu / shortcuts / drag-drop / clipboard | Missing | Minimal click actions only |
-| Jump to latest / unread divider / jump-to-date | Missing | No unread boundary or date navigation |
+| Jump to latest / unread divider / jump-to-date | Partial | Jump-to-latest and local jump-to-date are implemented for loaded history; unread boundary and server-side date retrieval remain missing |
 | Very long history virtualization | Missing | Basic DOM rendering; performance risk |
 
 ### 2. Media, attachments and rich content
