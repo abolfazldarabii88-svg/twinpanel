@@ -57,6 +57,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     sendGif: (chatId, token) => ipcRenderer.invoke('telegram-native:send-gif', chatId, token),
     scheduleMessage: (chatId, body, scheduleAt) => ipcRenderer.invoke('telegram-native:schedule-message', chatId, body, scheduleAt),
     listScheduledMessages: chatId => ipcRenderer.invoke('telegram-native:list-scheduled-messages', chatId),
+    sendScheduledMessageNow: (chatId, messageId) => ipcRenderer.invoke('telegram-native:send-scheduled-message-now', chatId, messageId),
     cancelScheduledMessage: (chatId, messageId) => ipcRenderer.invoke('telegram-native:cancel-scheduled-message', chatId, messageId),
     editScheduledMessage: (chatId, messageId, text) => ipcRenderer.invoke('telegram-native:edit-scheduled-message', chatId, messageId, text),
     replyText: (chatId, messageId, body) => ipcRenderer.invoke('telegram-native:reply-text', chatId, messageId, body),
