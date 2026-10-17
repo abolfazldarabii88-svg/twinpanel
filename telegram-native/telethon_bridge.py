@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji
@@ -382,6 +382,17 @@ async def handle(method, args):
         for msg in getattr(result, "messages", []) or []:
             items.append({"id": str(msg.id), "text": (getattr(msg, "message", "") or "")[:500], "date": int(msg.date.timestamp()) if getattr(msg, "date", None) else None})
         return items
+    if method == "edit-scheduled-message":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        body = str(args.get("text") or "").strip()
+        if message_id <= 0 or not body:
+            raise RuntimeError("شناسه و متن پیام زمان‌بندی‌شده لازم است.")
+        if len(body) > 4096:
+            raise RuntimeError("متن پیام حداکثر می‌تواند ۴۰۹۶ نویسه باشد.")
+        peer = await client.get_input_entity(entity)
+        await client(EditScheduledMessageRequest(peer=peer, id=message_id, message=body))
+        return {"ok": True, "id": str(message_id)}
     if method == "cancel-scheduled-message":
         entity = entity_for(args.get("chatId"))
         message_id = int(args.get("messageId") or 0)
