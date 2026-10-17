@@ -305,11 +305,12 @@ async def handle(method, args):
         return {"id": str(msg.id)}
     if method == "set-chat-unread":
         entity = entity_for(args.get("chatId"))
+        input_peer = await client.get_input_entity(entity)
         unread = bool(args.get("unread", False))
         if unread:
-            await client(MarkDialogUnreadRequest(peer=entity, unread=True))
+            await client(MarkDialogUnreadRequest(peer=input_peer, unread=True))
         else:
-            await client.send_read_acknowledge(entity)
+            await client.send_read_acknowledge(input_peer)
         return {"ok": True, "chatId": str(args.get("chatId")), "unread": unread}
     if method == "mute-chat":
         entity = entity_for(args.get("chatId"))
