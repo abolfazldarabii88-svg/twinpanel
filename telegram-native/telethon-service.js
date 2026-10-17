@@ -159,6 +159,7 @@ class TelethonService {
   listScheduledMessages(chatId) { return this.request('list-scheduled-messages', { chatId: String(chatId) }); }
   cancelScheduledMessage(chatId, messageId) { return this.request('cancel-scheduled-message', { chatId: String(chatId), messageId: String(messageId) }); }
   editScheduledMessage(chatId, messageId, text) { return this.request('edit-scheduled-message', { chatId: String(chatId), messageId: String(messageId), text: String(text || '') }); }
+  sendVoice(chatId, filePath, caption = '') { return this.request('send-voice', { chatId: String(chatId), filePath: String(filePath || ''), caption: String(caption || '') }); }
   sendMedia(chatId, filePath, caption = '') { return this.request('send-media', { chatId: String(chatId), filePath: String(filePath || ''), caption: String(caption || '') }); }
   sendMediaBatch(chatId, filePaths, caption = '') { return this.request('send-media-batch', { chatId: String(chatId), filePaths: Array.isArray(filePaths) ? filePaths.map(String) : [], caption: String(caption || '') }); }
   replyTextMessage(chatId, messageId, text) { return this.request('reply-text', { chatId: String(chatId), messageId: String(messageId), text: String(text || '') }); }
