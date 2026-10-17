@@ -74,7 +74,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Voice messages / audio notes | Missing | No voice playback UI/waveform/recording |
 | Round video notes | Missing | No dedicated display/recording |
 | Music/audio files | Missing | Generic file label only |
-| Documents and arbitrary files | Partial | Sending one selected file; received documents still lack a proper download/open flow. Loaded inline photo/video can be saved |
+| Documents and arbitrary files | Partial | Sending one selected file; received media/documents up to 25 MB can be downloaded; larger files and save-dialog destination choice remain missing |
 | Upload/download progress, retry, cancel | Missing | No transfer queue |
 | Multiple attachments / drag-drop | Missing | One file per chooser action |
 | Send as photo vs file | Missing | No send-mode choice |
