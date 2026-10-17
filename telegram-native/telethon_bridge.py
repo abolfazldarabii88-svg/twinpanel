@@ -9,10 +9,10 @@ from pathlib import Path
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer
-from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings
+from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
 
@@ -330,6 +330,17 @@ async def handle(method, args):
         forwarded = await client.forward_messages(target, [message_id], from_peer=source)
         item = forwarded[0] if isinstance(forwarded, list) else forwarded
         return {"ok": True, "id": str(item.id) if item else ""}
+    if method == "react-message":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        emoji = str(args.get("emoji") or "").strip()
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام معتبر نیست.")
+        if emoji and len(emoji) > 16:
+            raise RuntimeError("واکنش انتخاب‌شده معتبر نیست.")
+        reactions = [ReactionEmoji(emoticon=emoji)] if emoji else []
+        await client(SendReactionRequest(peer=await client.get_input_entity(entity), msg_id=message_id, reaction=reactions))
+        return {"ok": True, "id": str(message_id), "emoji": emoji}
     if method == "pin-message":
         entity = entity_for(args.get("chatId"))
         message_id = int(args.get("messageId") or 0)
