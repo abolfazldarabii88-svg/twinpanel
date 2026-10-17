@@ -111,8 +111,15 @@ async def handle(method, args):
     if method == "export-chat-invite-link":
         entity = entity_for(args.get("chatId"))
         peer = await client.get_input_entity(entity)
+        expire_seconds = int(args.get("expireSeconds") or 0)
+        usage_limit = int(args.get("usageLimit") or 0)
+        if expire_seconds not in {0, 3600, 86400, 604800, 2592000}:
+            raise RuntimeError("مدت اعتبار لینک دعوت معتبر نیست.")
+        if usage_limit < 0 or usage_limit > 1000:
+            raise RuntimeError("محدودیت استفاده باید بین ۰ تا ۱۰۰۰ باشد.")
+        expire_date = int(time.time()) + expire_seconds if expire_seconds else None
         try:
-            invite = await client(ExportChatInviteRequest(peer=peer))
+            invite = await client(ExportChatInviteRequest(peer=peer, expire_date=expire_date, usage_limit=usage_limit or None))
         except Exception as exc:
             raise RuntimeError("ساخت لینک دعوت ممکن نشد؛ برای این گفتگو باید دسترسی مدیر داشته باشی.") from exc
         link = getattr(invite, "link", None)
