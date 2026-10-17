@@ -375,3 +375,7 @@ Do not create a release or installer while this parity work is in progress unles
 - Added focus-visible states, reduced-motion support, thin scrollbar styling, more responsive layouts, and a mobile single-conversation presentation breakpoint.
 - Kept existing element IDs and event wiring intact so the redesign remains a presentation-layer change rather than replacing the Telegram features.
 - Performance note: glass blur is limited to major surfaces; on low-memory hardware, validate scrolling and media rendering in the actual Electron build before treating the design as final.
+
+
+### Release v1.6.1 startup hotfix
+- Removed duplicate Electron `ipcMain.handle` registration for `telegram-native:export-chat-invite-link`; the single handler supports optional expiry and usage-limit parameters.
