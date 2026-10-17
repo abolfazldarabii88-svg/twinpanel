@@ -293,6 +293,8 @@ ipcMain.handle('telegram-native:send-text', (_event, chatId, body) => tdlibServi
 ipcMain.handle('telegram-native:reply-text', (_event, chatId, messageId, body) => tdlibService.replyTextMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:edit-message', (_event, chatId, messageId, body) => tdlibService.editMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:delete-message', (_event, chatId, messageId) => tdlibService.deleteMessage(chatId, messageId));
+ipcMain.handle('telegram-native:forward-message', (_event, chatId, messageId, targetChatId) => tdlibService.forwardMessage(chatId, messageId, targetChatId));
+ipcMain.handle('telegram-native:pin-message', (_event, chatId, messageId, pinned) => tdlibService.pinMessage(chatId, messageId, pinned));
 ipcMain.handle('telegram-native:select-media', async () => {
   const result = await dialog.showOpenDialog(nativeTelegramWindow && !nativeTelegramWindow.isDestroyed() ? nativeTelegramWindow : mainWindow, {
     title: 'انتخاب فایل برای تلگرام',
