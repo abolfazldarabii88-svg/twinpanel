@@ -15,9 +15,9 @@ from telethon.tl.functions.contacts import ImportContactsRequest, SearchRequest
 from telethon.tl.functions.bots import GetBotInfoRequest
 from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, SendScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, ExportChatlistInviteRequest, ReportRequest, GetRecentStickersRequest, ExportChatInviteRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, SendScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, ReportRequest, GetRecentStickersRequest, ExportChatInviteRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser, InputDocument, InputChatlistDialogFilter, InputMediaDocument, InputReportReasonSpam, InputReportReasonViolence, InputReportReasonChildAbuse, InputReportReasonIllegalDrugs, InputReportReasonFake, InputReportReasonOther
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser, InputDocument, InputMediaDocument, InputReportReasonSpam, InputReportReasonViolence, InputReportReasonChildAbuse, InputReportReasonIllegalDrugs, InputReportReasonFake, InputReportReasonOther
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -517,30 +517,6 @@ async def handle(method, args):
             except Exception:
                 continue
         return found
-    if method == "share-dialog-folder":
-        folder_id = int(args.get("id") or 0)
-        title = str(args.get("title") or "").strip()
-        chat_ids = args.get("chatIds") or []
-        if folder_id < 2 or not title or len(title) > 64:
-            raise RuntimeError("پوشه یا عنوان لینک اشتراک معتبر نیست.")
-        if not isinstance(chat_ids, list) or not chat_ids:
-            raise RuntimeError("این پوشه گفتگوی مشخصی برای اشتراک‌گذاری ندارد.")
-        if len(chat_ids) > 100:
-            chat_ids = chat_ids[:100]
-        peers = []
-        for chat_id in chat_ids:
-            try:
-                peers.append(await client.get_input_entity(entity_for(str(chat_id))))
-            except Exception:
-                continue
-        if not peers:
-            raise RuntimeError("گفتگوهای پوشه برای ساخت لینک قابل دسترسی نیستند.")
-        result = await client(ExportChatlistInviteRequest(chatlist=InputChatlistDialogFilter(filter_id=folder_id), title=title, peers=peers))
-        invite = getattr(result, "invite", None)
-        url = str(getattr(invite, "url", "") or "")
-        if not url:
-            raise RuntimeError("تلگرام لینک اشتراک را برنگرداند.")
-        return {"ok": True, "url": url, "title": str(getattr(invite, "title", "") or title), "missingPeers": len(getattr(result, "missing_peers", []) or [])}
     if method == "save-dialog-folder":
         folder_id = int(args.get("id") or 0)
         title = str(args.get("title") or "").strip()
