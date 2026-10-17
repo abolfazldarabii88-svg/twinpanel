@@ -145,6 +145,7 @@ class TelethonService {
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }
   sendTextMessage(chatId, text, topicId = null) { return this.request('send-text', { chatId: String(chatId), text: String(text || ''), topicId: topicId == null ? null : String(topicId) }); }
   sendPoll(chatId, question, options, anonymous = true, multipleChoice = false) { return this.request('send-poll', { chatId: String(chatId), question: String(question || ''), options: Array.isArray(options) ? options.map(String) : [], anonymous: !!anonymous, multipleChoice: !!multipleChoice }); }
+  votePoll(chatId, messageId, options) { return this.request('vote-poll', { chatId: String(chatId), messageId: String(messageId), options: Array.isArray(options) ? options.map(String) : [] }); }
   searchGifs(query) { return this.request('search-gifs', { query: String(query || '') }); }
   sendGif(chatId, token) { return this.request('send-gif', { chatId: String(chatId), token: String(token || '') }); }
   scheduleMessage(chatId, text, scheduleAt) { return this.request('schedule-message', { chatId: String(chatId), text: String(text || ''), scheduleAt: Number(scheduleAt) }); }
