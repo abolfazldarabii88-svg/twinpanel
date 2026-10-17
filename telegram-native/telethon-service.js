@@ -126,6 +126,8 @@ class TelethonService {
   saveDialogFolder(folder) { return this.request('save-dialog-folder', folder || {}); }
   deleteDialogFolder(id) { return this.request('delete-dialog-folder', { id: Number(id) }); }
   getProfile() { return this.request('profile'); }
+  listStickers() { return this.request('list-stickers'); }
+  sendSticker(chatId, token) { return this.request('send-sticker', { chatId: String(chatId), token: String(token || '') }); }
   getBotCommands(chatId) { return this.request('get-bot-commands', { chatId: String(chatId) }); }
   listStories() { return this.request('list-stories'); }
   openStory(token) { return this.request('open-story', { token: String(token || '') }); }
