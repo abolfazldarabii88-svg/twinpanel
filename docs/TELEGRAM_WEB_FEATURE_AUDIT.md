@@ -286,3 +286,9 @@ Do not create a release or installer while this parity work is in progress unles
 - Results include Telegram message entities and are capped at 100 returned messages, with a bounded server scan to avoid unbounded work on low-memory devices.
 - The date interval is calculated from the desktop's local date boundaries and sent as Unix timestamps; the bridge validates the interval and uses Telegram's date offset to seek into history.
 - Automated CI and a real account check are required to verify Telegram's server-side offset semantics and timezone edge cases.
+
+
+### Spoilers and quote formatting — 2026-10-17
+- Added rendering for Telegram spoiler entities, with click-to-reveal and click-to-hide behavior.
+- Added blockquote/expandable-blockquote presentation and preformatted block styling.
+- This uses Telegram-provided entity metadata when present. Overlapping/nested entity combinations and real-account appearance still require acceptance testing.
