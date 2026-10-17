@@ -50,7 +50,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Custom Telegram folders | Partial | Existing folders can be listed and selected; folder creation, editing and sharing are missing |
 | Current conversation | In code | History, search, reply, reactions, media viewer and message actions exist in varying levels of completeness |
 | Profile / chat info / members | Partial | Summary dialogs only; no full profile editor or complete group/channel administration pages |
-| Client settings | Partial | Auto-refresh preferences only; Telegram privacy, devices, sessions, appearance and notification settings are missing |
+| Client settings | Partial | Auto-refresh preferences and Telegram privacy controls for last seen, phone, profile photo, forwards, group invites and calls are now in code; device/session management, appearance settings and comprehensive notification controls remain missing |
 | Connection / QR / phone authorization | In code | Authentication screens exist; QR/phone login still requires Windows and real-account acceptance testing |
 | Scheduled messages | Partial | Schedule/list/edit/cancel actions exist through prompts; a dedicated scheduled-messages page and polished date/time picker are missing |
 | Stories | Missing | No stories strip, viewer, publishing or privacy controls |
