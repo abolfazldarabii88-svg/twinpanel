@@ -287,6 +287,7 @@ ipcMain.handle('telegram-native:auth-input', (_event, payload) => tdlibService.s
 ipcMain.handle('telegram-native:list-chats', (_event, limit) => tdlibService.listChats(limit));
 ipcMain.handle('telegram-native:list-contacts', () => tdlibService.listContacts());
 ipcMain.handle('telegram-native:add-contact', (_event, phone, firstName, lastName) => tdlibService.addContact(phone, firstName, lastName));
+ipcMain.handle('telegram-native:delete-contact', (_event, chatId) => tdlibService.deleteContact(chatId));
 ipcMain.handle('telegram-native:list-dialog-folders', () => tdlibService.listDialogFolders());
 ipcMain.handle('telegram-native:profile', (_event) => tdlibService.getProfile());
 ipcMain.handle('telegram-native:list-authorizations', () => tdlibService.getAuthorizations());
