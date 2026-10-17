@@ -8,6 +8,7 @@ This is an experimental native Telegram client integration using Telegram's offi
 - Pinned `tdl` and `prebuilt-tdlib` dependencies, including the prebuilt Windows x64 TDLib library.
 - Main-process TDLib service with a narrow, explicit IPC API.
 - Interactive authorization prompts for phone number, login code, and 2-step verification password.
+- Optional local SOCKS5, HTTP CONNECT, and MTProto proxy settings for TDLib; proxy details remain in memory and are not persisted or uploaded.
 - TDLib-backed main chat list, search, chat history, text sending, document upload, file download request, and chat mute request.
 - Local TDLib database/files under Electron's `userData`; database encryption key is encrypted using Electron `safeStorage`. API credentials are not persisted by this app.
 - Preview mode uses `getChatHistory` only and deliberately does not call `openChat`, `viewMessages`, or `readChatList`.
@@ -26,9 +27,9 @@ This is an experimental native Telegram client integration using Telegram's offi
 1. Install Node.js and run `npm install` from `twinpanel-desktop`.
 2. Launch TwinPanel and open **تلگرام اختصاصی**.
 3. Enter your Telegram API ID and API Hash obtained from Telegram's official developer portal. These are used locally by TDLib.
-4. Complete phone, code, and optional 2-step verification prompts inside the native window.
+4. If direct TDLib connectivity fails, optionally select a proxy type and enter your proxy settings. Then complete phone, code, and optional 2-step verification prompts inside the native window.
 
-Never share login codes or 2FA passwords. Do not send the TDLib database, encryption key, or session data to a remote service. The current integration does not send those items to any TwinPanel backend.
+Proxy settings, login codes, and 2FA passwords are used locally and are not written to the app's connection log. Never share login codes or 2FA passwords. Do not send the TDLib database, encryption key, or session data to a remote service. The current integration does not send those items to any TwinPanel backend.
 
 ## Official references
 
