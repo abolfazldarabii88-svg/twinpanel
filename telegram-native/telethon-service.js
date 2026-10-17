@@ -115,6 +115,7 @@ class TelethonService {
   listChats(limit = 60) { return this.request('list-chats', { limit }); }
   listDialogFolders() { return this.request('list-dialog-folders'); }
   getProfile() { return this.request('profile'); }
+  getChatInfo(chatId) { return this.request('get-chat-info', { chatId: String(chatId) }); }
   getChatMembers(chatId) { return this.request('get-chat-members', { chatId: String(chatId) }); }
   exportChatInviteLink(chatId, expireSeconds = 0, usageLimit = 0) { return this.request('export-chat-invite-link', { chatId: String(chatId), expireSeconds: Number(expireSeconds) || 0, usageLimit: Number(usageLimit) || 0 }); }
   searchChats(query, limit = 30) { return this.request('search-chats', { query: String(query || ''), limit }); }
