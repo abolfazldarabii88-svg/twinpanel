@@ -149,6 +149,7 @@ async def handle(method, args):
             me = await client.get_me()
         connected = True
         connecting = False
+        event("prompt", {"type": "cancelled"})
         set_status("connected", "حساب تلگرام با موفقیت متصل شد.")
         return {**status(), "account": getattr(me, "first_name", "") or get_display_name(me), "userId": str(me.id)}
     if method == "auth-input":
