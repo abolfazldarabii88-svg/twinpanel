@@ -117,6 +117,8 @@ class TelethonService {
   addContact(phone, firstName, lastName = '') { return this.request('add-contact', { phone: String(phone || ''), firstName: String(firstName || ''), lastName: String(lastName || '') }); }
   deleteContact(chatId) { return this.request('delete-contact', { chatId: String(chatId) }); }
   listDialogFolders() { return this.request('list-dialog-folders'); }
+  saveDialogFolder(folder) { return this.request('save-dialog-folder', folder || {}); }
+  deleteDialogFolder(id) { return this.request('delete-dialog-folder', { id: Number(id) }); }
   getProfile() { return this.request('profile'); }
   getAuthorizations() { return this.request('list-authorizations'); }
   resetAuthorization(hash) { return this.request('reset-authorization', { hash: String(hash || '') }); }
