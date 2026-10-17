@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('twinPanel', {
     submitAuthInput: (type, value) => ipcRenderer.invoke('telegram-native:auth-input', { type, value }),
     listChats: limit => ipcRenderer.invoke('telegram-native:list-chats', limit),
     listForumTopics: chatId => ipcRenderer.invoke('telegram-native:list-forum-topics', chatId),
+    createForumTopic: (chatId, title) => ipcRenderer.invoke('telegram-native:create-forum-topic', chatId, title),
+    editForumTopic: (chatId, topicId, changes) => ipcRenderer.invoke('telegram-native:edit-forum-topic', chatId, topicId, changes),
     topicHistory: (chatId, topicId, limit) => ipcRenderer.invoke('telegram-native:topic-history', chatId, topicId, limit),
     listContacts: () => ipcRenderer.invoke('telegram-native:list-contacts'),
     addContact: (phone, firstName, lastName) => ipcRenderer.invoke('telegram-native:add-contact', phone, firstName, lastName),
