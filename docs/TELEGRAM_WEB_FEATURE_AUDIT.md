@@ -54,7 +54,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Global Telegram search | Missing | No server-side message/user/channel search |
 | Search by date / hashtag / public posts | Missing | No search workflows |
 | Multi-select / bulk actions | Missing | No selection mode |
-| Copy text | Partial | Copy selected message text action implemented; message-link copy and context menu remain missing |
+| Copy text / message link | Partial | Copy selected message text and direct link where supported implemented; context menu and links for every peer type remain missing |
 | Report message / user | Missing | No reporting flow |
 | Save/forward attribution choices | Partial | Basic forward-to-chat flow exists; attribution choices and save/copy workflows remain missing |
 | Message effects / reactions / read-by list | Missing | No reaction or effect UI/API |
