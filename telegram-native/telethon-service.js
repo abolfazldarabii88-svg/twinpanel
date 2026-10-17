@@ -122,6 +122,8 @@ class TelethonService {
   replyTextMessage(chatId, messageId, text) { return this.request('reply-text', { chatId: String(chatId), messageId: String(messageId), text: String(text || '') }); }
   editMessage(chatId, messageId, text) { return this.request('edit-message', { chatId: String(chatId), messageId: String(messageId), text: String(text || '') }); }
   deleteMessage(chatId, messageId) { return this.request('delete-message', { chatId: String(chatId), messageId: String(messageId) }); }
+  forwardMessage(chatId, messageId, targetChatId) { return this.request('forward-message', { chatId: String(chatId), messageId: String(messageId), targetChatId: String(targetChatId) }); }
+  pinMessage(chatId, messageId, pinned = true) { return this.request('pin-message', { chatId: String(chatId), messageId: String(messageId), pinned: !!pinned }); }
   setChatMuted(chatId, muted) { return this.request('mute-chat', { chatId: String(chatId), muted: !!muted }); }
   async close() {
     const child = this.child; this.child = null; this.connected = false; this.connecting = false;
