@@ -285,6 +285,8 @@ ipcMain.handle('telegram-native:qr-image-status', (event, state) => {
 });
 ipcMain.handle('telegram-native:auth-input', (_event, payload) => tdlibService.submitAuthInput(payload?.type, payload?.value));
 ipcMain.handle('telegram-native:list-chats', (_event, limit) => tdlibService.listChats(limit));
+ipcMain.handle('telegram-native:list-forum-topics', (_event, chatId) => tdlibService.listForumTopics(chatId));
+ipcMain.handle('telegram-native:topic-history', (_event, chatId, topicId, limit) => tdlibService.topicHistory(chatId, topicId, limit));
 ipcMain.handle('telegram-native:list-contacts', () => tdlibService.listContacts());
 ipcMain.handle('telegram-native:add-contact', (_event, phone, firstName, lastName) => tdlibService.addContact(phone, firstName, lastName));
 ipcMain.handle('telegram-native:delete-contact', (_event, chatId) => tdlibService.deleteContact(chatId));
@@ -322,7 +324,7 @@ ipcMain.handle('telegram-native:history-before', (_event, chatId, offsetId, limi
 ipcMain.handle('telegram-native:history-around', (_event, chatId, messageId) => tdlibService.getChatHistoryAround(chatId, messageId));
 ipcMain.handle('telegram-native:messages-on-date', (_event, chatId, startTimestamp, endTimestamp, limit) => tdlibService.getChatMessagesOnDate(chatId, startTimestamp, endTimestamp, limit));
 ipcMain.handle('telegram-native:preview', (_event, chatId, limit) => tdlibService.getUnreadPreview(chatId, limit));
-ipcMain.handle('telegram-native:send-text', (_event, chatId, body) => tdlibService.sendTextMessage(chatId, body));
+ipcMain.handle('telegram-native:send-text', (_event, chatId, body, topicId) => tdlibService.sendTextMessage(chatId, body, topicId));
 ipcMain.handle('telegram-native:send-poll', (_event, chatId, question, options, anonymous, multipleChoice) => tdlibService.sendPoll(chatId, question, options, anonymous, multipleChoice));
 ipcMain.handle('telegram-native:search-gifs', (_event, query) => tdlibService.searchGifs(query));
 ipcMain.handle('telegram-native:send-gif', (_event, chatId, token) => tdlibService.sendGif(chatId, token));
