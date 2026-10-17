@@ -45,7 +45,7 @@ jobs:
           python -c "from telethon.tl.functions.channels import GetFullChannelRequest, GetAdminLogRequest"
           python -c "from telethon.tl.functions.messages import ReportRequest"
           python -c "from telethon.tl.functions.account import ReportPeerRequest"
-          python -c "from telethon.tl.functions.contacts import ImportContactsRequest"
+          python -c "from telethon.tl.functions.contacts import ImportContactsRequest, SearchRequest"
           python -c "from telethon.tl.functions.bots import GetBotInfoRequest"
           python -c "from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest"
           python -c "from telethon.tl.types import InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants, DialogFilter, InputChannel, InputUser, InputPhoneContact, InputDocument, InputMediaDocument, InputChatlistDialogFilter, InputReportReasonSpam, InputReportReasonViolence, InputReportReasonChildAbuse, InputReportReasonIllegalDrugs, InputReportReasonFake, InputReportReasonOther, Poll, PollAnswer, TextWithEntities, InputMediaPoll"
