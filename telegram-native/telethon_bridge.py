@@ -223,6 +223,21 @@ async def handle(method, args):
             raise RuntimeError("متن پیام خالی است یا بیش از حد طولانی است.")
         msg = await client.send_message(entity, body)
         return {"id": str(msg.id), "text": body}
+    if method == "edit-message":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        body = str(args.get("text") or "").strip()
+        if message_id <= 0 or not body or len(body) > 4096:
+            raise RuntimeError("شناسهٔ پیام یا متن ویرایش معتبر نیست.")
+        edited = await client.edit_message(entity, message_id, body)
+        return {"id": str(edited.id), "text": body}
+    if method == "delete-message":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام معتبر نیست.")
+        await client.delete_messages(entity, [message_id], revoke=True)
+        return {"ok": True, "id": str(message_id)}
     if method == "send-media":
         entity = entity_for(args.get("chatId"))
         file_path = Path(str(args.get("filePath") or "")).resolve()
