@@ -113,6 +113,7 @@ class TelethonService {
   submitAuthInput(type, value) { return this.request('auth-input', { type, value: String(value || '') }); }
   // Polling and profile helpers are exposed by the native service.
   listChats(limit = 60) { return this.request('list-chats', { limit }); }
+  getAdminLog(chatId) { return this.request('get-admin-log', { chatId: String(chatId) }); }
   listForumTopics(chatId) { return this.request('list-forum-topics', { chatId: String(chatId) }); }
   createForumTopic(chatId, title) { return this.request('create-forum-topic', { chatId: String(chatId), title: String(title || '') }); }
   editForumTopic(chatId, topicId, changes = {}) { return this.request('edit-forum-topic', { chatId: String(chatId), topicId: String(topicId), title: changes.title == null ? null : String(changes.title), closed: changes.closed == null ? null : !!changes.closed }); }
