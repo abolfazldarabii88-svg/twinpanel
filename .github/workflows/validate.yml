@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: twinpanel-validation-${{ github.ref }}
@@ -55,3 +55,18 @@ jobs:
             package-lock.json
           if-no-files-found: error
           retention-days: 14
+
+      - name: Commit resolved lockfile on experiment branch
+        if: github.event_name == 'push'
+        shell: pwsh
+        run: |
+          git add package-lock.json
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "package-lock.json is already synchronized."
+            exit 0
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync experimental GramJS lockfile"
+          git push origin "HEAD:$env:GITHUB_REF_NAME"
