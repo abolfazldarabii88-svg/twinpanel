@@ -8,10 +8,16 @@ on:
       - "work/**"
       - "feature/**"
       - "fix/**"
+      - "test/**"
+      - "ci/**"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: twinpanel-validation-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   windows:
@@ -40,10 +46,10 @@ jobs:
       - name: Upload installer as a short-lived CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TwinPanel-Windows-CI
+          name: TwinPanel-Windows-CI-${{ github.run_number }}-${{ github.sha }}
           path: |
             release/TwinPanel-Setup-*.exe
             release/TwinPanel-Setup-*.exe.blockmap
             release/latest.yml
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 14
