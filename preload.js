@@ -1,48 +1,20 @@
+'use strict';
+
+const path = require('node:path');
 const { contextBridge, ipcRenderer } = require('electron');
+
 contextBridge.exposeInMainWorld('twinPanel', {
-  openNativeTelegram: () => ipcRenderer.invoke('twinpanel:open-native-telegram'),
-  telegramNative: {
-    status: () => ipcRenderer.invoke('telegram-native:status'),
-    connect: credentials => ipcRenderer.invoke('telegram-native:connect', credentials),
-    cancelConnect: () => ipcRenderer.invoke('telegram-native:cancel-connect'),
-    diagnostics: () => ipcRenderer.invoke('telegram-native:diagnostics'),
-    qrDataUrl: link => ipcRenderer.invoke('telegram-native:qr-data-url', link),
-    qrImageStatus: state => ipcRenderer.invoke('telegram-native:qr-image-status', state),
-    submitAuthInput: (type, value) => ipcRenderer.invoke('telegram-native:auth-input', { type, value }),
-    listChats: limit => ipcRenderer.invoke('telegram-native:list-chats', limit),
-    searchChats: query => ipcRenderer.invoke('telegram-native:search-chats', query),
-    history: (chatId, limit) => ipcRenderer.invoke('telegram-native:history', chatId, limit),
-    preview: (chatId, limit) => ipcRenderer.invoke('telegram-native:preview', chatId, limit),
-    sendText: (chatId, body) => ipcRenderer.invoke('telegram-native:send-text', chatId, body),
-    selectMedia: () => ipcRenderer.invoke('telegram-native:select-media'),
-    sendMedia: (chatId, filePath, caption) => ipcRenderer.invoke('telegram-native:send-media', chatId, filePath, caption),
-    muteChat: (chatId, muted) => ipcRenderer.invoke('telegram-native:mute-chat', chatId, muted),
-    onAuthPrompt: callback => {
-      let lastId = 0;
-      const forward = packet => {
-        if (!packet) return;
-        const id = Number(packet.id) || 0;
-        if (id && id <= lastId) {
-          void ipcRenderer.invoke('telegram-native:ack-auth-prompt', id).catch(() => {});
-          return;
-        }
-        if (id) lastId = id;
-        callback(packet.prompt || packet);
-        if (id) void ipcRenderer.invoke('telegram-native:ack-auth-prompt', id).catch(() => {});
-      };
-      ipcRenderer.on('telegram-native:auth-prompt', (_event, packet) => forward(packet));
-      void ipcRenderer.invoke('telegram-native:take-auth-prompt').then(forward).catch(() => {});
-    },
-    onStatus: callback => ipcRenderer.on('telegram-native:status-update', (_event, value) => callback(value))
-  },
+  getTelegramNativePreloadPath: () => path.join(__dirname, 'telegram-native', 'preload.js'),
+  registerTelegramPanel: webContentsId => ipcRenderer.invoke('twinpanel:register-telegram-panel', Number(webContentsId)),
+  toggleNativeTelegram: () => ipcRenderer.invoke('twinpanel:toggle-native-telegram'),
   toggleFullscreen: () => ipcRenderer.invoke('twinpanel:toggle-fullscreen'),
   getVersion: () => ipcRenderer.invoke('twinpanel:app-version'),
   checkForUpdates: () => ipcRenderer.invoke('twinpanel:check-updates'),
   downloadUpdate: () => ipcRenderer.invoke('twinpanel:download-update'),
   installUpdate: () => ipcRenderer.invoke('twinpanel:install-update'),
-  onFullscreenChanged: (callback) => ipcRenderer.on('twinpanel:fullscreen-changed', (_event, value) => callback(value)),
-  onCommand: (callback) => ipcRenderer.on('twinpanel:command', (_event, command) => callback(command)),
-  onUpdateStatus: (callback) => ipcRenderer.on('twinpanel:update-status', (_event, status) => callback(status)),
-  onMediaState: (callback) => ipcRenderer.on('twinpanel:media-state', (_event, state) => callback(state)),
-  onGptAudioState: (callback) => ipcRenderer.on('twinpanel:gpt-audio-state', (_event, audible) => callback(audible))
+  onFullscreenChanged: callback => ipcRenderer.on('twinpanel:fullscreen-changed', (_event, value) => callback(value)),
+  onCommand: callback => ipcRenderer.on('twinpanel:command', (_event, command) => callback(command)),
+  onUpdateStatus: callback => ipcRenderer.on('twinpanel:update-status', (_event, status) => callback(status)),
+  onMediaState: callback => ipcRenderer.on('twinpanel:media-state', (_event, state) => callback(state)),
+  onGptAudioState: callback => ipcRenderer.on('twinpanel:gpt-audio-state', (_event, audible) => callback(audible))
 });
