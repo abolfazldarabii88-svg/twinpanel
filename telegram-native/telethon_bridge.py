@@ -365,7 +365,7 @@ async def handle(method, args):
         entity = entity_for(args.get("chatId"))
         limit = max(1, min(int(args.get("limit") or 2000), 5000))
         rows = []
-        async for msg in client.iter_messages(entity, limit=limit, reverse=True):
+        async for msg in client.iter_messages(entity, limit=limit):
             body = (msg.message or "").strip()
             if not body and msg.media:
                 body = "[رسانه / فایل: " + type(msg.media).__name__ + "]"
