@@ -58,7 +58,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
       void ipcRenderer.invoke('telegram-native:take-auth-prompt').then(forward).catch(() => {});
     },
     onStatus: callback => ipcRenderer.on('telegram-native:status-update', (_event, value) => callback(value)),
-    onUpdate: callback => ipcRenderer.on('telegram-native:live-update', (_event, value) => callback(value))
+    onUpdate: callback => ipcRenderer.on('telegram-native:live-update', (_event, value) => callback(value)),
     onUploadProgress: callback => ipcRenderer.on('telegram-native:upload-progress', (_event, value) => callback(value)),
   },
   toggleFullscreen: () => ipcRenderer.invoke('twinpanel:toggle-fullscreen'),
