@@ -314,6 +314,7 @@ ipcMain.handle('telegram-native:select-media', async () => {
 });
 ipcMain.handle('telegram-native:send-media', (_event, chatId, filePath, caption) => tdlibService.sendMedia(chatId, filePath, caption));
 ipcMain.handle('telegram-native:mute-chat', (_event, chatId, muted) => tdlibService.setChatMuted(chatId, muted));
+ipcMain.handle('telegram-native:set-chat-unread', (_event, chatId, unread) => tdlibService.setChatUnread(chatId, unread));
 ipcMain.handle('twinpanel:toggle-fullscreen', event => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return false;
