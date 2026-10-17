@@ -26,6 +26,7 @@ connecting = False
 me = None
 dialogs_cache = {}
 media_data_cache = {}
+inline_gif_cache = {}
 pending_auth = asyncio.Queue()
 tasks = set()
 diagnostic_stage = "ready"
@@ -631,6 +632,38 @@ async def handle(method, args):
         msg = await client.send_message(entity, body, schedule=datetime.fromtimestamp(schedule_at, timezone.utc))
         return {"id": str(msg.id),
                 "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "scheduleAt": schedule_at}
+    if method == "search-gifs":
+        query = str(args.get("query") or "").strip()
+        if not query or len(query) > 100:
+            raise RuntimeError("عبارت جست‌وجوی GIF را وارد کن.")
+        try:
+            results = await client.inline_query("gif", query)
+        except Exception as exc:
+            raise RuntimeError("جست‌وجوی GIF تلگرام ناموفق بود؛ ربات درون‌خطی GIF ممکن است در دسترس نباشد.") from exc
+        rows = []
+        for index, item in enumerate(list(results)[:12]):
+            token = str(int(time.time() * 1000)) + ":" + str(index)
+            inline_gif_cache[token] = item
+            title = str(getattr(item, "title", "") or getattr(item, "type", "") or "GIF")
+            description = str(getattr(item, "description", "") or "")
+            rows.append({"token": token, "title": title[:160], "description": description[:240]})
+        if not rows:
+            raise RuntimeError("برای این عبارت GIFای پیدا نشد.")
+        if len(inline_gif_cache) > 100:
+            for key in list(inline_gif_cache)[:-60]:
+                inline_gif_cache.pop(key, None)
+        return rows
+    if method == "send-gif":
+        token = str(args.get("token") or "")
+        item = inline_gif_cache.get(token)
+        if item is None:
+            raise RuntimeError("نتیجهٔ GIF منقضی شده؛ دوباره جست‌وجو کن.")
+        entity = entity_for(args.get("chatId"))
+        try:
+            await item.click(entity)
+        except Exception as exc:
+            raise RuntimeError("ارسال GIF از تلگرام ناموفق بود.") from exc
+        return {"ok": True}
     if method == "send-poll":
         entity = entity_for(args.get("chatId"))
         question = str(args.get("question") or "").strip()
