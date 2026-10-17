@@ -112,6 +112,7 @@ class TelethonService {
   submitAuthInput(type, value) { return this.request('auth-input', { type, value: String(value || '') }); }
   // Polling and profile helpers are exposed by the native service.
   listChats(limit = 60) { return this.request('list-chats', { limit }); }
+  listDialogFolders() { return this.request('list-dialog-folders'); }
   getProfile() { return this.request('profile'); }
   searchChats(query, limit = 30) { return this.request('search-chats', { query: String(query || ''), limit }); }
   searchGlobalMessages(query, limit = 30) { return this.request('search-global-messages', { query: String(query || ''), limit }); }
