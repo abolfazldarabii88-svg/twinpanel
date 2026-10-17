@@ -163,11 +163,19 @@ class GramJsService {
     const { ConnectionTCPObfuscated } = require('telegram/network/connection');
     const { Logger, LogLevel } = require('telegram/extensions/Logger');
 
-    // Telegram Web clients use the /apiws WebSocket transport on port 443.
-    // Force the matching connection and socket classes even though this runs in
-    // Electron's Node main process (whose default transport would be raw TCP).
+    // In Node, GramJS normally chooses a raw Telegram IP because its default
+    // socket is TCP. A WSS connection must preserve a TLS-verifiable hostname.
+    // Seed fresh sessions with Telegram Web's browser-facing WSS hostname so
+    // the initial connection uses wss://vesta.web.telegram.org:443/apiws.
+    const session = new StringSession(sessionString || '');
+    if (!sessionString) {
+      session.setDC(2, 'vesta.web.telegram.org', 443);
+    }
+
+    // Force the same WebSocket transport used by Telegram Web even though this
+    // runs in Electron's Node main process (whose default transport is raw TCP).
     return new TelegramClient(
-      new StringSession(sessionString || ''),
+      session,
       Number(apiId),
       String(apiHash),
       {
