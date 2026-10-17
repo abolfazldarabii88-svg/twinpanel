@@ -294,6 +294,7 @@ ipcMain.handle('telegram-native:export-chat-invite-link', (_event, chatId, expir
 ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
 ipcMain.handle('telegram-native:search-global-messages', (_event, query, limit) => tdlibService.searchGlobalMessages(query, limit));
 ipcMain.handle('telegram-native:history', (_event, chatId, limit) => tdlibService.getChatHistory(chatId, limit));
+ipcMain.handle('telegram-native:typing-action', (_event, chatId) => tdlibService.sendTypingAction(chatId));
 ipcMain.handle('telegram-native:export-chat-history', async (_event, chatId, title) => {
   const result = await tdlibService.exportChatHistory(chatId, 2000);
   const messages = result && Array.isArray(result.messages) ? result.messages : [];
