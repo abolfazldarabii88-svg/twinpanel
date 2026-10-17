@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import os
 import sys
@@ -99,6 +100,11 @@ async def handle(method, args):
     global client, connected, connecting, me, diagnostic_stage, last_message
     if method == "status":
         return status()
+    if method == "profile":
+        if not client or not connected or not me:
+            raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
+        full = await client.get_me()
+        return {"id": str(full.id), "name": get_display_name(full), "username": getattr(full, "username", None), "firstName": getattr(full, "first_name", None), "lastName": getattr(full, "last_name", None), "isPremium": bool(getattr(full, "premium", False)), "bot": bool(getattr(full, "bot", False))}
     if method == "credentials-status":
         return {"saved": False}
     if method == "connect":
@@ -177,14 +183,32 @@ async def handle(method, args):
             text = (msg.message or "").strip()
             if not text and msg.media:
                 text = "رسانه / فایل"
-            result.append({
+            item = {
                 "id": str(msg.id),
                 "chatId": str(args.get("chatId")),
                 "date": int(msg.date.timestamp()) if msg.date else int(time.time()),
                 "outgoing": bool(msg.out),
                 "text": text[:4096],
                 "contentType": type(msg.media).__name__ if msg.media else "text"
-            })
+            }
+            if msg.photo or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("image/")):
+                try:
+                    media_bytes = await client.download_media(msg, file=bytes)
+                    if media_bytes and len(media_bytes) <= 4 * 1024 * 1024:
+                        mime = getattr(msg.file, "mime_type", None) or "image/jpeg"
+                        item["mediaDataUrl"] = "data:" + mime + ";base64," + base64.b64encode(media_bytes).decode("ascii")
+                except Exception:
+                    pass
+            elif msg.video or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("video/")):
+                item["contentType"] = "video"
+                try:
+                    media_bytes = await client.download_media(msg, file=bytes)
+                    if media_bytes and len(media_bytes) <= 8 * 1024 * 1024:
+                        mime = getattr(msg.file, "mime_type", None) or "video/mp4"
+                        item["mediaDataUrl"] = "data:" + mime + ";base64," + base64.b64encode(media_bytes).decode("ascii")
+                except Exception:
+                    pass
+            result.append(item)
         return result
     if method == "send-text":
         entity = entity_for(args.get("chatId"))
