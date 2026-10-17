@@ -248,3 +248,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Added a pinned-messages list for the active chat (up to 100 results) with a jump-to-message action that loads the surrounding history. Actual behavior depends on Telegram permissions and message availability.
 
 - Invite link generation now offers optional expiration (1 hour, 1 day, 1 week, 1 month, or none) and a usage limit (up to 1,000). Telegram admin rights are required; these options have not yet been validated against a live account.
+
+- Chat information panel added for users, groups, and channels; it displays available usernames, descriptions, verification status, and group/channel participant/admin counts. Availability depends on Telegram's returned full-chat data and permissions.
