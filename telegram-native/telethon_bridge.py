@@ -442,6 +442,14 @@ async def handle(method, args):
                 matched.append(cid)
             result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched})
         return result
+    if method == "delete-contact":
+        peer_id = str(args.get("chatId") or "")
+        entity = entity_for(peer_id)
+        if getattr(entity, "first_name", None) is None:
+            raise RuntimeError("حذف از دفترچه فقط برای مخاطب شخصی ممکن است.")
+        await client.delete_contacts(entity)
+        dialogs_cache.pop(peer_id, None)
+        return {"ok": True, "chatId": peer_id}
     if method == "add-contact":
         phone = str(args.get("phone") or "").strip()
         first_name = str(args.get("firstName") or "").strip()
