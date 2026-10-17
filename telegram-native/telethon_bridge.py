@@ -12,6 +12,14 @@ from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
 
+# The packaged Windows executable may inherit a legacy console code page.
+# The Electron parent expects UTF-8 JSON lines, including Persian text.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except (AttributeError, OSError):
+        pass
+
 client = None
 connected = False
 connecting = False
