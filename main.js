@@ -317,6 +317,8 @@ ipcMain.handle('telegram-native:messages-on-date', (_event, chatId, startTimesta
 ipcMain.handle('telegram-native:preview', (_event, chatId, limit) => tdlibService.getUnreadPreview(chatId, limit));
 ipcMain.handle('telegram-native:send-text', (_event, chatId, body) => tdlibService.sendTextMessage(chatId, body));
 ipcMain.handle('telegram-native:send-poll', (_event, chatId, question, options, anonymous, multipleChoice) => tdlibService.sendPoll(chatId, question, options, anonymous, multipleChoice));
+ipcMain.handle('telegram-native:search-gifs', (_event, query) => tdlibService.searchGifs(query));
+ipcMain.handle('telegram-native:send-gif', (_event, chatId, token) => tdlibService.sendGif(chatId, token));
 ipcMain.handle('telegram-native:schedule-message', (_event, chatId, body, scheduleAt) => tdlibService.scheduleMessage(chatId, body, scheduleAt));
 ipcMain.handle('telegram-native:list-scheduled-messages', (_event, chatId) => tdlibService.listScheduledMessages(chatId));
 ipcMain.handle('telegram-native:cancel-scheduled-message', (_event, chatId, messageId) => tdlibService.cancelScheduledMessage(chatId, messageId));
