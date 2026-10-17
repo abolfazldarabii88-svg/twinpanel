@@ -48,7 +48,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Delete own / delete for everyone | Partial | Delete path requests revoke; permissions and UI choices need testing |
 | Pin/unpin message | Partial | Pin and unpin API actions and selected-message controls implemented; real-account permission checks still missing |
 | Scheduled / recurring messages | Missing | Scheduler and UI absent |
-| Sent/read state and read receipts | Missing | No message status model or reliable read state |
+| Sent/read state and read receipts | Partial | Explicit mark-chat-read/unread actions and unread-count badges implemented; live receipt/status UI and account verification remain missing |
 | Typing indicators / online status | Missing | No live updates |
 | Search in current conversation | Partial | Local search filters only currently loaded message text; older unloaded history, media captions and server-side search are not included |
 | Global Telegram search | Missing | No server-side message/user/channel search |
@@ -97,7 +97,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Telegram Web capability | TwinPanel status | Notes / required work |
 |---|---|---|
 | Private chats, groups, supergroups, channels, bots | Partial | Dialog list is generic; per-type actions and metadata are absent |
-| Unread counts and unread markers | Missing | No unread model |
+| Unread counts and unread markers | Partial | Dialog unread counts are rendered as badges and can be toggled read/unread; refresh consistency and real-account behavior unverified |
 | Archived chats | Missing | No archive section/action |
 | Pinned chats and custom order | Missing | No pin/reorder model |
 | Chat folders and include/exclude rules | Missing | Only hard-coded category filters |
