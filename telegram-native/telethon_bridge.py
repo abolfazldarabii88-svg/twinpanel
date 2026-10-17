@@ -9,15 +9,15 @@ from datetime import datetime, timezone
 
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
-from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest
+from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest, ReportPeerRequest
 from telethon.tl.functions.channels import GetFullChannelRequest, GetAdminLogRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.bots import GetBotInfoRequest
 from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, SendScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, GetRecentStickersRequest, ExportChatInviteRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, SendScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, ReportRequest, GetRecentStickersRequest, ExportChatInviteRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser, InputDocument, InputMediaDocument
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser, InputDocument, InputMediaDocument, InputReportReasonSpam, InputReportReasonViolence, InputReportReasonChildAbuse, InputReportReasonIllegalDrugs, InputReportReasonFake, InputReportReasonOther
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -592,6 +592,32 @@ async def handle(method, args):
                 matched.append(cid)
             result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched, "contacts": bool(getattr(folder, "contacts", False)), "nonContacts": bool(getattr(folder, "non_contacts", False)), "groups": bool(getattr(folder, "groups", False)), "broadcasts": bool(getattr(folder, "broadcasts", False)), "bots": bool(getattr(folder, "bots", False)), "excludeMuted": bool(getattr(folder, "exclude_muted", False)), "excludeRead": bool(getattr(folder, "exclude_read", False)), "excludeArchived": bool(getattr(folder, "exclude_archived", False)), "includeIds": sorted(included), "excludeIds": sorted(excluded)})
         return result
+    if method in ("report-message", "report-chat"):
+        chat_id = str(args.get("chatId") or "")
+        entity = entity_for(chat_id)
+        reason_name = str(args.get("reason") or "other")
+        reason_types = {
+            "spam": InputReportReasonSpam,
+            "violence": InputReportReasonViolence,
+            "child_abuse": InputReportReasonChildAbuse,
+            "illegal": InputReportReasonIllegalDrugs,
+            "fake": InputReportReasonFake,
+            "other": InputReportReasonOther,
+        }
+        reason_type = reason_types.get(reason_name)
+        if reason_type is None:
+            raise RuntimeError("دلیل گزارش معتبر نیست.")
+        reason = reason_type()
+        details = str(args.get("details") or "")[:500]
+        peer = await client.get_input_entity(entity)
+        if method == "report-message":
+            message_id = int(args.get("messageId") or 0)
+            if message_id <= 0:
+                raise RuntimeError("شناسهٔ پیام برای گزارش معتبر نیست.")
+            await client(ReportRequest(peer=peer, id=[message_id], reason=reason, message=details))
+        else:
+            await client(ReportPeerRequest(peer=peer, reason=reason, message=details))
+        return {"ok": True}
     if method == "get-admin-log":
         entity = await client.get_entity(entity_for(args.get("chatId")))
         if not (getattr(entity, "broadcast", False) or getattr(entity, "megagroup", False)):
