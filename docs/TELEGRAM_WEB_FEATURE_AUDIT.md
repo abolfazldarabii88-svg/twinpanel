@@ -29,7 +29,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Reply to selected message | reply-text plus UI state | Present in code — unverified |
 | Edit/delete own message | edit-message / delete-message and UI controls | Present in code — unverified |
 | Photo/video preview | Bounded media downloads to data URLs; limited size/cache | Partial |
-| Send one selected file with optional caption | Native file chooser + send-media | Partial; no queue/progress/cancel |
+| Send one selected file with optional caption | Native file chooser + send-media; upload progress is forwarded to the active chat's attachment button | Partial; no queued transfers, pause/cancel, retry, or download progress |
 | Mute a chat | Mute/unmute API and duration choices in the chat context menu | Partial; Telegram account behavior needs real-account verification |
 | Profile summary | Name, username, ID, Premium/bot flags | Partial; not a full profile |
 | Manual/periodic refresh | UI polling | Partial; no event-driven live update stream |
@@ -102,7 +102,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Round video notes | Missing | No dedicated display/recording |
 | Music/audio files | Missing | Generic file label only |
 | Documents and arbitrary files | Partial | Sending one selected file; received media/documents up to 25 MB can be downloaded; larger files and save-dialog destination choice remain missing |
-| Upload/download progress, retry, cancel | Missing | No transfer queue |
+| Upload/download progress, retry, cancel | Partial | Upload progress events are wired through service → IPC → renderer; the callback hookup was corrected in commit `51828b7`. Download progress, queueing, retry and cancellation remain missing; verify live on a real account |
 | Multiple attachments / drag-drop | Missing | One file per chooser action |
 | Send as photo vs file | Missing | No send-mode choice |
 | Stickers: static, animated, video | Recent sticker list and sending are implemented | Partial; full pack search, animated previews and sticker management are missing |
