@@ -10,7 +10,7 @@ import os
 import sys
 from pathlib import Path
 
-import socks
+from python_socks import ProxyType
 from telethon import TelegramClient
 from telethon.errors import (
     ApiIdInvalidError,
@@ -49,7 +49,7 @@ async def main() -> int:
 
     # Windows Internet Options indicates a local proxy at 127.0.0.1:2081.
     # Use HTTP proxy mode; Telethon otherwise ignores the Windows system proxy.
-    proxy = (socks.HTTP, PROXY_HOST, PROXY_PORT)
+    proxy = (ProxyType.HTTP, PROXY_HOST, PROXY_PORT)
     client = TelegramClient(str(SESSION_PATH), api_id, api_hash, proxy=proxy)
     try:
         print(f"Connecting to Telegram through HTTP proxy {PROXY_HOST}:{PROXY_PORT}…")
