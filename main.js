@@ -294,6 +294,16 @@ ipcMain.handle('telegram-native:export-chat-invite-link', (_event, chatId, expir
 ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
 ipcMain.handle('telegram-native:search-global-messages', (_event, query, limit) => tdlibService.searchGlobalMessages(query, limit));
 ipcMain.handle('telegram-native:history', (_event, chatId, limit) => tdlibService.getChatHistory(chatId, limit));
+ipcMain.handle('telegram-native:export-chat-history', async (_event, chatId, title) => {
+  const result = await tdlibService.exportChatHistory(chatId, 2000);
+  const messages = result && Array.isArray(result.messages) ? result.messages : [];
+  const content = messages.map(m => '[' + (m.date || '') + '] ' + (m.outgoing ? 'من' : 'طرف مقابل') + ' #' + m.id + '\n' + (m.text || '')).join('\n\n') + '\n';
+  const safeTitle = String(title || 'telegram-chat').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || 'telegram-chat';
+  const choice = await dialog.showSaveDialog(mainWindow, { title: 'خروجی تاریخچهٔ تلگرام', defaultPath: safeTitle + '.txt', filters: [{ name: 'Text files', extensions: ['txt'] }] });
+  if (choice.canceled || !choice.filePath) return { canceled: true };
+  fs.writeFileSync(choice.filePath, content, 'utf8');
+  return { canceled: false, path: choice.filePath, count: messages.length, limited: !!(result && result.limited) };
+});
 ipcMain.handle('telegram-native:search-chat-messages', (_event, chatId, query, limit) => tdlibService.searchChatMessages(chatId, query, limit));
 ipcMain.handle('telegram-native:list-pinned-messages', (_event, chatId) => tdlibService.listPinnedMessages(chatId));
 ipcMain.handle('telegram-native:history-before', (_event, chatId, offsetId, limit) => tdlibService.getChatHistoryBefore(chatId, offsetId, limit));
