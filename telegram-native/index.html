@@ -99,7 +99,7 @@ function setStatus(s){
  if(s&&s.connecting) lastConnectionStatusAt=Date.now();
  if(connected) connectUiActive=false;
  document.getElementById('connectionNotice').hidden=connected;
- document.getElementById('messageInput').disabled=!connected;document.getElementById('scheduleBtn').disabled=!connected;document.getElementById('scheduledListBtn').disabled=!connected;
+ document.getElementById('messageInput').disabled=!connected;document.getElementById('scheduleBtn').disabled=!connected;document.getElementById('scheduledListBtn').disabled=!connected;document.getElementById('chatMembersBtn').disabled=!connected;
  document.querySelector('.composer button').disabled=!connected;
  document.getElementById('attachBtn').disabled=!connected;
  document.getElementById('muteBtn').disabled=!connected;
