@@ -320,3 +320,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Keyboard navigation: Arrow keys move focus through the chat list and between focusable messages; context menus remain keyboard-operable.
 - Media viewer: zoomed photos can be panned by dragging, and adjacent loaded photos can be browsed with previous/next buttons or left/right arrow keys. This navigates only media already present in the currently loaded message history; it does not fetch an entire remote album.
 - Validation boundary: these UI additions are covered by repository CI syntax checks; they have not yet been exercised against a live Telegram account or a Windows device in this turn.
+
+- Quick reactions: connected chats expose a compact set of common reactions on message hover/focus, including touch devices. Actions call the existing Telegram reaction API and report errors instead of silently pretending success.
