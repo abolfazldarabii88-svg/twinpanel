@@ -330,6 +330,22 @@ async def handle(method, args):
         forwarded = await client.forward_messages(target, [message_id], from_peer=source)
         item = forwarded[0] if isinstance(forwarded, list) else forwarded
         return {"ok": True, "id": str(item.id) if item else ""}
+    if method == "download-message-media":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام معتبر نیست.")
+        message = await client.get_messages(entity, ids=message_id)
+        if not message or not message.media:
+            raise RuntimeError("این پیام رسانه یا فایل قابل دانلود ندارد.")
+        media_bytes = await client.download_media(message, file=bytes)
+        if not media_bytes:
+            raise RuntimeError("تلگرام فایلی برای این پیام برنگرداند.")
+        if len(media_bytes) > 25 * 1024 * 1024:
+            raise RuntimeError("دانلود از داخل پیش‌نمایش برای فایل‌های بالای ۲۵ مگابایت غیرفعال است.")
+        mime = getattr(message.file, "mime_type", None) or "application/octet-stream"
+        filename = getattr(message.file, "name", None) or f"telegram-{message_id}"
+        return {"dataUrl": "data:" + mime + ";base64," + base64.b64encode(media_bytes).decode("ascii"), "fileName": filename, "mimeType": mime, "size": len(media_bytes)}
     if method == "message-link":
         entity = entity_for(args.get("chatId"))
         message_id = int(args.get("messageId") or 0)
