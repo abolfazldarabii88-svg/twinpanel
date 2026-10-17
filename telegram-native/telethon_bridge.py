@@ -12,7 +12,7 @@ from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -320,6 +320,15 @@ async def handle(method, args):
                 text = "رسانه / فایل"
             item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "contentType": type(msg.media).__name__ if msg.media else "text"}
             result.append(item)
+        return result
+    if method == "list-pinned-messages":
+        entity = entity_for(args.get("chatId"))
+        result = []
+        async for msg in client.iter_messages(entity, filter=InputMessagesFilterPinned, limit=100):
+            body = (msg.message or "").strip()
+            if not body and msg.media:
+                body = "رسانه / فایل"
+            result.append({"id": str(msg.id), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "text": body[:500], "outgoing": bool(msg.out), "contentType": type(msg.media).__name__ if msg.media else "text"})
         return result
     if method == "search-chat-messages":
         entity = entity_for(args.get("chatId"))
