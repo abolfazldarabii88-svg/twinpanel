@@ -36,6 +36,29 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Native pane is default, Telegram Web is fallback | TwinPanel host UI | Present in code — unverified |
 | Real-account test, Windows packaged runtime test | Not performed in this audit | Not verified |
 
+## Page and section inventory
+
+This separates actual navigation/overlays in TwinPanel from Telegram Web destinations that are not implemented yet. “In code” is not a claim of live-account verification.
+
+| Telegram-like page/section | TwinPanel today | Gap |
+|---|---|---|
+| All chats / conversation list | In code | Dialog list exists; parity for every chat type and full contact directory is incomplete |
+| Study / personal / channel categories | In code | Local category filters; they are not Telegram cloud folders |
+| Contacts | Partial — new rail section | Filters user-type conversations already present in the dialog list; does not enumerate every saved phone contact or add/edit contacts |
+| Saved Messages | In code | Can open Saved Messages and save messages; no complete tags/collections/organization page |
+| Archived and unread chats | Partial | Filters/actions exist; exact Telegram Web archive UX and folder edge cases need testing |
+| Custom Telegram folders | Partial | Existing folders can be listed and selected; folder creation, editing and sharing are missing |
+| Current conversation | In code | History, search, reply, reactions, media viewer and message actions exist in varying levels of completeness |
+| Profile / chat info / members | Partial | Summary dialogs only; no full profile editor or complete group/channel administration pages |
+| Client settings | Partial | Auto-refresh preferences only; Telegram privacy, devices, sessions, appearance and notification settings are missing |
+| Connection / QR / phone authorization | In code | Authentication screens exist; QR/phone login still requires Windows and real-account acceptance testing |
+| Scheduled messages | Partial | Schedule/list/edit/cancel actions exist through prompts; a dedicated scheduled-messages page and polished date/time picker are missing |
+| Stories | Missing | No stories strip, viewer, publishing or privacy controls |
+| Voice/video and group calls | Missing | No calling UI/runtime |
+| Group/channel management and topics | Missing | No full admin screens, topic navigation, permissions or recent actions |
+| Polls, stickers, GIFs, bots and mini apps | Missing/partial | No complete creation/viewing workflows or feature-specific pages |
+| Multiple accounts and Secret Chats | Missing / protocol-dependent | Not implemented; Secret Chats cannot be treated as ordinary cloud chats |
+
 ## Feature-by-feature parity inventory
 
 ### 1. Core messaging and message actions
@@ -57,7 +80,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Search in current conversation | Partial | Local search filters only currently loaded message text; older unloaded history, media captions and server-side search are not included |
 | Global Telegram search | Missing | No server-side message/user/channel search |
 | Search by date / hashtag / public posts | Missing | No search workflows |
-| Multi-select / bulk actions | Missing | No selection mode |
+| Multi-select / bulk actions | Partial — added in code, unverified | Selection mode supports copying selected text, saving selected messages to Saved Messages, and forwarding selected messages to a chat; no bulk delete or selection by drag/range. CI and real-account behavior still need verification |
 | Copy text / message link | Partial | Copy selected message text and direct link where supported implemented; context menu and links for every peer type remain missing |
 | Report message / user | Missing | No reporting flow |
 | Save/forward attribution choices | Partial | Basic forward-to-chat flow exists; attribution choices and save/copy workflows remain missing |
@@ -102,9 +125,9 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 |---|---|---|
 | Private chats, groups, supergroups, channels, bots | Partial | Dialog list is generic; per-type actions and metadata are absent |
 | Unread counts and unread markers | Partial | Dialog unread counts are rendered as badges and can be toggled read/unread; refresh consistency and real-account behavior unverified |
-| Archived chats | Missing | No archive section/action |
-| Pinned chats and custom order | Missing | No pin/reorder model |
-| Chat folders and include/exclude rules | Missing | Only hard-coded category filters |
+| Archived chats | Partial | Archive/unarchive actions and an archived filter exist; folder behavior and complete archive-page parity still need verification |
+| Pinned chats and custom order | Partial | Pin/unpin chat actions and pinned-first sorting exist; drag-and-drop custom ordering is missing |
+| Chat folders and include/exclude rules | Partial | Telegram custom folder filters are fetched and displayed read-only; creating/editing rules and shared folders are missing |
 | Shared folders / folder invite links | Missing | No folder support |
 | Chat list search | Partial | Local title/last-message substring match |
 | Mark read/unread, clear history, delete chat, leave chat | Missing | No chat management actions |
