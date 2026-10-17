@@ -310,6 +310,18 @@ async def handle(method, args):
             item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "contentType": type(msg.media).__name__ if msg.media else "text"}
             result.append(item)
         return result
+    if method == "search-chat-messages":
+        entity = entity_for(args.get("chatId"))
+        query = str(args.get("query") or "").strip()
+        if len(query) < 2:
+            raise RuntimeError("برای جست‌وجو دست‌کم دو نویسه وارد کن.")
+        result = []
+        async for msg in client.iter_messages(entity, search=query, limit=max(1, min(int(args.get("limit") or 50), 100))):
+            text = (msg.message or "").strip()
+            if not text and msg.media:
+                text = "رسانه / فایل"
+            result.append({"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "contentType": type(msg.media).__name__ if msg.media else "text", "searchResult": True})
+        return result
     if method in ("history", "preview", "history-before"):
         entity = entity_for(args.get("chatId"))
         limit = max(1, min(int(args.get("limit") or 40), 100))
