@@ -355,4 +355,36 @@ document.getElementById('markReadBtn').addEventListener('click',async()=>{if(!re
 document.getElementById('markUnreadBtn').addEventListener('click',async()=>{if(!realChats||!api)return;try{await api.setChatUnread(active,true);const c=realChats.find(x=>String(x.id)===String(active));if(c)c.unreadCount=Math.max(1,Number(c.unreadCount)||0);renderChats();showToast('گفتگو به‌عنوان خوانده‌نشده علامت خورد')}catch(e){showToast(e.message||'علامت‌گذاری گفتگو ناموفق بود')}});
 document.getElementById('muteBtn').addEventListener('click',async()=>{if(!realChats||!api)return;const c=realChats.find(x=>String(x.id)===String(active));if(!c)return;let seconds=0;if(!c.muted){const choice=window.prompt('مدت بی‌صداکردن را انتخاب کن:\n1 = یک ساعت\n8 = هشت ساعت\n48 = دو روز\n365 = یک سال\n0 = لغو بی‌صداکردن','8');if(choice===null)return;const map={'0':0,'1':3600,'8':28800,'48':172800,'365':31536000};if(!(choice.trim() in map)){showToast('مدت انتخاب‌شده معتبر نیست');return}seconds=map[choice.trim()]}try{await api.muteChatUntil(active,seconds);c.muted=seconds>0;document.getElementById('muteBtn').textContent=c.muted?'فعال‌کردن اعلان':'بی‌صدا';showToast(c.muted?'اعلان‌ها برای مدت انتخاب‌شده بی‌صدا شدند':'اعلان گفتگو فعال شد')}catch(e){showToast(e.message||'تغییر اعلان ناموفق بود')}});
 renderChats();selectChat('saved');if(api)api.status().then(setStatus).catch(()=>{});
+
+/* Keyboard navigation: shortcuts avoid stealing keys from normal text entry. */
+document.addEventListener('keydown',event=>{
+ const target=event.target;
+ const typing=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+ const key=event.key.toLowerCase();
+ if((event.ctrlKey||event.metaKey)&&!event.altKey){
+  if(key==='k'){event.preventDefault();search.focus();search.select();return}
+  if(key==='f'&&event.shiftKey){event.preventDefault();document.getElementById('globalSearchBtn').click();return}
+  if(key==='f'&&!event.shiftKey){event.preventDefault();messageSearch.focus();messageSearch.select();return}
+  if(key==='enter'&&!typing){event.preventDefault();document.getElementById('composer').requestSubmit();return}
+ }
+ if(event.key==='F1'){event.preventDefault();showToast('میانبرها: Ctrl+K گفتگوها · Ctrl+F جست‌وجوی همین گفتگو · Ctrl+Shift+F جست‌وجوی سراسری · Alt+↑ قدیمی‌تر · Alt+↓ جدیدترین · Esc بستن/پاک‌کردن')}
+ if(event.altKey&&!event.ctrlKey&&!event.metaKey&&event.key==='ArrowUp'){event.preventDefault();if(!document.getElementById('olderBtn').disabled)loadOlderMessages();return}
+ if(event.altKey&&!event.ctrlKey&&!event.metaKey&&event.key==='ArrowDown'){event.preventDefault();document.getElementById('jumpLatestBtn').click();return}
+ if(event.key==='Escape'){
+  const lightbox=document.getElementById('mediaLightbox');
+  if(lightbox&&!lightbox.hidden){closeMediaLightbox();return}
+  const menu=document.getElementById('messageContextMenu');
+  if(menu&&!menu.hidden){closeMessageContextMenu();return}
+  if(globalSearchResults){document.getElementById('clearGlobalSearchBtn').click();return}
+  if(typing&&target===messageSearch&&messageSearch.value){messageSearch.value='';renderMessages(currentMessages,false);return}
+  if(typing&&target===search&&search.value){search.value='';renderChats();return}
+ }
+});
+document.getElementById('chats').addEventListener('keydown',event=>{
+ if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
+ const items=[...chats.querySelectorAll('button.chat')];if(!items.length)return;
+ const index=items.indexOf(document.activeElement);if(index<0)return;
+ event.preventDefault();items[Math.max(0,Math.min(items.length-1,index+(event.key==='ArrowDown'?1:-1)))].focus();
+});
+
 </script></body></html>
