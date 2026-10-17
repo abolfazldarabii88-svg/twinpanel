@@ -279,3 +279,10 @@ Do not create a release or installer while this parity work is in progress unles
 - Added a right-click menu on messages with quick actions for copy, reply, forward, save, pin, edit, and delete; actions reuse the existing tested UI handlers rather than duplicating Telegram API calls.
 - Edit and delete are disabled for incoming messages, matching the existing UI permission guard. Menu placement is constrained to the visible window, and Escape, outside click, scrolling, and resize dismiss it.
 - Keyboard invocation is supported through Shift+F10 / Context Menu when a message bubble has focus. Live Telegram account behavior remains unverified.
+
+
+### Server-side jump to date — 2026-10-17
+- The date picker first jumps to a matching message already loaded in the selected conversation. If there is no loaded match, it now requests messages from the selected local calendar day from Telegram via Telethon, rather than telling the user to load pages manually.
+- Results include Telegram message entities and are capped at 100 returned messages, with a bounded server scan to avoid unbounded work on low-memory devices.
+- The date interval is calculated from the desktop's local date boundaries and sent as Unix timestamps; the bridge validates the interval and uses Telegram's date offset to seek into history.
+- Automated CI and a real account check are required to verify Telegram's server-side offset semantics and timezone edge cases.
