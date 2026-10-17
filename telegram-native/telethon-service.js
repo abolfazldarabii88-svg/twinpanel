@@ -120,6 +120,7 @@ class TelethonService {
   listContacts() { return this.request('list-contacts'); }
   addContact(phone, firstName, lastName = '') { return this.request('add-contact', { phone: String(phone || ''), firstName: String(firstName || ''), lastName: String(lastName || '') }); }
   deleteContact(chatId) { return this.request('delete-contact', { chatId: String(chatId) }); }
+  deleteChat(chatId) { return this.request('delete-chat', { chatId: String(chatId) }); }
   clearChatHistory(chatId) { return this.request('clear-chat-history', { chatId: String(chatId) }); }
   leaveChat(chatId) { return this.request('leave-chat', { chatId: String(chatId) }); }
   listDialogFolders() { return this.request('list-dialog-folders'); }
