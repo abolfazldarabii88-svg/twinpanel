@@ -128,6 +128,7 @@ class TelethonService {
   pinMessage(chatId, messageId, pinned = true) { return this.request('pin-message', { chatId: String(chatId), messageId: String(messageId), pinned: !!pinned }); }
   reactMessage(chatId, messageId, emoji) { return this.request('react-message', { chatId: String(chatId), messageId: String(messageId), emoji: String(emoji || '') }); }
   getMessageLink(chatId, messageId) { return this.request('message-link', { chatId: String(chatId), messageId: String(messageId) }); }
+  downloadMessageMedia(chatId, messageId) { return this.request('download-message-media', { chatId: String(chatId), messageId: String(messageId) }); }
   setChatMuted(chatId, muted) { return this.request('mute-chat', { chatId: String(chatId), muted: !!muted }); }
   setChatUnread(chatId, unread) { return this.request('set-chat-unread', { chatId: String(chatId), unread: !!unread }); }
   setChatArchived(chatId, archived) { return this.request('set-chat-archived', { chatId: String(chatId), archived: !!archived }); }
