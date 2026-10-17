@@ -223,3 +223,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Selected message can be saved to Saved Messages.
 - Multiple selected files are sent as Telegram media albums in batches of up to 10.
 - Chat notification mute now supports timed presets (1 hour, 8 hours, 2 days, 1 year) and unmute.
+
+- Scheduled text messages: composer control accepts local date/time and schedules through Telegram; queue editing/cancel controls remain outstanding.
