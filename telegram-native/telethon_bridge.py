@@ -9,13 +9,13 @@ from datetime import datetime, timezone
 
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
-from telethon.tl.functions.account import UpdateNotifySettingsRequest
+from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned
-from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll
+from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
 
@@ -199,6 +199,41 @@ async def handle(method, args):
             username = getattr(user, "username", None)
             members.append({"id": str(user.id), "name": name, "username": username, "bot": bool(getattr(user, "bot", False)), "verified": bool(getattr(user, "verified", False))})
         return {"members": members, "count": len(members), "limited": len(members) >= 100}
+    if method == "get-privacy-settings":
+        keys = {
+            "lastSeen": InputPrivacyKeyStatusTimestamp(),
+            "phoneNumber": InputPrivacyKeyPhoneNumber(),
+            "profilePhoto": InputPrivacyKeyProfilePhoto(),
+            "forwards": InputPrivacyKeyForwards(),
+            "groups": InputPrivacyKeyChatInvite(),
+            "calls": InputPrivacyKeyPhoneCall(),
+        }
+        result = {}
+        for name, key in keys.items():
+            response = await client(GetPrivacyRequest(key=key))
+            broad = next((rule for rule in reversed(response.rules) if type(rule).__name__ in {"PrivacyValueAllowAll", "PrivacyValueDisallowAll", "PrivacyValueAllowContacts", "PrivacyValueDisallowContacts"}), None)
+            kind = type(broad).__name__ if broad else "PrivacyValueAllowContacts"
+            result[name] = "everyone" if kind == "PrivacyValueAllowAll" else ("nobody" if kind == "PrivacyValueDisallowAll" else "contacts")
+        return result
+    if method == "set-privacy-setting":
+        name = str(args.get("name") or "")
+        choice = str(args.get("choice") or "")
+        keys = {
+            "lastSeen": InputPrivacyKeyStatusTimestamp(),
+            "phoneNumber": InputPrivacyKeyPhoneNumber(),
+            "profilePhoto": InputPrivacyKeyProfilePhoto(),
+            "forwards": InputPrivacyKeyForwards(),
+            "groups": InputPrivacyKeyChatInvite(),
+            "calls": InputPrivacyKeyPhoneCall(),
+        }
+        if name not in keys or choice not in {"everyone", "contacts", "nobody"}:
+            raise RuntimeError("تنظیم حریم خصوصی معتبر نیست.")
+        key = keys[name]
+        response = await client(GetPrivacyRequest(key=key))
+        exceptions = [rule for rule in response.rules if type(rule).__name__ in {"PrivacyValueAllowUsers", "PrivacyValueDisallowUsers", "PrivacyValueAllowChatParticipants", "PrivacyValueDisallowChatParticipants"}]
+        base = InputPrivacyValueAllowAll() if choice == "everyone" else (InputPrivacyValueDisallowAll() if choice == "nobody" else InputPrivacyValueAllowContacts())
+        await client(SetPrivacyRequest(key=key, rules=exceptions + [base]))
+        return {"ok": True, "name": name, "choice": choice}
     if method == "profile":
         if not client or not connected or not me:
             raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
