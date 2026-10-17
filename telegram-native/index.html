@@ -392,6 +392,7 @@ document.addEventListener('keydown',event=>{
  }
 });
 document.getElementById('chats').addEventListener('keydown',event=>{
+ if((event.key==='F10'&&event.shiftKey)||event.key==='ContextMenu'){const focused=document.activeElement;if(focused&&focused.classList.contains('chat')){event.preventDefault();focused.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:Math.min(innerWidth-220,focused.getBoundingClientRect().left+40),clientY:Math.min(innerHeight-220,focused.getBoundingClientRect().top+30)}))}return}
  if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
  const items=[...chats.querySelectorAll('button.chat')];if(!items.length)return;
  const index=items.indexOf(document.activeElement);if(index<0)return;
