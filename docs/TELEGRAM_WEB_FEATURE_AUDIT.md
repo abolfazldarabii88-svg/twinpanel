@@ -19,6 +19,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Saved API credentials / connection status / diagnostics | Electron IPC and native UI | Partial; needs restart/expired-session testing |
 | Chat/dialog list | Telethon dialog iteration and cache | Present in code — unverified |
 | Search within loaded chat titles and last-message snippets | search-chats filters fetched dialog rows | Partial; not Telegram global search |\n| Search text within currently loaded messages in the active conversation | Local renderer filter over loaded message text | Partial; no server-side/global search, and unloaded older messages are not searched |
+| Keyboard shortcuts (Ctrl/Cmd+F, Ctrl/Cmd+K, Ctrl/Cmd+Shift+F, Ctrl/Cmd+Enter, Escape) | Native renderer key handler | Present in code — unverified; shortcut conflicts and Windows runtime behavior still need testing |
 | Recent message history | get_messages | Present in code — unverified |
 | Older history pagination | history-before, merge and scroll restoration | Present in code — unverified |
 | Send plain text | send-text | Present in code — unverified |
