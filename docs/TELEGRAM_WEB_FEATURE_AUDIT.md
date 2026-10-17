@@ -269,7 +269,7 @@ Do not create a release or installer while this parity work is in progress unles
 
 
 ### Telegram formatting and entity-aware rendering — 2026-10-17
-- The Telethon bridge now includes message entity metadata (type, UTF-16-compatible offset/length, and optional URL/user ID) in chat history and in-chat search results.
+- The Telethon bridge now includes message entity metadata (type, offset/length, and optional URL/user ID) in chat history, in-chat/global search results, history-around navigation, and live message updates.
 - The renderer uses Telegram-provided entities for bold, italic, code/preformatted text, underline, strikethrough, URLs, mentions, and hashtags when present; plain-text detection remains the fallback for messages without entities.
 - Message text is no longer stripped in the history/search paths that return entities, so Telegram entity offsets remain aligned with the source text.
-- Automated CI is the next validation gate. No live Telegram account has been used to verify rendering.
+- Automated JavaScript and Python syntax checks are being rerun after the renderer fixes. No live Telegram account has been used to verify rendering.
