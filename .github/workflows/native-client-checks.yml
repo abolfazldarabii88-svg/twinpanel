@@ -42,6 +42,7 @@ jobs:
         run: |
           python -c "from telethon.tl.functions.messages import GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, GetRecentStickersRequest, SendScheduledMessagesRequest, DeleteHistoryRequest, UpdateDialogFilterRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, SetTypingRequest, SendMediaRequest"
           python -c "from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest"
+          python -c "from telethon.tl.functions.channels import GetFullChannelRequest, GetAdminLogRequest"
           python -c "from telethon.tl.functions.contacts import ImportContactsRequest"
           python -c "from telethon.tl.functions.bots import GetBotInfoRequest"
           python -c "from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest"
