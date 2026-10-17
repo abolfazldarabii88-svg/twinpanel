@@ -320,6 +320,7 @@ async def handle(method, args):
                     "outgoing": bool(msg.out),
                     "text": text_body[:4096] or ("رسانه / فایل" if msg.media else ""),
                     "entities": serialize_entities(msg),
+                    "reactions": serialize_reactions(msg),
                     "contentType": type(msg.media).__name__ if msg.media else "text"
                 })
             except Exception:
