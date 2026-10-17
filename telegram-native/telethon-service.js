@@ -115,6 +115,7 @@ class TelethonService {
   listChats(limit = 60) { return this.request('list-chats', { limit }); }
   listContacts() { return this.request('list-contacts'); }
   addContact(phone, firstName, lastName = '') { return this.request('add-contact', { phone: String(phone || ''), firstName: String(firstName || ''), lastName: String(lastName || '') }); }
+  deleteContact(chatId) { return this.request('delete-contact', { chatId: String(chatId) }); }
   listDialogFolders() { return this.request('list-dialog-folders'); }
   getProfile() { return this.request('profile'); }
   getAuthorizations() { return this.request('list-authorizations'); }
