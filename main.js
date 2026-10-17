@@ -64,7 +64,9 @@ tdlibService.setCallbacks({
     pendingNativeAuthPrompt = packet;
     notifyNativeTelegram('telegram-native:auth-prompt', packet);
   },
-  onStatus: value => notifyNativeTelegram('telegram-native:status-update', value)
+  onStatus: value => notifyNativeTelegram('telegram-native:status-update', value),
+  onUpdate: value => notifyNativeTelegram('telegram-native:live-update', value),
+  onProgress: value => notifyNativeTelegram('telegram-native:upload-progress', value)
 });
 const send = (channel, data) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, data); };
 const status = (state, message, extra = {}) => send('twinpanel:update-status', { state, message, ...extra });
@@ -283,30 +285,101 @@ ipcMain.handle('telegram-native:qr-image-status', (event, state) => {
 });
 ipcMain.handle('telegram-native:auth-input', (_event, payload) => tdlibService.submitAuthInput(payload?.type, payload?.value));
 ipcMain.handle('telegram-native:list-chats', (_event, limit) => tdlibService.listChats(limit));
+ipcMain.handle('telegram-native:search-public-peers', (_event, query) => tdlibService.searchPublicPeers(query));
+ipcMain.handle('telegram-native:report-message', (_event, chatId, messageId, reason, details) => tdlibService.reportMessage(chatId, messageId, reason, details));
+ipcMain.handle('telegram-native:report-chat', (_event, chatId, reason, details) => tdlibService.reportChat(chatId, reason, details));
+ipcMain.handle('telegram-native:get-admin-log', (_event, chatId) => tdlibService.getAdminLog(chatId));
+ipcMain.handle('telegram-native:list-forum-topics', (_event, chatId) => tdlibService.listForumTopics(chatId));
+ipcMain.handle('telegram-native:create-forum-topic', (_event, chatId, title) => tdlibService.createForumTopic(chatId, title));
+ipcMain.handle('telegram-native:edit-forum-topic', (_event, chatId, topicId, changes) => tdlibService.editForumTopic(chatId, topicId, changes));
+ipcMain.handle('telegram-native:topic-history', (_event, chatId, topicId, limit) => tdlibService.topicHistory(chatId, topicId, limit));
+ipcMain.handle('telegram-native:list-contacts', () => tdlibService.listContacts());
+ipcMain.handle('telegram-native:add-contact', (_event, phone, firstName, lastName) => tdlibService.addContact(phone, firstName, lastName));
+ipcMain.handle('telegram-native:delete-contact', (_event, chatId) => tdlibService.deleteContact(chatId));
+ipcMain.handle('telegram-native:delete-chat', (_event, chatId) => tdlibService.deleteChat(chatId));
+ipcMain.handle('telegram-native:clear-chat-history', (_event, chatId) => tdlibService.clearChatHistory(chatId));
+ipcMain.handle('telegram-native:leave-chat', (_event, chatId) => tdlibService.leaveChat(chatId));
+ipcMain.handle('telegram-native:list-dialog-folders', () => tdlibService.listDialogFolders());
+ipcMain.handle('telegram-native:save-dialog-folder', (_event, folder) => tdlibService.saveDialogFolder(folder));
+ipcMain.handle('telegram-native:delete-dialog-folder', (_event, id) => tdlibService.deleteDialogFolder(id));
 ipcMain.handle('telegram-native:profile', (_event) => tdlibService.getProfile());
+ipcMain.handle('telegram-native:list-stickers', () => tdlibService.listStickers());
+ipcMain.handle('telegram-native:send-sticker', (_event, chatId, token) => tdlibService.sendSticker(chatId, token));
+ipcMain.handle('telegram-native:get-bot-commands', (_event, chatId) => tdlibService.getBotCommands(chatId));
+ipcMain.handle('telegram-native:list-stories', () => tdlibService.listStories());
+ipcMain.handle('telegram-native:open-story', (_event, token) => tdlibService.openStory(token));
+ipcMain.handle('telegram-native:list-authorizations', () => tdlibService.getAuthorizations());
+ipcMain.handle('telegram-native:reset-authorization', (_event, hash) => tdlibService.resetAuthorization(hash));
+ipcMain.handle('telegram-native:get-privacy-settings', () => tdlibService.getPrivacySettings());
+ipcMain.handle('telegram-native:set-privacy-setting', (_event, name, choice) => tdlibService.setPrivacySetting(name, choice));
+ipcMain.handle('telegram-native:get-chat-info', (_event, chatId) => tdlibService.getChatInfo(chatId));
+ipcMain.handle('telegram-native:get-chat-members', (_event, chatId) => tdlibService.getChatMembers(chatId));
+ipcMain.handle('telegram-native:export-chat-invite-link', (_event, chatId) => tdlibService.exportChatInviteLink(chatId));
+ipcMain.handle('telegram-native:export-chat-invite-link', (_event, chatId, expireSeconds, usageLimit) => tdlibService.exportChatInviteLink(chatId, expireSeconds, usageLimit));
 ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
+ipcMain.handle('telegram-native:search-global-messages', (_event, query, limit) => tdlibService.searchGlobalMessages(query, limit));
 ipcMain.handle('telegram-native:history', (_event, chatId, limit) => tdlibService.getChatHistory(chatId, limit));
+ipcMain.handle('telegram-native:typing-action', (_event, chatId) => tdlibService.sendTypingAction(chatId));
+ipcMain.handle('telegram-native:export-chat-history', async (_event, chatId, title) => {
+  const result = await tdlibService.exportChatHistory(chatId, 2000);
+  const messages = result && Array.isArray(result.messages) ? result.messages : [];
+  const content = messages.map(m => '[' + (m.date || '') + '] ' + (m.outgoing ? 'من' : 'طرف مقابل') + ' #' + m.id + '\n' + (m.text || '')).join('\n\n') + '\n';
+  const safeTitle = String(title || 'telegram-chat').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || 'telegram-chat';
+  const choice = await dialog.showSaveDialog(mainWindow, { title: 'خروجی تاریخچهٔ تلگرام', defaultPath: safeTitle + '.txt', filters: [{ name: 'Text files', extensions: ['txt'] }] });
+  if (choice.canceled || !choice.filePath) return { canceled: true };
+  fs.writeFileSync(choice.filePath, content, 'utf8');
+  return { canceled: false, path: choice.filePath, count: messages.length, limited: !!(result && result.limited) };
+});
+ipcMain.handle('telegram-native:search-chat-messages', (_event, chatId, query, limit) => tdlibService.searchChatMessages(chatId, query, limit));
+ipcMain.handle('telegram-native:list-pinned-messages', (_event, chatId) => tdlibService.listPinnedMessages(chatId));
+ipcMain.handle('telegram-native:history-before', (_event, chatId, offsetId, limit) => tdlibService.getChatHistoryBefore(chatId, offsetId, limit));
+ipcMain.handle('telegram-native:history-around', (_event, chatId, messageId) => tdlibService.getChatHistoryAround(chatId, messageId));
+ipcMain.handle('telegram-native:messages-on-date', (_event, chatId, startTimestamp, endTimestamp, limit) => tdlibService.getChatMessagesOnDate(chatId, startTimestamp, endTimestamp, limit));
 ipcMain.handle('telegram-native:preview', (_event, chatId, limit) => tdlibService.getUnreadPreview(chatId, limit));
-ipcMain.handle('telegram-native:send-text', (_event, chatId, body) => tdlibService.sendTextMessage(chatId, body));
+ipcMain.handle('telegram-native:send-text', (_event, chatId, body, topicId) => tdlibService.sendTextMessage(chatId, body, topicId));
+ipcMain.handle('telegram-native:send-poll', (_event, chatId, question, options, anonymous, multipleChoice) => tdlibService.sendPoll(chatId, question, options, anonymous, multipleChoice));
+ipcMain.handle('telegram-native:vote-poll', (_event, chatId, messageId, options) => tdlibService.votePoll(chatId, messageId, options));
+ipcMain.handle('telegram-native:search-gifs', (_event, query) => tdlibService.searchGifs(query));
+ipcMain.handle('telegram-native:send-gif', (_event, chatId, token) => tdlibService.sendGif(chatId, token));
+ipcMain.handle('telegram-native:schedule-message', (_event, chatId, body, scheduleAt) => tdlibService.scheduleMessage(chatId, body, scheduleAt));
+ipcMain.handle('telegram-native:list-scheduled-messages', (_event, chatId) => tdlibService.listScheduledMessages(chatId));
+ipcMain.handle('telegram-native:send-scheduled-message-now', (_event, chatId, messageId) => tdlibService.sendScheduledMessageNow(chatId, messageId));
+ipcMain.handle('telegram-native:cancel-scheduled-message', (_event, chatId, messageId) => tdlibService.cancelScheduledMessage(chatId, messageId));
+ipcMain.handle('telegram-native:edit-scheduled-message', (_event, chatId, messageId, text) => tdlibService.editScheduledMessage(chatId, messageId, text));
+ipcMain.handle('telegram-native:reply-text', (_event, chatId, messageId, body) => tdlibService.replyTextMessage(chatId, messageId, body));
+ipcMain.handle('telegram-native:edit-message', (_event, chatId, messageId, body) => tdlibService.editMessage(chatId, messageId, body));
+ipcMain.handle('telegram-native:delete-message', (_event, chatId, messageId) => tdlibService.deleteMessage(chatId, messageId));
+ipcMain.handle('telegram-native:forward-message', (_event, chatId, messageId, targetChatId, options) => tdlibService.forwardMessage(chatId, messageId, targetChatId, options));
+ipcMain.handle('telegram-native:save-message', (_event, chatId, messageId) => tdlibService.saveMessage(chatId, messageId));
+ipcMain.handle('telegram-native:pin-message', (_event, chatId, messageId, pinned) => tdlibService.pinMessage(chatId, messageId, pinned));
+ipcMain.handle('telegram-native:react-message', (_event, chatId, messageId, emoji) => tdlibService.reactMessage(chatId, messageId, emoji));
+ipcMain.handle('telegram-native:message-link', (_event, chatId, messageId) => tdlibService.getMessageLink(chatId, messageId));
+ipcMain.handle('telegram-native:download-message-media', (_event, chatId, messageId) => tdlibService.downloadMessageMedia(chatId, messageId));
 ipcMain.handle('telegram-native:select-media', async () => {
   const result = await dialog.showOpenDialog(nativeTelegramWindow && !nativeTelegramWindow.isDestroyed() ? nativeTelegramWindow : mainWindow, {
-    title: 'انتخاب فایل برای تلگرام',
-    properties: ['openFile'],
-    filters: [{ name: 'Media and documents', extensions: ['png','jpg','jpeg','webp','gif','mp4','mp3','ogg','opus','pdf','txt','zip','doc','docx'] }]
+    title: 'انتخاب یک یا چند فایل برای تلگرام',
+    properties: ['openFile', 'multiSelections'],
+    filters: [{ name: 'Media and documents', extensions: ['png','jpg','jpeg','webp','gif','mp4','mp3','ogg','oga','opus','m4a','wav','aac','flac','pdf','txt','zip','doc','docx'] }]
   });
-  if (result.canceled || !result.filePaths[0]) return null;
-  const fs = require('node:fs');
-  const path = require('node:path');
+  if (result.canceled || !result.filePaths.length) return null;
   const crypto = require('node:crypto');
   const outbox = path.join(app.getPath('userData'), 'telegram-native', 'outbox');
   fs.mkdirSync(outbox, { recursive: true });
-  const source = result.filePaths[0];
-  const target = path.join(outbox, crypto.randomUUID() + path.extname(source));
-  fs.copyFileSync(source, target);
-  return { path: target, name: path.basename(source) };
+  const files = result.filePaths.map(source => {
+    const target = path.join(outbox, crypto.randomUUID() + path.extname(source));
+    fs.copyFileSync(source, target);
+    return { path: target, name: path.basename(source) };
+  });
+  return { ...files[0], paths: files.map(file => file.path), files };
 });
+ipcMain.handle('telegram-native:send-voice', (_event, chatId, filePath, caption) => tdlibService.sendVoice(chatId, filePath, caption));
 ipcMain.handle('telegram-native:send-media', (_event, chatId, filePath, caption) => tdlibService.sendMedia(chatId, filePath, caption));
+ipcMain.handle('telegram-native:send-media-batch', (_event, chatId, filePaths, caption) => tdlibService.sendMediaBatch(chatId, filePaths, caption));
 ipcMain.handle('telegram-native:mute-chat', (_event, chatId, muted) => tdlibService.setChatMuted(chatId, muted));
+ipcMain.handle('telegram-native:mute-chat-until', (_event, chatId, seconds) => tdlibService.setChatMutedUntil(chatId, seconds));
+ipcMain.handle('telegram-native:set-chat-unread', (_event, chatId, unread) => tdlibService.setChatUnread(chatId, unread));
+ipcMain.handle('telegram-native:set-chat-archived', (_event, chatId, archived) => tdlibService.setChatArchived(chatId, archived));
+ipcMain.handle('telegram-native:set-chat-pinned', (_event, chatId, pinned) => tdlibService.setChatPinned(chatId, pinned));
 ipcMain.handle('twinpanel:toggle-fullscreen', event => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return false;
