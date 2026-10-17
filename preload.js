@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     submitAuthInput: (type, value) => ipcRenderer.invoke('telegram-native:auth-input', { type, value }),
     listChats: limit => ipcRenderer.invoke('telegram-native:list-chats', limit),
     listContacts: () => ipcRenderer.invoke('telegram-native:list-contacts'),
+    addContact: (phone, firstName, lastName) => ipcRenderer.invoke('telegram-native:add-contact', phone, firstName, lastName),
     listDialogFolders: () => ipcRenderer.invoke('telegram-native:list-dialog-folders'),
     getProfile: () => ipcRenderer.invoke('telegram-native:profile'),
     getPrivacySettings: () => ipcRenderer.invoke('telegram-native:get-privacy-settings'),
