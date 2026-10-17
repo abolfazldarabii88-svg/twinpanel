@@ -254,3 +254,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Group/channel invite-link generation added. The UI requests a link through Telegram and copies/displays it; Telegram permissions may restrict this to admins or existing invite links. Live-account verification is still pending.
 
 - Added a native save-dialog workflow to export up to 2,000 recent messages from the active chat to UTF-8 `.txt`, in chronological order. Media is represented by a short placeholder rather than embedded. Export scope is bounded and does not yet support full account-wide export.
+
+- Typing indicator is now sent to Telegram while composing, throttled to at most one request every 3.5 seconds per renderer session. It is best-effort and not a persistent typing state.
