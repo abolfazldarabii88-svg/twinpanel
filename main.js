@@ -71,6 +71,20 @@ tdlibService.setCallbacks({
 const send = (channel, data) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, data); };
 const status = (state, message, extra = {}) => send('twinpanel:update-status', { state, message, ...extra });
 
+function openPdfReader(filePath, title = 'PDF') {
+  const reader = new BrowserWindow({
+    width: 1050, height: 820, minWidth: 640, minHeight: 480,
+    title: title || 'TwinPanel PDF Reader',
+    backgroundColor: '#202124',
+    autoHideMenuBar: true,
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
+  });
+  reader.loadURL(pathToFileURL(filePath).href).catch(error => {
+    console.error('[TwinPanel] PDF viewer failed to load:', error);
+  });
+  return reader;
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1500, height: 950, minWidth: 900, minHeight: 600,
@@ -107,6 +121,31 @@ function createWindow() {
         nativeTelegramGuest = null;
       }
     };
+    // Open Telegram PDF documents in a lightweight TwinPanel reader window.
+    // Telegram Web may expose PDFs as downloads rather than navigable documents.
+    if (!child.session.__twinPanelTelegramPdfHandler) {
+      child.session.__twinPanelTelegramPdfHandler = true;
+      child.session.on('will-download', (event, item, sourceContents) => {
+        let fromTelegram = false;
+        try {
+          const url = new URL(sourceContents?.getURL() || child.getURL());
+          fromTelegram = url.protocol === 'https:' &&
+            (url.hostname === 'web.telegram.org' || url.hostname.endsWith('.telegram.org'));
+        } catch {}
+        const filename = item.getFilename() || 'Telegram-document.pdf';
+        const isPdf = /\.pdf$/i.test(filename) || String(item.getMimeType() || '').toLowerCase() === 'application/pdf';
+        if (!fromTelegram || !isPdf) return;
+        const folder = path.join(app.getPath('temp'), 'TwinPanel-PDF');
+        fs.mkdirSync(folder, { recursive: true });
+        const safeName = path.basename(filename).replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'Telegram-document.pdf';
+        const filePath = path.join(folder, Date.now() + '-' + safeName);
+        item.setSavePath(filePath);
+        item.once('done', (_downloadEvent, state) => {
+          if (state === 'completed') openPdfReader(filePath, safeName);
+        });
+      });
+    }
+
     // Never inherit an accidental muted state in either embedded app.
     child.setAudioMuted(false);
     child.on('dom-ready', () => { child.setAudioMuted(false); identifyNativeTelegramGuest(); });
