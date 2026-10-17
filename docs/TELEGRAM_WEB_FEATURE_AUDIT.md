@@ -298,3 +298,9 @@ Do not create a release or installer while this parity work is in progress unles
 - Message history, server-side in-chat/global search, date search, and live updates now serialize available Telegram reaction emoji/count/chosen metadata where supported by the returned message object.
 - The native renderer displays reaction chips and clicking a chip requests that reaction through the existing Telethon action. Custom emoji reactions currently use a generic sparkle marker; choosing premium/custom emoji is not implemented.
 - Reaction rendering and toggle semantics require real-account verification; syntax CI does not prove Telegram permissions or server behavior.
+
+
+### Photo viewer — 2026-10-17
+- Clicking an inline photo opens a fullscreen lightbox with close button, Escape handling, mouse-wheel zoom from 1× to 4×, and double-click reset.
+- The viewer reuses the already downloaded/cached image data URL and does not trigger another media download. Keyboard activation is supported on the inline image.
+- Multi-photo navigation, panning at high zoom, and real-account visual verification remain future work.
