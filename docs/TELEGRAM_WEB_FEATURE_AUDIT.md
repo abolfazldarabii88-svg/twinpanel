@@ -18,7 +18,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Phone/code, 2FA and QR login flow | Telethon bridge + auth prompt UI | Present in code — unverified |
 | Saved API credentials / connection status / diagnostics | Electron IPC and native UI | Partial; needs restart/expired-session testing |
 | Chat/dialog list | Telethon dialog iteration and cache | Present in code — unverified |
-| Search within loaded chat titles and last-message snippets | search-chats filters fetched dialog rows | Partial; not Telegram global search |
+| Search within loaded chat titles and last-message snippets | search-chats filters fetched dialog rows | Partial; not Telegram global search |\n| Search text within currently loaded messages in the active conversation | Local renderer filter over loaded message text | Partial; no server-side/global search, and unloaded older messages are not searched |
 | Recent message history | get_messages | Present in code — unverified |
 | Older history pagination | history-before, merge and scroll restoration | Present in code — unverified |
 | Send plain text | send-text | Present in code — unverified |
@@ -50,7 +50,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Scheduled / recurring messages | Missing | Scheduler and UI absent |
 | Sent/read state and read receipts | Missing | No message status model or reliable read state |
 | Typing indicators / online status | Missing | No live updates |
-| Search in current conversation | Missing | Current search filters chat list only |
+| Search in current conversation | Partial | Local search filters only currently loaded message text; older unloaded history, media captions and server-side search are not included |
 | Global Telegram search | Missing | No server-side message/user/channel search |
 | Search by date / hashtag / public posts | Missing | No search workflows |
 | Multi-select / bulk actions | Missing | No selection mode |
