@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji
@@ -108,6 +108,17 @@ async def handle(method, args):
     global client, connected, connecting, me, diagnostic_stage, last_message
     if method == "status":
         return status()
+    if method == "export-chat-invite-link":
+        entity = entity_for(args.get("chatId"))
+        peer = await client.get_input_entity(entity)
+        try:
+            invite = await client(ExportChatInviteRequest(peer=peer))
+        except Exception as exc:
+            raise RuntimeError("ساخت لینک دعوت ممکن نشد؛ برای این گفتگو باید دسترسی مدیر داشته باشی.") from exc
+        link = getattr(invite, "link", None)
+        if not link:
+            raise RuntimeError("تلگرام لینک دعوتی برنگرداند.")
+        return {"link": str(link)}
     if method == "get-chat-members":
         entity = entity_for(args.get("chatId"))
         members = []
