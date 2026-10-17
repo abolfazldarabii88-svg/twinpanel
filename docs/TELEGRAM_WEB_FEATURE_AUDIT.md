@@ -329,3 +329,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Reply previews: native message serialization now carries the replied-to message ID in history/search/live updates where the underlying Telegram message exposes it. The bubble shows a compact reply reference; selecting it loads nearby history and highlights the original message when returned. The quoted original text is not fetched per message, avoiding one network request for every bubble.
 
 - In-chat search navigation: previous/next controls cycle through matching messages already loaded in the active conversation, move focus/scroll to the selected bubble, and Enter / Shift+Enter provide keyboard navigation. This remains local-history search unless the explicit full-chat search action is used.
+
+- Typing indicator: while composing a non-empty message in a connected real chat, the client sends Telegram's typing action at most once every 3.5 seconds; transient failures are intentionally non-blocking and do not interrupt typing.
