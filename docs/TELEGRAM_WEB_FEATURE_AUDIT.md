@@ -21,6 +21,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Search within loaded chat titles and last-message snippets | search-chats filters fetched dialog rows | Partial; not Telegram global search |\n| Search text within currently loaded messages in the active conversation | Local renderer filter over loaded message text | Partial; no server-side/global search, and unloaded older messages are not searched |
 | Keyboard shortcuts (Ctrl/Cmd+F, Ctrl/Cmd+K, Ctrl/Cmd+Shift+F, Ctrl/Cmd+Enter, Escape) | Native renderer key handler | Present in code — unverified; shortcut conflicts and Windows runtime behavior still need testing |
 | Recent message history | get_messages | Present in code — unverified |
+| Date separators in conversation history | Renderer groups adjacent messages by local calendar date | Present in code — unverified; timezone and long-history behavior still need runtime testing |
 | Older history pagination | history-before, merge and scroll restoration | Present in code — unverified |
 | Jump to latest messages | Native conversation control scrolls to the bottom of the loaded history | Present in code — unverified; live-update and long-history behavior still need testing |
 | Send plain text | send-text | Present in code — unverified |
