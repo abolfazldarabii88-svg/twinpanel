@@ -124,7 +124,8 @@ body.host-themed .small-btn{background:color-mix(in srgb,var(--panel) 70%,var(--
 const demoChats=[{id:'saved',name:'Saved Messages',avatar:'▣',category:'personal',preview:'یادداشت‌ها و فایل‌های ذخیره‌شده',sample:true},{id:'biology',name:'زیست‌شناسی · کلاس',avatar:'ز',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'physics',name:'فیزیک · کلاس',avatar:'ف',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'math',name:'ریاضی · کلاس',avatar:'∑',category:'study',preview:'دادهٔ نمایشی',sample:true},{id:'friends',name:'گفتگوی شخصی',avatar:'✦',category:'personal',preview:'دادهٔ نمایشی',sample:true},{id:'channel',name:'کانال نمونه',avatar:'◉',category:'channels',preview:'دادهٔ نمایشی',sample:true}];
 const api=window.twinPanel&&window.twinPanel.telegramNative;
 let active='saved',filter='all',realChats=null,pendingPrompt=null,apiCredentialsSaved=false,currentMessages=[],hasOlderMessages=true,selectedMessageId=null,replyTargetMessageId=null;
-let globalSearchResults=null,globalSearchQuery='',customFolders=[];\nlet multiSelectMode=false,multiSelectChatId=null;const selectedMessageIds=new Set();
+let globalSearchResults=null,globalSearchQuery='',customFolders=[];
+let multiSelectMode=false,multiSelectChatId=null;const selectedMessageIds=new Set();
 const chatScrollPositions=new Map();
 try{const saved=JSON.parse(localStorage.getItem('twinpanel:telegram-scroll-positions')||'{}');for(const [id,top] of Object.entries(saved).slice(-200)){if(Number.isFinite(top)&&top>=0)chatScrollPositions.set(String(id),top)}}catch{}
 function persistChatScrollPositions(){try{const entries=[...chatScrollPositions.entries()].slice(-200);localStorage.setItem('twinpanel:telegram-scroll-positions',JSON.stringify(Object.fromEntries(entries)))}catch{}}
