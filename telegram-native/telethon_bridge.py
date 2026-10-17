@@ -429,6 +429,16 @@ async def handle(method, args):
         else:
             await client.send_read_acknowledge(input_peer)
         return {"ok": True, "chatId": str(args.get("chatId")), "unread": unread}
+    if method == "mute-chat-until":
+        entity = entity_for(args.get("chatId"))
+        seconds = int(args.get("seconds") or 0)
+        allowed = {0, 3600, 28800, 172800, 31536000}
+        if seconds not in allowed:
+            raise RuntimeError("مدت بی‌صداکردن معتبر نیست.")
+        mute_until = int(time.time()) + seconds if seconds else 0
+        input_peer = await client.get_input_entity(entity)
+        await client(UpdateNotifySettingsRequest(InputNotifyPeer(input_peer), InputPeerNotifySettings(mute_until=mute_until)))
+        return {"ok": True, "muted": bool(seconds), "muteUntil": mute_until}
     if method == "mute-chat":
         entity = entity_for(args.get("chatId"))
         mute_until = int(time.time()) + 31536000 if args.get("muted") else 0
