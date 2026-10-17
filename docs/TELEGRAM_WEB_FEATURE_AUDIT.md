@@ -333,3 +333,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Typing indicator: while composing a non-empty message in a connected real chat, the client sends Telegram's typing action at most once every 3.5 seconds; transient failures are intentionally non-blocking and do not interrupt typing.
 
 - Composer emoji picker: a compact, keyboard-focusable emoji grid inserts the selected emoji at the current text selection, preserves surrounding text, and remains disabled until Telegram is connected.
+
+- Multiline composer: the message field is now an auto-growing textarea capped at 140 px; Enter sends, Shift+Enter inserts a newline, restored per-chat drafts resize correctly, and the emoji picker still inserts at the current selection.
