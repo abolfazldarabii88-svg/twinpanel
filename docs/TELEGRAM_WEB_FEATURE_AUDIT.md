@@ -227,3 +227,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Scheduled text messages: composer control accepts local date/time and schedules through Telegram; queue editing/cancel controls remain outstanding.
 
 - Chat list now includes a dedicated unread-only filter using each dialog's unread count.
+
+- Conversation pin/unpin controls added; pinned conversations sort ahead of unpinned dialogs in the list.
