@@ -244,3 +244,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Group/channel invite link export added for accounts with the required Telegram permissions. The renderer displays the generated link in a selectable prompt and warns users to share it only with trusted people. Live permission/error handling still needs account testing.
 
 - Scheduled-message manager now supports editing the text of a scheduled text message as well as canceling it. Editing media-based scheduled messages is not provided by this control.
+
+- Added a pinned-messages list for the active chat (up to 100 results) with a jump-to-message action that loads the surrounding history. Actual behavior depends on Telegram permissions and message availability.
