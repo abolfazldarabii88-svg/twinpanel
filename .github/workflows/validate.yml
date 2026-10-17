@@ -25,6 +25,17 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+      - name: Set up Python for bundled Telethon runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build standalone Telethon runtime
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install telethon python-socks pyinstaller
+          python -m py_compile telegram-native/telethon_bridge.py
+          pyinstaller --noconfirm --clean --onefile --name twinpanel-telethon --distpath telegram-native/runtime --collect-all telethon --collect-all python_socks telegram-native/telethon_bridge.py
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -36,8 +47,7 @@ jobs:
           node --check preload.js
           node --check scripts/make-icon.js
           node --check scripts/check-inline-scripts.js
-          node --check telegram-native/tdlib-service.js
-          node --check telegram-native/tdlib-bridge.js
+          node --check telegram-native/telethon-service.js
           node scripts/check-inline-scripts.js
       - name: Install dependencies
         run: npm ci
