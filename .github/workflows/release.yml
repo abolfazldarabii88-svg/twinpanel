@@ -37,7 +37,9 @@ jobs:
       - name: Resolve release version
         id: version
         shell: pwsh
-        run: "echo version=$(node -p \"require('./package.json').version\") >> $env:GITHUB_OUTPUT"
+        run: |
+          $version = node -p "require('./package.json').version"
+          "version=$version" >> $env:GITHUB_OUTPUT
       - name: Publish installer and all updater assets together
         uses: softprops/action-gh-release@v2
         with:
