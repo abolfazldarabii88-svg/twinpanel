@@ -87,6 +87,7 @@ let globalSearchResults=null,customFolders=[];
 const chatScrollPositions=new Map();
 try{const saved=JSON.parse(localStorage.getItem('twinpanel:telegram-scroll-positions')||'{}');for(const [id,top] of Object.entries(saved).slice(-200)){if(Number.isFinite(top)&&top>=0)chatScrollPositions.set(String(id),top)}}catch{}
 function persistChatScrollPositions(){try{const entries=[...chatScrollPositions.entries()].slice(-200);localStorage.setItem('twinpanel:telegram-scroll-positions',JSON.stringify(Object.fromEntries(entries)))}catch{}}
+window.addEventListener('pagehide',persistChatScrollPositions);
 let lastTypingSentAt=0;
 function saveDraft(chatId,value){try{localStorage.setItem('twinpanel:telegram-draft:'+String(chatId),String(value||''))}catch{}}
 function loadDraft(chatId){try{return localStorage.getItem('twinpanel:telegram-draft:'+String(chatId))||''}catch{return ''}}
