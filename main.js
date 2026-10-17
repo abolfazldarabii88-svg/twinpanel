@@ -98,6 +98,45 @@ function createWindow() {
   mainWindow.on('enter-full-screen', () => send('twinpanel:fullscreen-changed', true));
   mainWindow.on('leave-full-screen', () => send('twinpanel:fullscreen-changed', false));
   mainWindow.webContents.on('did-attach-webview', (_event, child) => {
+    // Telegram Web sends PDFs as downloads. Keep the download flow, but open completed
+    // PDFs automatically instead of leaving them silently in the Downloads folder.
+    const attachTelegramPdfAutoOpen = () => {
+      let telegramSession = false;
+      try {
+        const current = new URL(child.getURL());
+        telegramSession = current.protocol === 'https:' &&
+          (current.hostname === 'web.telegram.org' || current.hostname.endsWith('.telegram.org'));
+      } catch {}
+      if (!telegramSession || child.session.__twinPanelPdfAutoOpenAttached) return;
+      child.session.__twinPanelPdfAutoOpenAttached = true;
+      child.session.on('will-download', (event, item, sourceContents) => {
+        let fromTelegram = false;
+        try {
+          const current = new URL(sourceContents?.getURL() || '');
+          fromTelegram = current.protocol === 'https:' &&
+            (current.hostname === 'web.telegram.org' || current.hostname.endsWith('.telegram.org'));
+        } catch {}
+        const originalName = item.getFilename() || '';
+        const mimeType = String(item.getMimeType() || '').toLowerCase();
+        if (!fromTelegram || (!/\.pdf$/i.test(originalName) && mimeType !== 'application/pdf')) return;
+        const folder = path.join(app.getPath('temp'), 'TwinPanel-PDF');
+        fs.mkdirSync(folder, { recursive: true });
+        const safeName = path.basename(originalName || 'Telegram-document.pdf')
+          .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'Telegram-document.pdf';
+        const filePath = path.join(folder, `${Date.now()}-${safeName}`);
+        item.setSavePath(filePath);
+        item.once('done', (_downloadEvent, state) => {
+          if (state === 'completed') {
+            shell.openPath(filePath).then(error => {
+              if (error) console.error('[TwinPanel] Could not open downloaded Telegram PDF:', error);
+            }).catch(error => console.error('[TwinPanel] PDF open failed:', error));
+          }
+        });
+      });
+    };
+    attachTelegramPdfAutoOpen();
+    child.on('dom-ready', attachTelegramPdfAutoOpen);
+    child.on('did-navigate', attachTelegramPdfAutoOpen);
     const identifyNativeTelegramGuest = () => {
       const isNative = isNativeTelegramUrl(child.getURL());
       if (isNative) {
