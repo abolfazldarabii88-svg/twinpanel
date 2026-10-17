@@ -55,7 +55,7 @@ body.host-themed .small-btn{background:color-mix(in srgb,var(--panel) 70%,var(--
 <button id="apiCredentialEdit" type="button" hidden style="width:100%">ویرایش اعتبارهای API</button>
 <div style="display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-top:4px">
  <select id="proxyType" aria-label="نوع پروکسی" style="min-width:145px;flex:1;padding:8px;border-radius:8px">
-  <option value="">اتصال مستقیم</option><option value="socks5">پروکسی SOCKS5</option><option value="http">پروکسی HTTP</option><option value="mtproto">پروکسی MTProto</option>
+  <option value="">WebSocket امن (WSS) · پورت ۴۴۳</option>
  </select>
  <input id="proxyServer" hidden autocomplete="off" placeholder="میزبان پروکسی (IP/دامنه)" style="min-width:155px;flex:2;padding:8px;border-radius:8px">
  <input id="proxyPort" hidden type="number" min="1" max="65535" inputmode="numeric" placeholder="درگاه" style="min-width:80px;flex:1;padding:8px;border-radius:8px">
@@ -63,7 +63,7 @@ body.host-themed .small-btn{background:color-mix(in srgb,var(--panel) 70%,var(--
  <input id="proxyPassword" hidden type="password" autocomplete="new-password" placeholder="رمز پروکسی (اختیاری)" style="min-width:130px;flex:1;padding:8px;border-radius:8px">
  <input id="proxySecret" hidden autocomplete="off" placeholder="Secret هگزادسیمال MTProto" style="min-width:180px;flex:2;padding:8px;border-radius:8px">
 </div>
-<div id="proxyHint" style="width:100%;font-size:11px;line-height:1.7;color:#9eafd0">اگر اتصال مستقیم به تلگرام انجام نشد، پروکسی سالم خودت را انتخاب کن. اطلاعات پروکسی فقط هنگام اتصال روی همین دستگاه استفاده می‌شود و ذخیره یا ارسال نمی‌شود.</div>
+<div id="proxyHint" style="width:100%;font-size:11px;line-height:1.7;color:#9eafd0">این نسخهٔ آزمایشی از مسیر WebSocket رمزگذاری‌شده روی پورت ۴۴۳ استفاده می‌کند؛ تنظیم پروکسی دستی در این مسیر غیرفعال است.</div>
 <button id="connectButton" type="submit">اتصال به تلگرام</button>
 <button id="cancelConnectButton" type="button" hidden>لغو اتصال</button>
 <button id="diagnosticsButton" type="button">کپی گزارش اتصال</button>
@@ -191,6 +191,16 @@ document.getElementById('connectForm').addEventListener('submit',async e=>{
    setStatus(s);if(api.credentialsStatus)api.credentialsStatus().then(state=>setApiCredentialUi(!!state.saved)).catch(()=>{});document.getElementById('apiId').value='';document.getElementById('apiHash').value='';realChats=[];await loadChats();showToast('اتصال برقرار شد.');
  }catch(err){
    const msg=err.message||'اتصال برقرار نشد';
+   // API credentials are stored encrypted before the network attempt starts.
+   // Refresh their saved state even if the Telegram connection itself fails.
+   try{
+     const savedState=await api.credentialsStatus();
+     if(savedState&&savedState.saved){
+       document.getElementById('apiId').value='';
+       document.getElementById('apiHash').value='';
+       setApiCredentialUi(true);
+     }
+   }catch{}
    showToast(msg);document.getElementById('statusText').textContent='خطای اتصال: '+msg;
    document.getElementById('connectionProgress').textContent='خطای اتصال: '+msg;
  }finally{
