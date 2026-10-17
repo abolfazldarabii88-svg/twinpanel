@@ -18,7 +18,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Phone/code, 2FA and QR login flow | Telethon bridge + auth prompt UI | Present in code — unverified |
 | Saved API credentials / connection status / diagnostics | Electron IPC and native UI | Partial; needs restart/expired-session testing |
 | Chat/dialog list | Telethon dialog iteration and cache | Present in code — unverified |
-| Search within loaded chat titles and last-message snippets | search-chats filters fetched dialog rows | Partial; not Telegram global search |\n| Search text within currently loaded messages in the active conversation | Local renderer filter over loaded message text | Partial; no server-side/global search, and unloaded older messages are not searched |
+| Search within loaded chat titles and last-message snippets | search-chats filters fetched dialog rows | Partial; not Telegram global search |\n| Search text within current conversation | Local renderer search over loaded messages, plus separate server-side global search | Partial; unloaded older messages and all media captions are not always searched |
 | Keyboard shortcuts (Ctrl/Cmd+F, Ctrl/Cmd+K, Ctrl/Cmd+Shift+F, Ctrl/Cmd+Enter, Escape) | Native renderer key handler | Present in code — unverified; shortcut conflicts and Windows runtime behavior still need testing |
 | Recent message history | get_messages | Present in code — unverified |
 | Date separators in conversation history | Renderer groups adjacent messages by local calendar date | Present in code — unverified; timezone and long-history behavior still need runtime testing |
@@ -30,7 +30,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Edit/delete own message | edit-message / delete-message and UI controls | Present in code — unverified |
 | Photo/video preview | Bounded media downloads to data URLs; limited size/cache | Partial |
 | Send one selected file with optional caption | Native file chooser + send-media | Partial; no queue/progress/cancel |
-| Mute a chat | One-year mute request | Partial; no duration picker/unmute UI |
+| Mute a chat | Mute/unmute API and duration choices in the chat context menu | Partial; Telegram account behavior needs real-account verification |
 | Profile summary | Name, username, ID, Premium/bot flags | Partial; not a full profile |
 | Manual/periodic refresh | UI polling | Partial; no event-driven live update stream |
 | Native pane is default, Telegram Web is fallback | TwinPanel host UI | Present in code — unverified |
@@ -49,7 +49,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Archived and unread chats | Partial | Filters/actions exist; exact Telegram Web archive UX and folder edge cases need testing |
 | Custom Telegram folders | Partial | Existing folders can be listed and selected; folder creation, editing and sharing are missing |
 | Current conversation | In code | History, search, reply, reactions, media viewer and message actions exist in varying levels of completeness |
-| Profile / chat info / members | Partial | Summary dialogs only; no full profile editor or complete group/channel administration pages |
+| Profile / chat info / members | Profile summary, chat info, members, invite links and recent admin log are in code | Partial; full profile editor and admin permission controls are missing |
 | Client settings | Partial | Auto-refresh, compact mode, light/dark theme, font size, Telegram privacy controls and a connected-device/session manager with remote logout are in code; comprehensive notification controls remain missing |
 | Connection / QR / phone authorization | In code | Authentication screens exist; QR/phone login still requires Windows and real-account acceptance testing |
 | Scheduled messages | Partial | A dedicated manager lists scheduled messages with inline edit/cancel/send-now actions; scheduling uses a native date/time picker |
@@ -66,17 +66,17 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Telegram Web capability | TwinPanel status | Notes / required work |
 |---|---|---|
 | Plain text send/receive | Partial | Send/history code exists; live updates and account verification missing |
-| Bold, italic, underline, strikethrough | Missing | Need Telegram entity parsing and rich-text composer |
-| Code blocks, spoilers, blockquotes | Missing | Need entity-aware rendering and composer |
+| Bold, italic, underline, strikethrough | Telegram entities are serialized and rendered | Partial; rich-text composer parity remains incomplete |
+| Code blocks, spoilers, blockquotes | Code formatting, spoilers and expandable blockquotes are rendered | Partial; full composer formatting controls remain incomplete |
 | Mentions, hashtags, links, bot commands | Partial | Plain text only; no autocomplete or structured entities |
 | Reply/quote | Present in code — unverified | Basic reply to a selected message; no quote formatting/thread UI |
-| Forward with/without attribution | Partial | Forward API and exact-title destination picker implemented; no attribution-choice UI; real-account permissions/behavior unverified |
+| Forward with/without attribution | Forward-to-chat supports keeping or removing attribution and optionally removing media captions | Partial; real-account permissions and behavior are unverified |
 | Edit message text/media | Partial | Text edit path only; media caption/edit support missing |
 | Delete own / delete for everyone | Partial | Delete path requests revoke; permissions and UI choices need testing |
 | Pin/unpin message | Partial | Pin and unpin API actions and selected-message controls implemented; real-account permission checks still missing |
-| Scheduled / recurring messages | Missing | Scheduler and UI absent |
+| Scheduled / recurring messages | Schedule, list, edit, cancel and send-now actions exist; native date/time picker is used | Partial; recurring schedules are missing |
 | Sent/read state and read receipts | Partial | Explicit mark-chat-read/unread actions and unread-count badges implemented; live receipt/status UI and account verification remain missing |
-| Typing indicators / online status | Missing | No live updates |
+| Typing indicators / online status | Throttled typing action is sent while composing; live online/read state is not fully surfaced | Partial |
 | Search in current conversation | Partial | Local search filters only currently loaded message text; older unloaded history, media captions and server-side search are not included |
 | Global Telegram search | Missing | No server-side message/user/channel search |
 | Search by date / hashtag / public posts | Partial | Search by date and local hashtags exist; global public user/channel/group search is in code, but public-post search and complete hashtag workflows remain missing |
@@ -84,9 +84,9 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Copy text / message link | Partial | Copy selected message text and direct link where supported implemented; context menu and links for every peer type remain missing |
 | Report message / user | Partial | Report-message and report-chat actions are in code with reason and optional details; actual Telegram acceptance and account eligibility remain unverified |
 | Save/forward attribution choices | Partial | Forward-to-chat supports keeping attribution or removing it, with an optional media-caption removal choice; complete saved-message collections remain missing |
-| Message effects / reactions / read-by list | Missing | No reaction or effect UI/API |
-| Per-chat cloud drafts | Missing | Composer draft is not saved per chat |
-| Context menu / shortcuts / drag-drop / clipboard | Missing | Minimal click actions only |
+| Message effects / reactions / read-by list | Reaction metadata and quick reactions are implemented | Partial; effects and read-by list are missing |
+| Per-chat drafts | Local per-chat drafts and list previews are implemented | Partial; drafts are local-only, not Telegram cloud drafts |
+| Context menu / shortcuts / drag-drop / clipboard | Keyboard-accessible message/chat context menus, shortcuts and clipboard actions exist | Partial; drag-and-drop is missing |
 | Jump to latest / unread divider / jump-to-date | Partial | Jump-to-latest and local jump-to-date are implemented for loaded history; unread boundary and server-side date retrieval remain missing |
 | Very long history virtualization | Missing | Basic DOM rendering; performance risk |
 
@@ -96,23 +96,23 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 |---|---|---|
 | Single photo display | Partial | Limited download size and inline preview; loaded photo/video can now be saved from the selected message |
 | Photo albums / grouped media | Missing | Album grouping and layout absent |
-| Full-screen photo viewer, zoom, next/previous | Missing | No media viewer |
+| Full-screen photo viewer, zoom, next/previous | Lightbox, zoom, panning and previous/next navigation for loaded photos are implemented | Partial; unloaded albums are not fetched automatically |
 | Video thumbnail, seeking, speed, fullscreen | Partial | Basic HTML video playback only |
-| Voice messages / audio notes | Missing | No voice playback UI/waveform/recording |
+| Voice messages / audio notes | Existing audio files can be sent as Telegram voice notes | Partial; microphone recording, waveform and playback parity are missing |
 | Round video notes | Missing | No dedicated display/recording |
 | Music/audio files | Missing | Generic file label only |
 | Documents and arbitrary files | Partial | Sending one selected file; received media/documents up to 25 MB can be downloaded; larger files and save-dialog destination choice remain missing |
 | Upload/download progress, retry, cancel | Missing | No transfer queue |
 | Multiple attachments / drag-drop | Missing | One file per chooser action |
 | Send as photo vs file | Missing | No send-mode choice |
-| Stickers: static, animated, video | Missing | No sticker renderer or pack manager |
-| Emoji picker, categories, search, suggestions | Missing | Plain text input only |
+| Stickers: static, animated, video | Recent sticker list and sending are implemented | Partial; full pack search, animated previews and sticker management are missing |
+| Emoji picker, categories, search, suggestions | Compact emoji picker with insertion at cursor is implemented | Partial; categories, search and suggestions are missing |
 | Custom/animated emoji and emoji sounds | Missing | No support |
-| GIF search and saved GIFs | Missing | No inline bot or GIF picker |
+| GIF search and saved GIFs | GIF search/send via Telegram inline GIF bot is implemented | Partial; saved GIF collections and real-account behavior need verification |
 | Link previews | Missing | No preview generation/rendering |
 | Locations / venues / live location | Missing | No map/location message UI |
 | Contact cards / vCards | Missing | No structured contact rendering |
-| Polls / quizzes | Missing | No poll display, vote, create or results UI |
+| Polls / quizzes | Poll creation, result display and single-/multiple-choice voting are implemented | Partial; quiz answer configuration and result analytics need work |
 | Dice / games / invoices / payments | Missing | No rich-message renderer |
 | Spoiler media / captions above media | Missing | No spoiler/media layout handling |
 | Paid media / Stars / gifts / giveaways / checklists | Missing | No feature-specific UI or API paths |
@@ -128,14 +128,14 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Archived chats | Partial | Archive/unarchive actions and an archived filter exist; folder behavior and complete archive-page parity still need verification |
 | Pinned chats and custom order | Partial | Pin/unpin chat actions and pinned-first sorting exist; drag-and-drop custom ordering is missing |
 | Chat folders and include/exclude rules | Partial | Can create/edit/delete Telegram folders with category flags, exclude-muted/read/archived rules, and explicit include/exclude chat IDs; folder sharing links are in code; invite behavior requires account/Telegram verification, and pinned order editing remains missing |
-| Shared folders / folder invite links | Missing | No folder support |
+| Shared folders / folder invite links | Folder invite-link creation and copy are in code | Partial; Telegram acceptance and permissions need verification |
 | Chat list search | Partial | Local title/last-message substring match |
 | Mark read/unread, clear history, delete chat, leave chat | Partial | Mark read/unread, clear local-account history and leave groups/channels are in code; delete private chat and clear-history actions are in code; group/channel exit is separate and all destructive actions require confirmation |
 | Chat info and shared media tabs | Missing | No details pane or shared media browser |
 | Group creation/editing/photo/title/description | Missing | No group-management UI |
 | Members/admins/permissions/banned users | Missing | No members or permissions screens |
 | Invite links / join requests / join-to-send | Missing | No management actions |
-| Slow mode / anti-spam / recent actions | Partial | Recent admin-log viewer is in code; setting slow mode, anti-spam rules and full admin permissions remain missing |
+| Slow mode / anti-spam / recent actions | Recent admin-log viewer is in code | Partial; slow mode, anti-spam settings and full permission editor remain missing |
 | Group statistics / hidden members / content protection | Missing | No support in UI |
 | Channel info, comments/discussion links, signatures | Missing | No channel-specific view/actions |
 | Channel stats / subscriptions / monetization | Missing | No channel admin or monetization UI |
@@ -153,11 +153,11 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | View profile photos/history | Missing | No photo gallery |
 | Edit own name, bio, username, profile photo | Missing | No profile editing |
 | Emoji status/profile appearance | Missing | No UI |
-| Add/edit/delete contacts | Missing | No contacts management |
+| Add/edit/delete contacts | Contact listing, add by phone and remove from contacts are in code | Partial; richer editing and contact sharing are missing |
 | Block/unblock/report users | Missing | No controls |
 | Multi-account support and account switching | Missing | Single Telethon service/session |
 | Logout / remove account / session isolation | Partial | Close exists; user-facing logout/account management incomplete |
-| Active sessions and device management | Missing | No session management |
+| Active sessions and device management | Session list and remote logout for other sessions are in code | Partial; real-account session behavior needs testing |
 | QR sign-in | Present in code — unverified | Flow exists; end-to-end real-account behavior still needs testing |
 | Password/2FA/email/session security screens | Partial | Password prompt during login only |
 | Passkeys / secret chats / Telegram Passport | Blocked / API-dependent | No current implementation; secret chats require E2E-specific support |
@@ -172,7 +172,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Group voice/video chats, screen sharing, scheduling | Blocked / API-dependent | No group-call runtime |
 | Bot commands/autocomplete | Partial | Messages can be sent as text; no command helper |
 | Reply keyboards / inline keyboards / callback buttons | Missing | No structured button renderer |
-| Bot profile/commands/menu buttons | Missing | No bot details panel |
+| Bot profile/commands/menu buttons | Bot command menu and command sending are in code | Partial; inline keyboards, callback buttons and Web Apps remain missing |
 | Inline bots / attachment-menu bots | Missing | No inline query UI |
 | Telegram Mini Apps/Web Apps | Missing | No secure Mini App container or Telegram WebApp bridge |
 | Instant View / article reader | Missing | Links have no internal reader |
@@ -182,17 +182,17 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 
 | Telegram Web capability | TwinPanel status | Notes / required work |
 |---|---|---|
-| Global search users/chats/channels/messages | Missing | Only local chat-list filtering |
-| Shared media search / search by date / hashtag | Missing | No search backend/UI |
+| Global search users/chats/channels/messages | Server-side message search and public user/channel/group search are implemented | Partial; ranking, filters and complete Telegram Web parity remain |
+| Shared media search / search by date / hashtag | In-chat date search and local hashtag matching are available | Partial; dedicated shared-media search and public-post search are missing |
 | Similar/recommended channels/public post search | Missing | API/UI absent |
-| Desktop notifications and unread badge | Missing | No notification pipeline |
+| Desktop notifications and unread badge | Optional desktop notifications for incoming messages and unread badges are implemented | Partial; permission and Windows packaged behavior need testing |
 | Per-chat notifications / mute duration / silent messages | Partial | Fixed mute only |
-| Notification preview and sound settings | Missing | No settings UI |
+| Notification preview and sound settings | Desktop notification toggle is available; sound and preview privacy controls are incomplete | Partial |
 | Language selection | Missing | UI is currently Persian/RTL-focused |
-| Light/dark/custom themes | Partial | Host theme variables style the native pane; no full theme picker |
+| Light/dark/custom themes | Light/dark switch, compact mode and font size preferences are implemented | Partial; custom palettes and per-chat wallpapers are missing |
 | Chat backgrounds / wallpapers / animations | Missing | No customization screens |
 | Reduced motion / power-saving mode | Missing | No setting |
-| Privacy settings (last seen, phone, photo, calls, invites) | Missing | No settings flows |
+| Privacy settings (last seen, phone, photo, calls, invites) | Controls for last seen, phone, profile photo, forwards, group invites and calls are in code | Partial; preserving complex exception rules and account behavior need verification |
 | Content protection / no-forward / auto-delete timer | Missing | No controls |
 | Data/storage, auto-download, cache management | Missing | No settings or user-visible cache controls |
 | Sticker/emoji/download settings | Missing | No settings |
