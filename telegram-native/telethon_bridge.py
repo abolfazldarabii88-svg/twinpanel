@@ -10,6 +10,8 @@ from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.functions.messages import MarkDialogUnreadRequest
+from telethon.tl.functions.folders import EditPeerFoldersRequest
+from telethon.tl.types import InputFolderPeer
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -83,6 +85,7 @@ async def ensure_dialogs(limit=1000):
             "id": peer_id,
             "title": title,
             "unreadCount": int(dialog.unread_count or 0),
+            "archived": bool(getattr(dialog, "folder_id", 0) == 1),
             "lastMessage": preview,
             "isSavedMessages": bool(getattr(entity, "id", None) == getattr(me, "id", None)),
             "type": "user" if getattr(entity, "first_name", None) is not None else ("channel" if getattr(entity, "broadcast", False) else "chat")
@@ -303,6 +306,12 @@ async def handle(method, args):
             raise RuntimeError("فایل انتخاب‌شده پیدا نشد.")
         msg = await client.send_file(entity, str(file_path), caption=str(args.get("caption") or "")[:1024])
         return {"id": str(msg.id)}
+    if method == "set-chat-archived":
+        entity = entity_for(args.get("chatId"))
+        input_peer = await client.get_input_entity(entity)
+        archived = bool(args.get("archived", True))
+        await client(EditPeerFoldersRequest(folder_peers=[InputFolderPeer(peer=input_peer, folder_id=1 if archived else 0)]))
+        return {"ok": True, "chatId": str(args.get("chatId")), "archived": archived}
     if method == "set-chat-unread":
         entity = entity_for(args.get("chatId"))
         input_peer = await client.get_input_entity(entity)
