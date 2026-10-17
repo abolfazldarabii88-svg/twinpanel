@@ -27,7 +27,6 @@ contextBridge.exposeInMainWorld('twinPanel', {
     clearChatHistory: chatId => ipcRenderer.invoke('telegram-native:clear-chat-history', chatId),
     leaveChat: chatId => ipcRenderer.invoke('telegram-native:leave-chat', chatId),
     listDialogFolders: () => ipcRenderer.invoke('telegram-native:list-dialog-folders'),
-    shareDialogFolder: (id, title, chatIds) => ipcRenderer.invoke('telegram-native:share-dialog-folder', id, title, chatIds),
     saveDialogFolder: folder => ipcRenderer.invoke('telegram-native:save-dialog-folder', folder),
     deleteDialogFolder: id => ipcRenderer.invoke('telegram-native:delete-dialog-folder', id),
     getProfile: () => ipcRenderer.invoke('telegram-native:profile'),
