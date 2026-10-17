@@ -169,7 +169,7 @@ class GramJsService {
     // the initial connection uses wss://vesta.web.telegram.org:443/apiws.
     const session = new StringSession(sessionString || '');
     if (!sessionString) {
-      session.setDC(2, 'vesta.web.telegram.org', 443);
+      session.setDC(4, 'vesta.web.telegram.org', 443);
     }
 
     // Force the same WebSocket transport used by Telegram Web even though this
