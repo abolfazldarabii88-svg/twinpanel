@@ -193,6 +193,16 @@ document.getElementById('connectForm').addEventListener('submit',async e=>{
    const msg=err.message||'اتصال برقرار نشد';
    showToast(msg);document.getElementById('statusText').textContent='خطای اتصال: '+msg;
    document.getElementById('connectionProgress').textContent='خطای اتصال: '+msg;
+   // The main process encrypts credentials before networking starts. Refresh the
+   // saved-state UI even when TDLib fails so users aren't prompted again on retry.
+   try{
+     const savedState=await api.credentialsStatus();
+     if(savedState&&savedState.saved){
+       document.getElementById('apiId').value='';
+       document.getElementById('apiHash').value='';
+       setApiCredentialUi(true);
+     }
+   }catch{}
  }finally{
    connectUiActive=false;btn.disabled=false;btn.textContent='اتصال به تلگرام';cancel.hidden=true;
  }
