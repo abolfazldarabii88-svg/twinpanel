@@ -5,3 +5,4 @@ dist/
 .env.*
 !.env.example
 telegram-native/app-credentials.json
+build-secret/
