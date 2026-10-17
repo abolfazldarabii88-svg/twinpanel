@@ -1,8 +1,7 @@
 """Standalone Telethon proof-of-concept for TwinPanel.
 
-This deliberately lives outside the existing TDLib implementation.
-It tests network connectivity, phone/code/2FA login, session persistence,
-and basic dialog retrieval before any Electron integration is attempted.
+Uses the local HTTP proxy configured by the user's VPN app (default 127.0.0.1:2081).
+The proxy values can be overridden with TELEGRAM_PROXY_HOST and TELEGRAM_PROXY_PORT.
 """
 from __future__ import annotations
 
@@ -11,6 +10,7 @@ import os
 import sys
 from pathlib import Path
 
+import socks
 from telethon import TelegramClient
 from telethon.errors import (
     ApiIdInvalidError,
@@ -25,6 +25,8 @@ from telethon.errors import (
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 SESSION_PATH = DATA_DIR / "twinpanel_telethon"
+PROXY_HOST = os.getenv("TELEGRAM_PROXY_HOST", "127.0.0.1").strip()
+PROXY_PORT = int(os.getenv("TELEGRAM_PROXY_PORT", "2081"))
 
 
 def read_api_credentials() -> tuple[int, str]:
@@ -45,9 +47,12 @@ async def main() -> int:
     api_id, api_hash = read_api_credentials()
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    client = TelegramClient(str(SESSION_PATH), api_id, api_hash)
+    # Windows Internet Options indicates a local proxy at 127.0.0.1:2081.
+    # Use HTTP proxy mode; Telethon otherwise ignores the Windows system proxy.
+    proxy = (socks.HTTP, PROXY_HOST, PROXY_PORT)
+    client = TelegramClient(str(SESSION_PATH), api_id, api_hash, proxy=proxy)
     try:
-        print("Connecting to Telegram…")
+        print(f"Connecting to Telegram through HTTP proxy {PROXY_HOST}:{PROXY_PORT}…")
         await client.connect()
         if not await client.is_user_authorized():
             phone = input("Telegram phone number (international format): ").strip()
@@ -101,7 +106,7 @@ async def main() -> int:
         return 10
     except (OSError, ConnectionError, TimeoutError) as exc:
         print(f"Network connection failed: {type(exc).__name__}: {exc}")
-        print("This test cannot distinguish Telegram blocking from a local/proxy/firewall issue.")
+        print(f"Check that the VPN proxy is running and accepts HTTP connections at {PROXY_HOST}:{PROXY_PORT}.")
         return 11
     except AuthKeyUnregisteredError:
         print("Telegram invalidated the saved session. Delete the local session and sign in again.")
