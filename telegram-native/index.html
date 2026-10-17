@@ -347,6 +347,7 @@ document.getElementById('scheduleBtn').addEventListener('click',async()=>{if(!ap
 // TwinPanel keyboard shortcuts: Ctrl+F in-chat search, Ctrl+K chat search, Ctrl+Shift+F global search, Ctrl+Enter send, Escape dismiss search/reply.
 document.addEventListener('keydown',e=>{
  const key=(e.key||'').toLowerCase();
+ if((e.ctrlKey||e.metaKey)&&e.shiftKey&&!e.altKey&&key==='n'){e.preventDefault();const panel=document.getElementById('chatNotesPanel');panel.hidden=!panel.hidden;if(!panel.hidden)document.getElementById('chatNotesInput').focus();return;}
  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&!e.altKey&&key==='f'){
   e.preventDefault();document.getElementById('globalSearchBtn')?.click();return;
  }
