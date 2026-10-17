@@ -343,3 +343,4 @@ Do not create a release or installer while this parity work is in progress unles
 - Per-chat draft previews: locally saved drafts appear in the corresponding chat-list row with a distinct preview style, update while typing, and revert to the latest known message preview when cleared. Drafts stay local to the device; this does not send or sync them to Telegram.
 
 - Private per-chat notes: each conversation has an optional local notes panel with character count and clear action. Notes are stored in localStorage under a conversation-specific key, loaded when switching chats, and are never sent to Telegram. The chat-list search also matches local notes; these notes remain device-local and are not synced or encrypted by this feature.
+- Private notes can be toggled with Ctrl+Shift+N (Cmd+Shift+N on macOS); the shortcut focuses the note editor when opening it.
