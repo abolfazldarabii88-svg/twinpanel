@@ -22,6 +22,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Keyboard shortcuts (Ctrl/Cmd+F, Ctrl/Cmd+K, Ctrl/Cmd+Shift+F, Ctrl/Cmd+Enter, Escape) | Native renderer key handler | Present in code — unverified; shortcut conflicts and Windows runtime behavior still need testing |
 | Recent message history | get_messages | Present in code — unverified |
 | Older history pagination | history-before, merge and scroll restoration | Present in code — unverified |
+| Jump to latest messages | Native conversation control scrolls to the bottom of the loaded history | Present in code — unverified; live-update and long-history behavior still need testing |
 | Send plain text | send-text | Present in code — unverified |
 | Reply to selected message | reply-text plus UI state | Present in code — unverified |
 | Edit/delete own message | edit-message / delete-message and UI controls | Present in code — unverified |
