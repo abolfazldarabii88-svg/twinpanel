@@ -65,7 +65,8 @@ tdlibService.setCallbacks({
     notifyNativeTelegram('telegram-native:auth-prompt', packet);
   },
   onStatus: value => notifyNativeTelegram('telegram-native:status-update', value),
-  onUpdate: value => notifyNativeTelegram('telegram-native:live-update', value)
+  onUpdate: value => notifyNativeTelegram('telegram-native:live-update', value),
+  onProgress: value => notifyNativeTelegram('telegram-native:upload-progress', value)
 });
 const send = (channel, data) => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, data); };
 const status = (state, message, extra = {}) => send('twinpanel:update-status', { state, message, ...extra });
