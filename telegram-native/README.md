@@ -8,7 +8,7 @@ This is an experimental native Telegram client integration using Telegram's offi
 - Pinned `tdl` and `prebuilt-tdlib` dependencies, including the prebuilt Windows x64 TDLib library.
 - Main-process TDLib service with a narrow, explicit IPC API.
 - Interactive authorization prompts for phone number, login code, and 2-step verification password.
-- Optional local SOCKS5, HTTP CONNECT, and MTProto proxy settings for TDLib; proxy details remain in memory and are not persisted or uploaded.
+- Optional local SOCKS5, HTTP CONNECT, and MTProto proxy settings for TDLib. Proxy connectivity is tested with TDLib's `testProxy` before QR authentication; proxy details are not persisted or uploaded.
 - TDLib-backed main chat list, search, chat history, text sending, document upload, file download request, and chat mute request.
 - Local TDLib database/files under Electron's `userData`; database encryption key is encrypted using Electron `safeStorage`. API credentials are not persisted by this app.
 - Preview mode uses `getChatHistory` only and deliberately does not call `openChat`, `viewMessages`, or `readChatList`.
