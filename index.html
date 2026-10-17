@@ -181,7 +181,7 @@ function setMode(mode,save=true){
  requestAnimationFrame(()=>{if(splitter)splitter.setAttribute('aria-valuenow',String(Math.round(parseFloat(getComputedStyle(workspace).getPropertyValue('--left-width'))||30)));});
 }
 document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
-let telegramClient='web';
+let telegramClient='native';
 function nativeThemeValues(){const css=getComputedStyle(document.body);const read=name=>css.getPropertyValue(name).trim();return {bg:read('--bg'),panel:read('--panel'),head:read('--panel-head'),line:read('--line'),muted:read('--muted'),text:read('--text'),accent:read('--accent'),accent2:read('--accent2')};}
 function syncNativeTelegramTheme(){const view=$('tgNative');if(!view||!view.getAttribute('src'))return;const values=nativeThemeValues();const code='if(typeof window.applyTwinPanelTheme === "function") window.applyTwinPanelTheme('+JSON.stringify(values)+')';try{const result=view.executeJavaScript(code);if(result&&typeof result.catch==='function')result.catch(()=>{});}catch{}}
 async function setTelegramClient(client,save=true){
@@ -195,9 +195,9 @@ async function setTelegramClient(client,save=true){
  }
  telegramClient=client;document.body.dataset.tgClient=client;
  $('tg').style.display=client==='native'?'none':'flex';view.style.display=client==='native'?'flex':'none';
- $('toggleTelegramClient').textContent=client==='native'?'Telegram Web':'کلاینت آزمایشی';
+ $('toggleTelegramClient').textContent=client==='native'?'Telegram Web (جایگزین)':'کلاینت اختصاصی';
  $('toggleTelegramClient').classList.toggle('primary',client==='native');
- $('telegramPanelLabel').textContent=client==='native'?'Telegram · اختصاصی':'Telegram Web';
+ $('telegramPanelLabel').textContent=client==='native'?'Telegram · کلاینت اختصاصی':'Telegram Web · جایگزین';
  if(save)localStorage.setItem('twinpanel.telegramClient',client);
  syncNativeTelegramTheme();
 }
