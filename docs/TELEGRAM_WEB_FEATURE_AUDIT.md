@@ -217,3 +217,9 @@ Do not create a release or installer while this parity work is in progress unles
 ### Newly implemented in this pass
 - Multiple selected files are sent as Telegram media-group albums (batches of up to 10 files).
 - Selected messages can be forwarded to Saved Messages from the message action toolbar.
+
+
+### Further parity additions
+- Selected message can be saved to Saved Messages.
+- Multiple selected files are sent as Telegram media albums in batches of up to 10.
+- Chat notification mute now supports timed presets (1 hour, 8 hours, 2 days, 1 year) and unmute.
