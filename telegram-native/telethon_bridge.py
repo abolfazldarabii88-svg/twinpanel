@@ -359,6 +359,40 @@ async def handle(method, args):
             rows = [r for r in rows if q in r["title"].casefold() or q in r["lastMessage"].casefold()]
             return rows[:max(1, min(int(limit or 30), 100))]
         return rows[:max(1, min(int(limit or 80), 1000))]
+    if method == "messages-on-date":
+        entity = entity_for(args.get("chatId"))
+        start_ts = int(args.get("startTimestamp") or 0)
+        end_ts = int(args.get("endTimestamp") or 0)
+        limit = max(1, min(int(args.get("limit") or 100), 100))
+        if start_ts <= 0 or end_ts <= start_ts or end_ts - start_ts > 172800:
+            raise RuntimeError("بازهٔ تاریخ برای جست‌وجوی پیام معتبر نیست.")
+        end_date = datetime.fromtimestamp(end_ts, timezone.utc)
+        result = []
+        scanned = 0
+        async for msg in client.iter_messages(entity, offset_date=end_date, limit=500):
+            scanned += 1
+            if not msg.date:
+                continue
+            stamp = int(msg.date.timestamp())
+            if stamp < start_ts:
+                break
+            if stamp >= end_ts:
+                continue
+            body = msg.message or ""
+            if not body and msg.media:
+                body = "رسانه / فایل"
+            result.append({
+                "id": str(msg.id),
+                "chatId": str(args.get("chatId")),
+                "date": stamp,
+                "outgoing": bool(msg.out),
+                "text": body[:4096],
+                "entities": serialize_entities(msg),
+                "contentType": type(msg.media).__name__ if msg.media else "text"
+            })
+            if len(result) >= limit:
+                break
+        return {"messages": result, "scanned": scanned, "limited": len(result) >= limit}
     if method == "history-around":
         entity = entity_for(args.get("chatId"))
         target_id = int(args.get("messageId") or 0)
