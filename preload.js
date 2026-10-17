@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     messagesOnDate: (chatId, startTimestamp, endTimestamp, limit) => ipcRenderer.invoke('telegram-native:messages-on-date', chatId, startTimestamp, endTimestamp, limit),
     preview: (chatId, limit) => ipcRenderer.invoke('telegram-native:preview', chatId, limit),
     sendText: (chatId, body) => ipcRenderer.invoke('telegram-native:send-text', chatId, body),
+    sendPoll: (chatId, question, options, anonymous, multipleChoice) => ipcRenderer.invoke('telegram-native:send-poll', chatId, question, options, anonymous, multipleChoice),
     scheduleMessage: (chatId, body, scheduleAt) => ipcRenderer.invoke('telegram-native:schedule-message', chatId, body, scheduleAt),
     listScheduledMessages: chatId => ipcRenderer.invoke('telegram-native:list-scheduled-messages', chatId),
     cancelScheduledMessage: (chatId, messageId) => ipcRenderer.invoke('telegram-native:cancel-scheduled-message', chatId, messageId),
