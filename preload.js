@@ -40,7 +40,8 @@ contextBridge.exposeInMainWorld('twinPanel', {
       ipcRenderer.on('telegram-native:auth-prompt', (_event, packet) => forward(packet));
       void ipcRenderer.invoke('telegram-native:take-auth-prompt').then(forward).catch(() => {});
     },
-    onStatus: callback => ipcRenderer.on('telegram-native:status-update', (_event, value) => callback(value))
+    onStatus: callback => ipcRenderer.on('telegram-native:status-update', (_event, value) => callback(value)),
+    onUpdate: callback => ipcRenderer.on('telegram-native:live-update', (_event, value) => callback(value))
   },
   toggleFullscreen: () => ipcRenderer.invoke('twinpanel:toggle-fullscreen'),
   getVersion: () => ipcRenderer.invoke('twinpanel:app-version'),
