@@ -33,6 +33,21 @@ function withTimeout(promise, timeoutMs, message) {
   ]).finally(() => clearTimeout(timer));
 }
 
+async function disconnectQuietly(client) {
+  if (!client) return;
+  let timer;
+  try {
+    await Promise.race([
+      client.disconnect(),
+      new Promise(resolve => { timer = setTimeout(resolve, 3000); })
+    ]);
+  } catch {
+    // Teardown should never mask the original connection error.
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 class GramJsService {
   constructor() {
     this.client = null;
@@ -315,7 +330,7 @@ class GramJsService {
       if (!authorized) {
         if (savedSession) {
           this.reportStage('saved-session-not-authorized', 'نشست قبلی مجاز نیست؛ در حال آماده‌سازی ورود تازه…');
-          try { await client.disconnect(); } catch {}
+          await disconnectQuietly(client)
           client = this.createClient(parsedId, hash, '');
           this.client = client;
           await withTimeout(
@@ -339,6 +354,7 @@ class GramJsService {
       const sessionString = client.session.save();
       if (sessionString) this.saveSession(sessionString);
       this.connected = true;
+      this.connecting = false;
       this.reportStage('authorized-wss', 'ورود موفق بود؛ نشست به‌صورت رمزگذاری‌شده ذخیره شد.');
       this.onPrompt?.({ type: 'cancelled' });
       return this.status('حساب تلگرام متصل است.');
@@ -350,7 +366,7 @@ class GramJsService {
         this.reportStage('connect-error', `خطای موتور WebSocket: ${message}`);
         this.onPrompt?.({ type: 'cancelled' });
         if (client) {
-          try { await client.disconnect(); } catch {}
+          await disconnectQuietly(client)
         }
         if (this.client === client) this.client = null;
         throw new Error(`اتصال تلگرام برقرار نشد: ${redact(message)}`);
@@ -498,15 +514,6 @@ class GramJsService {
     return { id: String(result && result.id || '') };
   }
 
-  async downloadFile(fileId) {
-    const client = this.requireClient();
-    return client.invoke(new (require('telegram').Api.upload.GetFile)({
-      location: new (require('telegram').Api.InputFileLocation)({ id: Number(fileId), accessHash: 0, fileReference: Buffer.alloc(0) }),
-      offset: 0,
-      limit: 1024 * 1024
-    }));
-  }
-
   async setChatMuted(chatId, muted) {
     const client = this.requireClient();
     const entity = await this.resolveEntity(chatId);
@@ -536,7 +543,7 @@ class GramJsService {
     const client = this.client;
     this.client = null;
     const cleanup = (async () => {
-      try { if (client) await client.disconnect(); } catch {}
+      await disconnectQuietly(client)
       this.onPrompt?.({ type: 'cancelled' });
       this.onStatus?.(this.status('اتصال لغو شد؛ حالا می‌توانی دوباره تلاش کنی.'));
     })();
@@ -555,7 +562,7 @@ class GramJsService {
     }
     const client = this.client;
     this.client = null;
-    try { if (client) await client.disconnect(); } catch {}
+    await disconnectQuietly(client)
     this.connected = false;
     this.connecting = false;
   }
