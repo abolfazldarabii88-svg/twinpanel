@@ -166,7 +166,7 @@ async def handle(method, args):
             q = str(args.get("query") or "").strip().casefold()
             rows = [r for r in rows if q in r["title"].casefold() or q in r["lastMessage"].casefold()]
             return rows[:max(1, min(int(limit or 30), 100))]
-        return rows[:max(1, min(int(limit or 80), 100))]
+        return rows[:max(1, min(int(limit or 80), 1000))]
     if method in ("history", "preview"):
         entity = entity_for(args.get("chatId"))
         limit = max(1, min(int(args.get("limit") or 40), 100))
