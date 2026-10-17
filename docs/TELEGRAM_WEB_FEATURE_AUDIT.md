@@ -246,3 +246,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Scheduled-message manager now supports editing the text of a scheduled text message as well as canceling it. Editing media-based scheduled messages is not provided by this control.
 
 - Added a pinned-messages list for the active chat (up to 100 results) with a jump-to-message action that loads the surrounding history. Actual behavior depends on Telegram permissions and message availability.
+
+- Invite link generation now offers optional expiration (1 hour, 1 day, 1 week, 1 month, or none) and a usage limit (up to 1,000). Telegram admin rights are required; these options have not yet been validated against a live account.
