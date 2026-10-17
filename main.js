@@ -286,6 +286,7 @@ ipcMain.handle('telegram-native:auth-input', (_event, payload) => tdlibService.s
 ipcMain.handle('telegram-native:list-chats', (_event, limit) => tdlibService.listChats(limit));
 ipcMain.handle('telegram-native:profile', (_event) => tdlibService.getProfile());
 ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
+ipcMain.handle('telegram-native:search-global-messages', (_event, query, limit) => tdlibService.searchGlobalMessages(query, limit));
 ipcMain.handle('telegram-native:history', (_event, chatId, limit) => tdlibService.getChatHistory(chatId, limit));
 ipcMain.handle('telegram-native:history-before', (_event, chatId, offsetId, limit) => tdlibService.getChatHistoryBefore(chatId, offsetId, limit));
 ipcMain.handle('telegram-native:preview', (_event, chatId, limit) => tdlibService.getUnreadPreview(chatId, limit));
