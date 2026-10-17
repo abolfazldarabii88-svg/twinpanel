@@ -304,3 +304,9 @@ Do not create a release or installer while this parity work is in progress unles
 - Clicking an inline photo opens a fullscreen lightbox with close button, Escape handling, mouse-wheel zoom from 1× to 4×, and double-click reset.
 - The viewer reuses the already downloaded/cached image data URL and does not trigger another media download. Keyboard activation is supported on the inline image.
 - Multi-photo navigation, panning at high zoom, and real-account visual verification remain future work.
+
+
+### Global search result presentation — 2026-10-17
+- Global message search results now highlight the searched phrase safely in the message snippet and show the message date/time when returned by Telegram.
+- Highlighting uses text nodes and mark elements rather than injecting message text as HTML.
+- Search remains bounded to the configured result count; grouping duplicate results by conversation and server-side pagination are future improvements.
