@@ -236,3 +236,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Scheduled messages can be listed for the active conversation and canceled by message ID from the new queue control.
 
 - Media uploads now emit progress events from Telethon through the main/preload bridge; the attachment button displays live progress for the active conversation. Multi-file album progress is per active upload segment, not a per-file queue with pause/cancel yet.
+
+- Group/channel member inspection added through Telethon. The native pane can request up to 100 participants and show names, usernames, and bot flags. Availability depends on Telegram permissions and group/channel type; real-account verification remains pending.
