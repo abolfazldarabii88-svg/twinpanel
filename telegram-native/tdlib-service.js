@@ -519,11 +519,33 @@ class TdlibService {
 
       if (proxyRequest) {
         const proxyLabels = { socks5: 'SOCKS5', http: 'HTTP', mtproto: 'MTProto' };
+        const proxyObject = proxyRequest.proxy;
+        this.reportStage('test-proxy', 'در حال آزمایش دسترسی پروکسی به سرور تلگرام…');
+        try {
+          // TDLib documents testProxy as callable before authorization. This verifies
+          // network reachability before we begin QR auth and wait for state updates.
+          await client.invoke({ _: 'testProxy', proxy: proxyObject, dc_id: 2, timeout: 10 });
+          this.reportStage('proxy-test-success', 'آزمایش پروکسی موفق بود؛ در حال فعال‌کردن اتصال تلگرام…');
+        } catch (error) {
+          const message = String(error?.message || error || '').toLowerCase();
+          const reason = /timeout|timed out|timedout/.test(message)
+            ? 'timeout'
+            : /auth|username|password|407/.test(message)
+              ? 'authentication'
+              : /resolve|dns|host not found|name.*resolution/.test(message)
+                ? 'dns'
+                : /refused|reset|unreachable|connect|socket|network|handshake/.test(message)
+                  ? 'network'
+                  : 'unknown';
+          const code = Number(error?.code);
+          this.appendSafeDiagnostic('proxy-test-failed', 'reason=' + reason + ' code=' + (Number.isFinite(code) ? code : 'unknown'), attemptId);
+          throw new Error('آزمایش پروکسی برای اتصال به تلگرام ناموفق شد (' + reason + '). میزبان، درگاه، نوع پروکسی، دسترسی شبکه و در صورت نیاز نام کاربری/رمز را بررسی کن.');
+        }
         this.reportStage('configure-proxy', 'در حال فعال‌کردن پروکسی ' + proxyLabels[proxyType] + ' برای اتصال تلگرام…');
         try {
           const added = await client.invoke(proxyRequest);
           if (!added || added._ === 'error') throw new Error('Proxy rejected');
-          this.reportStage('proxy-enabled', 'پروکسی ثبت و فعال شد؛ در حال اتصال به تلگرام…');
+          this.reportStage('proxy-enabled', 'پروکسی ثبت شد؛ در حال برقراری اتصال…');
         } catch {
           throw new Error('فعال‌سازی پروکسی ناموفق بود؛ نوع پروکسی، میزبان، درگاه و مشخصات آن را بررسی کن.');
         }
@@ -552,7 +574,9 @@ class TdlibService {
         firstAuthPromptTimer = setTimeout(() => {
           if (attemptId === this.attemptId && !this.authPromptSeen) {
             reject(new Error(loginMethod === 'qr'
-              ? 'TDLib طی ۲۵ ثانیه پس از درخواست QR هیچ وضعیت جدیدی برنگرداند؛ اتصال مستقیم به سرورهای تلگرام برقرار نشد. شبکه/VPN را بررسی کن یا یک پروکسی سالم را در فرم اتصال تنظیم کن.'
+              ? (proxyRequest
+                ? 'TDLib طی ۲۵ ثانیه پس از درخواست QR هیچ وضعیت جدیدی برنگرداند؛ اتصال از طریق پروکسی برقرار نشد. میزبان، درگاه، نوع پروکسی و دسترسی شبکه را بررسی کن.'
+                : 'TDLib طی ۲۵ ثانیه پس از درخواست QR هیچ وضعیت جدیدی برنگرداند؛ اتصال مستقیم به سرورهای تلگرام برقرار نشد. شبکه را بررسی کن یا پروکسی معتبری تنظیم کن.')
               : 'TDLib طی ۲۵ ثانیه هیچ پنجرهٔ ورود نساخت. اتصال را لغو کن و دوباره امتحان کن.'));
           }
         }, 25000);
