@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji
@@ -231,6 +231,51 @@ async def handle(method, args):
             except Exception:
                 continue
         return found
+    if method == "list-dialog-folders":
+        if not client or not connected:
+            raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
+        dialogs = await ensure_dialogs(1000)
+        filters = await client(GetDialogFiltersRequest())
+        result = []
+        for folder in getattr(filters, "filters", []) or []:
+            folder_id = int(getattr(folder, "id", 0) or 0)
+            title_obj = getattr(folder, "title", "")
+            title = str(getattr(title_obj, "text", title_obj) or "").strip()
+            included, excluded = set(), set()
+            for peer in getattr(folder, "include_peers", []) or []:
+                try: included.add(str(get_peer_id(peer)))
+                except Exception: pass
+            for peer in getattr(folder, "exclude_peers", []) or []:
+                try: excluded.add(str(get_peer_id(peer)))
+                except Exception: pass
+            matched = []
+            for row in dialogs:
+                cid = str(row["id"])
+                entity = dialogs_cache.get(cid)
+                if cid in excluded:
+                    continue
+                explicit = cid in included
+                is_group = row.get("type") == "chat"
+                is_channel = row.get("type") == "channel"
+                is_user = row.get("type") == "user"
+                matches_flags = bool(
+                    (getattr(folder, "groups", False) and is_group) or
+                    (getattr(folder, "broadcasts", False) and is_channel) or
+                    (getattr(folder, "contacts", False) and is_user and bool(getattr(entity, "contact", False))) or
+                    (getattr(folder, "non_contacts", False) and is_user and not bool(getattr(entity, "contact", False))) or
+                    (getattr(folder, "bots", False) and bool(getattr(entity, "bot", False)))
+                )
+                if not explicit and not matches_flags:
+                    continue
+                if getattr(folder, "exclude_muted", False) and row.get("muted"):
+                    continue
+                if getattr(folder, "exclude_read", False) and int(row.get("unreadCount", 0)) == 0:
+                    continue
+                if getattr(folder, "exclude_archived", False) and row.get("archived"):
+                    continue
+                matched.append(cid)
+            result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched})
+        return result
     if method in ("list-chats", "search-chats"):
         limit = args.get("limit", 80 if method == "list-chats" else 30)
         rows = await ensure_dialogs(1000)
