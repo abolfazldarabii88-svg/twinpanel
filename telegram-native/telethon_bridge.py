@@ -13,9 +13,9 @@ from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivac
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -397,6 +397,58 @@ async def handle(method, args):
             except Exception:
                 continue
         return found
+    if method == "save-dialog-folder":
+        folder_id = int(args.get("id") or 0)
+        title = str(args.get("title") or "").strip()
+        if not title or len(title) > 12:
+            raise RuntimeError("نام پوشه باید بین ۱ تا ۱۲ نویسه باشد.")
+        filters = await client(GetDialogFiltersRequest())
+        available = list(getattr(filters, "filters", []) or [])
+        current = next((item for item in available if int(getattr(item, "id", 0) or 0) == folder_id), None) if folder_id else None
+        if folder_id and current is None:
+            raise RuntimeError("پوشهٔ انتخاب‌شده دیگر وجود ندارد.")
+        if not folder_id:
+            used = {int(getattr(item, "id", 0) or 0) for item in available}
+            folder_id = next((value for value in range(2, 256) if value not in used), 0)
+            if not folder_id:
+                raise RuntimeError("حداکثر تعداد پوشه‌های تلگرام پر شده است.")
+        async def resolve_peers(raw, field_name):
+            if not isinstance(raw, list) or len(raw) > 100:
+                raise RuntimeError("در هر قانون حداکثر ۱۰۰ گفتگو وارد کن.")
+            peers = []
+            for raw_id in raw:
+                key = str(raw_id or "").strip()
+                if not key:
+                    continue
+                entity = entity_for(key)
+                peers.append(await client.get_input_entity(entity))
+            return peers
+        include_peers = await resolve_peers(args.get("includeIds") or [], "includeIds")
+        exclude_peers = await resolve_peers(args.get("excludeIds") or [], "excludeIds")
+        pinned_peers = list(getattr(current, "pinned_peers", []) or []) if current else []
+        folder = DialogFilter(
+            id=folder_id,
+            title=TextWithEntities(text=title, entities=[]),
+            pinned_peers=pinned_peers,
+            include_peers=include_peers,
+            exclude_peers=exclude_peers,
+            contacts=bool(args.get("contacts")),
+            non_contacts=bool(args.get("nonContacts")),
+            groups=bool(args.get("groups")),
+            broadcasts=bool(args.get("broadcasts")),
+            bots=bool(args.get("bots")),
+            exclude_muted=bool(args.get("excludeMuted")),
+            exclude_read=bool(args.get("excludeRead")),
+            exclude_archived=bool(args.get("excludeArchived")),
+        )
+        await client(UpdateDialogFilterRequest(id=folder_id, filter=folder))
+        return {"ok": True, "id": folder_id}
+    if method == "delete-dialog-folder":
+        folder_id = int(args.get("id") or 0)
+        if folder_id < 2:
+            raise RuntimeError("شناسهٔ پوشهٔ سفارشی معتبر نیست.")
+        await client(DeleteDialogFilterRequest(id=folder_id))
+        return {"ok": True, "id": folder_id}
     if method == "list-dialog-folders":
         if not client or not connected:
             raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
@@ -440,7 +492,7 @@ async def handle(method, args):
                 if getattr(folder, "exclude_archived", False) and row.get("archived"):
                     continue
                 matched.append(cid)
-            result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched})
+            result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched, "contacts": bool(getattr(folder, "contacts", False)), "nonContacts": bool(getattr(folder, "non_contacts", False)), "groups": bool(getattr(folder, "groups", False)), "broadcasts": bool(getattr(folder, "broadcasts", False)), "bots": bool(getattr(folder, "bots", False)), "excludeMuted": bool(getattr(folder, "exclude_muted", False)), "excludeRead": bool(getattr(folder, "exclude_read", False)), "excludeArchived": bool(getattr(folder, "exclude_archived", False)), "includeIds": sorted(included), "excludeIds": sorted(excluded)})
         return result
     if method == "delete-contact":
         peer_id = str(args.get("chatId") or "")
