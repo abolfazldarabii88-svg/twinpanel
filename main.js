@@ -302,20 +302,20 @@ ipcMain.handle('telegram-native:message-link', (_event, chatId, messageId) => td
 ipcMain.handle('telegram-native:download-message-media', (_event, chatId, messageId) => tdlibService.downloadMessageMedia(chatId, messageId));
 ipcMain.handle('telegram-native:select-media', async () => {
   const result = await dialog.showOpenDialog(nativeTelegramWindow && !nativeTelegramWindow.isDestroyed() ? nativeTelegramWindow : mainWindow, {
-    title: 'انتخاب فایل برای تلگرام',
-    properties: ['openFile'],
+    title: 'انتخاب یک یا چند فایل برای تلگرام',
+    properties: ['openFile', 'multiSelections'],
     filters: [{ name: 'Media and documents', extensions: ['png','jpg','jpeg','webp','gif','mp4','mp3','ogg','opus','pdf','txt','zip','doc','docx'] }]
   });
-  if (result.canceled || !result.filePaths[0]) return null;
-  const fs = require('node:fs');
-  const path = require('node:path');
+  if (result.canceled || !result.filePaths.length) return null;
   const crypto = require('node:crypto');
   const outbox = path.join(app.getPath('userData'), 'telegram-native', 'outbox');
   fs.mkdirSync(outbox, { recursive: true });
-  const source = result.filePaths[0];
-  const target = path.join(outbox, crypto.randomUUID() + path.extname(source));
-  fs.copyFileSync(source, target);
-  return { path: target, name: path.basename(source) };
+  const files = result.filePaths.map(source => {
+    const target = path.join(outbox, crypto.randomUUID() + path.extname(source));
+    fs.copyFileSync(source, target);
+    return { path: target, name: path.basename(source) };
+  });
+  return { ...files[0], paths: files.map(file => file.path), files };
 });
 ipcMain.handle('telegram-native:send-media', (_event, chatId, filePath, caption) => tdlibService.sendMedia(chatId, filePath, caption));
 ipcMain.handle('telegram-native:mute-chat', (_event, chatId, muted) => tdlibService.setChatMuted(chatId, muted));
