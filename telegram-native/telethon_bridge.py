@@ -130,7 +130,7 @@ async def handle(method, args):
         elif str(args.get("loginMethod") or "phone").lower() == "qr":
             set_status("awaiting-qr", "QR ورود آماده می‌شود…")
             qr = await client.qr_login()
-            await ask("qr", "ورود امن با QR تلگرام", qr.url)
+            event("prompt", {"type": "qr", "label": "ورود امن با QR تلگرام", "link": qr.url})
             try:
                 me = await qr.wait(timeout=120)
             except SessionPasswordNeededError:
@@ -202,7 +202,8 @@ async def handle(method, args):
     if method == "mute-chat":
         entity = entity_for(args.get("chatId"))
         mute_until = int(time.time()) + 31536000 if args.get("muted") else 0
-        await client(UpdateNotifySettingsRequest(InputNotifyPeer(entity), InputPeerNotifySettings(mute_until=mute_until)))
+        input_peer = await client.get_input_entity(entity)
+        await client(UpdateNotifySettingsRequest(InputNotifyPeer(input_peer), InputPeerNotifySettings(mute_until=mute_until)))
         return {"ok": True}
     if method == "close":
         if client:
