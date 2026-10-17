@@ -16,7 +16,8 @@
     "electron-updater": "^6.6.2",
     "tdl": "8.1.0",
     "prebuilt-tdlib": "0.1008067.0",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "telegram": "2.26.22"
   },
   "devDependencies": {
     "electron": "35.7.5",
