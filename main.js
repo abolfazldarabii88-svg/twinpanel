@@ -284,6 +284,7 @@ ipcMain.handle('telegram-native:qr-image-status', (event, state) => {
 });
 ipcMain.handle('telegram-native:auth-input', (_event, payload) => tdlibService.submitAuthInput(payload?.type, payload?.value));
 ipcMain.handle('telegram-native:list-chats', (_event, limit) => tdlibService.listChats(limit));
+ipcMain.handle('telegram-native:list-dialog-folders', () => tdlibService.listDialogFolders());
 ipcMain.handle('telegram-native:profile', (_event) => tdlibService.getProfile());
 ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
 ipcMain.handle('telegram-native:search-global-messages', (_event, query, limit) => tdlibService.searchGlobalMessages(query, limit));
