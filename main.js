@@ -298,6 +298,7 @@ ipcMain.handle('telegram-native:list-dialog-folders', () => tdlibService.listDia
 ipcMain.handle('telegram-native:save-dialog-folder', (_event, folder) => tdlibService.saveDialogFolder(folder));
 ipcMain.handle('telegram-native:delete-dialog-folder', (_event, id) => tdlibService.deleteDialogFolder(id));
 ipcMain.handle('telegram-native:profile', (_event) => tdlibService.getProfile());
+ipcMain.handle('telegram-native:get-bot-commands', (_event, chatId) => tdlibService.getBotCommands(chatId));
 ipcMain.handle('telegram-native:list-stories', () => tdlibService.listStories());
 ipcMain.handle('telegram-native:open-story', (_event, token) => tdlibService.openStory(token));
 ipcMain.handle('telegram-native:list-authorizations', () => tdlibService.getAuthorizations());
