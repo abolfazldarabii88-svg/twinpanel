@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'release/v*'
+      - 'release/v*' # official v1.5.5 hotfix
 
 concurrency:
   group: twinpanel-windows-release
