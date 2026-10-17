@@ -278,6 +278,23 @@ async def handle(method, args):
             raise RuntimeError("شناسهٔ پیام معتبر نیست.")
         await client.delete_messages(entity, [message_id], revoke=True)
         return {"ok": True, "id": str(message_id)}
+    if method == "forward-message":
+        source = entity_for(args.get("chatId"))
+        target = entity_for(args.get("targetChatId"))
+        message_id = int(args.get("messageId") or 0)
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام معتبر نیست.")
+        forwarded = await client.forward_messages(target, [message_id], from_peer=source)
+        item = forwarded[0] if isinstance(forwarded, list) else forwarded
+        return {"ok": True, "id": str(item.id) if item else ""}
+    if method == "pin-message":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        pinned = bool(args.get("pinned", True))
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام معتبر نیست.")
+        await client.pin_message(entity, message_id, notify=False) if pinned else await client.unpin_message(entity, message_id)
+        return {"ok": True, "id": str(message_id), "pinned": pinned}
     if method == "send-media":
         entity = entity_for(args.get("chatId"))
         file_path = Path(str(args.get("filePath") or "")).resolve()
