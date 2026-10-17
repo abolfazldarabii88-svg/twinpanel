@@ -300,6 +300,7 @@ ipcMain.handle('telegram-native:send-text', (_event, chatId, body) => tdlibServi
 ipcMain.handle('telegram-native:schedule-message', (_event, chatId, body, scheduleAt) => tdlibService.scheduleMessage(chatId, body, scheduleAt));
 ipcMain.handle('telegram-native:list-scheduled-messages', (_event, chatId) => tdlibService.listScheduledMessages(chatId));
 ipcMain.handle('telegram-native:cancel-scheduled-message', (_event, chatId, messageId) => tdlibService.cancelScheduledMessage(chatId, messageId));
+ipcMain.handle('telegram-native:edit-scheduled-message', (_event, chatId, messageId, text) => tdlibService.editScheduledMessage(chatId, messageId, text));
 ipcMain.handle('telegram-native:reply-text', (_event, chatId, messageId, body) => tdlibService.replyTextMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:edit-message', (_event, chatId, messageId, body) => tdlibService.editMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:delete-message', (_event, chatId, messageId) => tdlibService.deleteMessage(chatId, messageId));
