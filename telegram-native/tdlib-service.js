@@ -359,15 +359,37 @@ class TdlibService {
     });
   }
 
-  async connect({ apiId, apiHash, loginMethod = 'phone', proxy = null }, targetWebContents) {
+  loadAppCredentials() {
+    const packagedPath = path.join(process.resourcesPath || '', 'telegram-native', 'app-credentials.json');
+    const developmentPath = path.join(__dirname, 'app-credentials.json');
+    const paths = app.isPackaged ? [packagedPath] : [developmentPath];
+    for (const file of paths) {
+      try {
+        if (!fs.existsSync(file)) continue;
+        const value = JSON.parse(fs.readFileSync(file, 'utf8'));
+        if (value && value.apiId && value.apiHash) return value;
+      } catch {
+        // Never log configuration values or file contents.
+      }
+    }
+    if (!app.isPackaged) {
+      const apiId = String(process.env.TWINPANEL_TELEGRAM_API_ID || '').trim();
+      const apiHash = String(process.env.TWINPANEL_TELEGRAM_API_HASH || '').trim();
+      if (apiId && apiHash) return { apiId: Number(apiId), apiHash };
+    }
+    return null;
+  }
+
+  async connect({ loginMethod = 'qr', proxy = null } = {}, targetWebContents) {
     if (this.cancelPromise) await this.cancelPromise;
     if (this.connected) return this.status();
-    if (this.connecting) throw new Error('تلاش اتصال قبلی هنوز فعال است. پنجرهٔ ورود قبلی را ببند یا اتصال را لغو کن؛ نیازی به انتظار نیم‌ساعته نیست.');
+    if (this.connecting) throw new Error('تلاش اتصال قبلی هنوز فعال است؛ آن را لغو کن و دوباره تلاش کن.');
 
-    const parsedId = Number(apiId);
-    const hash = String(apiHash || '').trim();
+    const appCredentials = this.loadAppCredentials();
+    const parsedId = Number(appCredentials && appCredentials.apiId);
+    const hash = String(appCredentials && appCredentials.apiHash || '').trim();
     if (!Number.isInteger(parsedId) || parsedId <= 0 || !/^[a-f0-9]{32}$/i.test(hash)) {
-      throw new Error('API ID باید عدد معتبر و API Hash باید ۳۲ نویسهٔ هگزادسیمال باشد.');
+      throw new Error('این نسخه با API ID و API Hash مخصوص TwinPanel پیکربندی نشده است. تنظیمات build را بررسی کن؛ لازم نیست این اطلاعات را در فرم ورود وارد کنی.');
     }
     const proxyType = String(proxy?.type || '').trim().toLowerCase();
     let proxyRequest = null;
