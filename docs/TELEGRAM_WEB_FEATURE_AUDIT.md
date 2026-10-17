@@ -55,7 +55,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Scheduled messages | Partial | A dedicated manager now lists scheduled messages with inline edit/cancel actions; scheduling still uses a text date/time prompt instead of a native date/time picker |
 | Stories | Missing | No stories strip, viewer, publishing or privacy controls |
 | Voice/video and group calls | Missing | No calling UI/runtime |
-| Group/channel management and topics | Missing | No full admin screens, topic navigation, permissions or recent actions |
+| Group/channel management and topics | Partial | Group info/member lists/invite links exist; forum topic listing, opening topic history and sending messages into a topic are in code; admin permissions, topic creation/editing and recent actions remain missing |
 | Polls, stickers, GIFs, bots and mini apps | Partial | Native poll creation supports 2–10 options, anonymous/public voting and multiple choice; GIF search/send through Telegram's inline GIF bot is in code; poll voting/result interactions, sticker browsing, bot menus and mini apps remain missing |
 | Multiple accounts and Secret Chats | Missing / protocol-dependent | Not implemented; Secret Chats cannot be treated as ordinary cloud chats |
 
