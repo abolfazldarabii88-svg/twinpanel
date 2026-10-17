@@ -53,7 +53,7 @@ This separates actual navigation/overlays in TwinPanel from Telegram Web destina
 | Client settings | Partial | Auto-refresh, compact mode, light/dark theme, font size, Telegram privacy controls and a connected-device/session manager with remote logout are in code; comprehensive notification controls remain missing |
 | Connection / QR / phone authorization | In code | Authentication screens exist; QR/phone login still requires Windows and real-account acceptance testing |
 | Scheduled messages | Partial | A dedicated manager now lists scheduled messages with inline edit/cancel actions; scheduling still uses a text date/time prompt instead of a native date/time picker |
-| Stories | Missing | No stories strip, viewer, publishing or privacy controls |
+| Stories | Partial | Active stories list and viewer are in code; reading/view counters are requested when opening a story; publishing, story privacy controls, archive and real-account behavior remain unverified |
 | Voice/video and group calls | Missing | No calling UI/runtime |
 | Group/channel management and topics | Partial | Group info/member lists/invite links exist; forum topic listing, topic history, sending messages, creating/renaming topics and closing/reopening topics are in code; admin permissions and recent actions remain missing |
 | Polls, stickers, GIFs, bots and mini apps | Partial | Native poll creation supports 2–10 options, anonymous/public voting and multiple choice; GIF search/send through Telegram's inline GIF bot is in code; poll creation, single- and multiple-choice voting, and result display are in code; sticker browsing, bot menus and mini apps remain missing |
