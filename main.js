@@ -346,7 +346,7 @@ ipcMain.handle('telegram-native:edit-scheduled-message', (_event, chatId, messag
 ipcMain.handle('telegram-native:reply-text', (_event, chatId, messageId, body) => tdlibService.replyTextMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:edit-message', (_event, chatId, messageId, body) => tdlibService.editMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:delete-message', (_event, chatId, messageId) => tdlibService.deleteMessage(chatId, messageId));
-ipcMain.handle('telegram-native:forward-message', (_event, chatId, messageId, targetChatId) => tdlibService.forwardMessage(chatId, messageId, targetChatId));
+ipcMain.handle('telegram-native:forward-message', (_event, chatId, messageId, targetChatId, options) => tdlibService.forwardMessage(chatId, messageId, targetChatId, options));
 ipcMain.handle('telegram-native:save-message', (_event, chatId, messageId) => tdlibService.saveMessage(chatId, messageId));
 ipcMain.handle('telegram-native:pin-message', (_event, chatId, messageId, pinned) => tdlibService.pinMessage(chatId, messageId, pinned));
 ipcMain.handle('telegram-native:react-message', (_event, chatId, messageId, emoji) => tdlibService.reactMessage(chatId, messageId, emoji));
