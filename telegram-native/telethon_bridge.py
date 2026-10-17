@@ -12,11 +12,12 @@ from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
+from telethon.tl.functions.bots import GetBotInfoRequest
 from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
-from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel
+from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
 from telethon.utils import get_display_name, get_peer_id
 from python_socks import ProxyType
@@ -97,7 +98,8 @@ async def ensure_dialogs(limit=1000):
             "muted": bool(getattr(getattr(dialog, "notify_settings", None), "mute_until", 0) and int(getattr(dialog.notify_settings, "mute_until", 0)) > int(time.time())),
             "lastMessage": preview,
             "isSavedMessages": bool(getattr(entity, "id", None) == getattr(me, "id", None)),
-            "type": "user" if getattr(entity, "first_name", None) is not None else ("channel" if getattr(entity, "broadcast", False) else "chat")
+            "type": "user" if getattr(entity, "first_name", None) is not None else ("channel" if getattr(entity, "broadcast", False) else "chat"),
+            "isBot": bool(getattr(entity, "bot", False))
         })
     return rows
 
@@ -203,6 +205,16 @@ async def handle(method, args):
             username = getattr(user, "username", None)
             members.append({"id": str(user.id), "name": name, "username": username, "bot": bool(getattr(user, "bot", False)), "verified": bool(getattr(user, "verified", False))})
         return {"members": members, "count": len(members), "limited": len(members) >= 100}
+    if method == "get-bot-commands":
+        entity = await client.get_entity(entity_for(args.get("chatId")))
+        if not getattr(entity, "bot", False):
+            raise RuntimeError("گفتگوی انتخاب‌شده ربات نیست.")
+        bot = InputUser(user_id=entity.id, access_hash=entity.access_hash)
+        info = await client(GetBotInfoRequest(bot=bot, lang_code="en"))
+        commands = []
+        for command in getattr(info, "commands", []) or []:
+            commands.append({"command": str(getattr(command, "command", "") or "").strip(), "description": str(getattr(command, "description", "") or "")[:180]})
+        return {"name": str(getattr(info, "name", "") or get_display_name(entity) or "ربات"), "description": str(getattr(info, "description", "") or "")[:1000], "commands": commands[:100]}
     if method == "list-stories":
         response = await client(GetAllStoriesRequest(hidden=False))
         rows = []
