@@ -128,6 +128,7 @@ class TelethonService {
   listPinnedMessages(chatId) { return this.request('list-pinned-messages', { chatId: String(chatId) }); }
   getChatHistoryBefore(chatId, offsetId, limit = 50) { return this.request('history-before', { chatId: String(chatId), offsetId: Number(offsetId), limit }); }
   getChatHistoryAround(chatId, messageId) { return this.request('history-around', { chatId: String(chatId), messageId: Number(messageId) }); }
+  getChatMessagesOnDate(chatId, startTimestamp, endTimestamp, limit = 100) { return this.request('messages-on-date', { chatId: String(chatId), startTimestamp: Number(startTimestamp), endTimestamp: Number(endTimestamp), limit: Number(limit) }); }
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }
   sendTextMessage(chatId, text) { return this.request('send-text', { chatId: String(chatId), text: String(text || '') }); }
   scheduleMessage(chatId, text, scheduleAt) { return this.request('schedule-message', { chatId: String(chatId), text: String(text || ''), scheduleAt: Number(scheduleAt) }); }
