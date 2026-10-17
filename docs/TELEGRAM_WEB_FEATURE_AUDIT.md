@@ -325,3 +325,5 @@ Do not create a release or installer while this parity work is in progress unles
 
 - Chat-list context actions: right-click (or Shift+F10 / Context Menu key on a focused chat) offers mark unread/read, mute/unmute notifications, pin/unpin, and archive/unarchive. These call the existing native API and refresh the chat list only after the action resolves; failures are shown to the user.
 - Chat list now visibly marks pinned and muted conversations alongside unread counts.
+
+- Reply previews: native message serialization now carries the replied-to message ID in history/search/live updates where the underlying Telegram message exposes it. The bubble shows a compact reply reference; selecting it loads nearby history and highlights the original message when returned. The quoted original text is not fetched per message, avoiding one network request for every bubble.
