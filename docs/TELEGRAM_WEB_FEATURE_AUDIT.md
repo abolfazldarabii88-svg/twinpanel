@@ -312,3 +312,11 @@ Do not create a release or installer while this parity work is in progress unles
 - Search remains bounded to the configured result count; grouping duplicate results by conversation and server-side pagination are future improvements.
 
 - Message context menu also includes copy-message-link and save-media actions, gated by the same per-message availability checks as the existing toolbar.
+
+
+## Additional parity work (2026-10-17)
+
+- Keyboard shortcuts: Ctrl+K focuses chat search, Ctrl+F focuses current-chat message search, Ctrl+Shift+F starts global search, Ctrl+Enter submits from the composer, Alt+Up loads older messages, Alt+Down jumps to latest, and F1 shows shortcut help. Escape closes the media viewer/context menu or clears active search where applicable.
+- Keyboard navigation: Arrow keys move focus through the chat list and between focusable messages; context menus remain keyboard-operable.
+- Media viewer: zoomed photos can be panned by dragging, and adjacent loaded photos can be browsed with previous/next buttons or left/right arrow keys. This navigates only media already present in the currently loaded message history; it does not fetch an entire remote album.
+- Validation boundary: these UI additions are covered by repository CI syntax checks; they have not yet been exercised against a live Telegram account or a Windows device in this turn.
