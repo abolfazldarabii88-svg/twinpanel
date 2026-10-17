@@ -299,6 +299,7 @@ ipcMain.handle('telegram-native:delete-chat', (_event, chatId) => tdlibService.d
 ipcMain.handle('telegram-native:clear-chat-history', (_event, chatId) => tdlibService.clearChatHistory(chatId));
 ipcMain.handle('telegram-native:leave-chat', (_event, chatId) => tdlibService.leaveChat(chatId));
 ipcMain.handle('telegram-native:list-dialog-folders', () => tdlibService.listDialogFolders());
+ipcMain.handle('telegram-native:share-dialog-folder', (_event, id, title, chatIds) => tdlibService.shareDialogFolder(id, title, chatIds));
 ipcMain.handle('telegram-native:save-dialog-folder', (_event, folder) => tdlibService.saveDialogFolder(folder));
 ipcMain.handle('telegram-native:delete-dialog-folder', (_event, id) => tdlibService.deleteDialogFolder(id));
 ipcMain.handle('telegram-native:profile', (_event) => tdlibService.getProfile());
