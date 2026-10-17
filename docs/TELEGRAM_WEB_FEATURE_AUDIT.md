@@ -260,3 +260,9 @@ Do not create a release or installer while this parity work is in progress unles
 - Added a native save-dialog workflow to export up to 2,000 recent messages from the active chat to UTF-8 `.txt`, in chronological order. Media is represented by a short placeholder rather than embedded. Export scope is bounded and does not yet support full account-wide export.
 
 - Typing indicator is now sent to Telegram while composing, throttled to at most one request every 3.5 seconds per renderer session. It is best-effort and not a persistent typing state.
+
+
+### Message entity rendering — 2026-10-17
+- Plain-text URLs beginning with `http://`, `https://`, or `www.` are rendered as links; `www.` URLs receive an HTTPS scheme. Links open in a new browsing context with `noopener noreferrer` and no referrer.
+- `@mentions` and `#hashtags` are visually highlighted in message text. These are presentation-only detections over the returned plain text; they do not yet use Telegram's server-provided entity offsets or resolve mention targets.
+- Automated CI and real-account behavior must be checked after this commit. No live Telegram account was used for validation.
