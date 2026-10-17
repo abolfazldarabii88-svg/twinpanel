@@ -236,6 +236,20 @@ async def handle(method, args):
             rows = [r for r in rows if q in r["title"].casefold() or q in r["lastMessage"].casefold()]
             return rows[:max(1, min(int(limit or 30), 100))]
         return rows[:max(1, min(int(limit or 80), 1000))]
+    if method == "history-around":
+        entity = entity_for(args.get("chatId"))
+        target_id = int(args.get("messageId") or 0)
+        if target_id <= 0:
+            raise RuntimeError("شناسهٔ پیام برای بازکردن نتیجه معتبر نیست.")
+        messages = await client.get_messages(entity, limit=50, min_id=max(0, target_id - 25), max_id=target_id + 25)
+        result = []
+        for msg in messages:
+            text = (msg.message or "").strip()
+            if not text and msg.media:
+                text = "رسانه / فایل"
+            item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "contentType": type(msg.media).__name__ if msg.media else "text"}
+            result.append(item)
+        return result
     if method in ("history", "preview", "history-before"):
         entity = entity_for(args.get("chatId"))
         limit = max(1, min(int(args.get("limit") or 40), 100))
