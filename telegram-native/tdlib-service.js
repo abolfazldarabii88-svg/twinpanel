@@ -180,6 +180,162 @@ class TdlibService {
     return { ok: true };
   }
 
+  async loginWithPhoneStateMachine(client, attemptId, config) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      let queue = Promise.resolve();
+      let parametersSubmitted = false;
+      let encryptionKeyChecked = false;
+      let phoneSubmitted = false;
+
+      const finish = error => {
+        if (settled) return;
+        settled = true;
+        client.off('update', onUpdate);
+        if (error) reject(error);
+        else resolve();
+      };
+
+      const invoke = async request => {
+        if (settled || attemptId !== this.attemptId) {
+          throw new Error('فرایند ورود لغو شده است؛ دوباره تلاش کن.');
+        }
+        const result = await client.invoke(request);
+        if (result && result._ === 'error') {
+          const error = new Error(result.message || 'درخواست TDLib ناموفق بود.');
+          error.code = result.code;
+          throw error;
+        }
+        return result;
+      };
+
+      const askUntilAccepted = async (type, requestFactory, retryCodes = []) => {
+        while (!settled) {
+          const value = await this.requestAuthInput(type, attemptId);
+          try {
+            await invoke(requestFactory(value));
+            return;
+          } catch (error) {
+            const message = String(error && error.message || '');
+            if (retryCodes.some(code => message.includes(code))) {
+              this.reportStage('auth-input-retry', 'اطلاعات ورود پذیرفته نشد؛ دوباره وارد کن.');
+              continue;
+            }
+            throw error;
+          }
+        }
+      };
+
+      const processState = async state => {
+        if (settled || !state) return;
+        if (attemptId !== this.attemptId) throw new Error('فرایند ورود لغو شده است.');
+
+        switch (state._) {
+          case 'authorizationStateWaitTdlibParameters':
+            if (parametersSubmitted) return;
+            parametersSubmitted = true;
+            this.reportStage('set-tdlib-parameters', 'در حال ارسال پارامترهای لازم به TDLib…');
+            await invoke({
+              _: 'setTdlibParameters',
+              use_test_dc: false,
+              database_directory: config.databaseDirectory,
+              files_directory: config.filesDirectory,
+              use_file_database: true,
+              use_chat_info_database: true,
+              use_message_database: true,
+              use_secret_chats: false,
+              api_id: config.apiId,
+              api_hash: config.apiHash,
+              system_language_code: 'fa-IR',
+              device_model: 'TwinPanel Desktop',
+              system_version: process.platform + ' ' + process.arch,
+              application_version: app.getVersion(),
+              enable_storage_optimizer: true,
+              ignore_file_names: false
+            });
+            return;
+
+          case 'authorizationStateWaitEncryptionKey':
+            if (encryptionKeyChecked) return;
+            encryptionKeyChecked = true;
+            this.reportStage('check-database-encryption-key', 'در حال بازکردن پایگاه دادهٔ رمزگذاری‌شده…');
+            await invoke({ _: 'checkDatabaseEncryptionKey', encryption_key: config.databaseKey });
+            return;
+
+          case 'authorizationStateWaitPhoneNumber':
+            if (phoneSubmitted) return;
+            phoneSubmitted = true;
+            await askUntilAccepted('phone', phone => ({
+              _: 'setAuthenticationPhoneNumber',
+              phone_number: String(phone || '').trim()
+            }), ['PHONE_NUMBER_INVALID', 'PHONE_NUMBER_EMPTY']);
+            return;
+
+          case 'authorizationStateWaitCode':
+            await askUntilAccepted('code', code => ({
+              _: 'checkAuthenticationCode',
+              code: String(code || '').trim()
+            }), ['PHONE_CODE_EMPTY', 'PHONE_CODE_INVALID']);
+            return;
+
+          case 'authorizationStateWaitPassword':
+            await askUntilAccepted('password', password => ({
+              _: 'checkAuthenticationPassword',
+              password: String(password || '')
+            }), ['PASSWORD_HASH_INVALID']);
+            return;
+
+          case 'authorizationStateWaitEmailAddress':
+            await askUntilAccepted('email', email => ({
+              _: 'setAuthenticationEmailAddress',
+              email_address: String(email || '').trim()
+            }), ['EMAIL_ADDRESS_INVALID']);
+            return;
+
+          case 'authorizationStateWaitEmailCode':
+            await askUntilAccepted('email-code', code => ({
+              _: 'checkAuthenticationEmailCode',
+              code: { _: 'emailAddressAuthenticationCode', code: String(code || '').trim() }
+            }), ['EMAIL_CODE_EMPTY', 'EMAIL_CODE_INVALID']);
+            return;
+
+          case 'authorizationStateWaitRegistration': {
+            const firstName = await this.requestAuthInput('name', attemptId);
+            await invoke({ _: 'registerUser', first_name: String(firstName || '').trim(), last_name: '' });
+            return;
+          }
+
+          case 'authorizationStateReady':
+            this.reportStage('auth-ready', 'ورود تأیید شد؛ در حال بارگذاری حساب تلگرام…');
+            finish();
+            return;
+
+          case 'authorizationStateClosed':
+            throw new Error('ارتباط TDLib بسته شد پیش از تکمیل ورود.');
+
+          default:
+            this.reportStage(
+              'auth-waiting-' + String(state._ || 'unknown').replace(/^authorizationState/, '').replace(/[^a-zA-Z0-9_-]/g, ''),
+              'در انتظار وضعیت بعدی احراز هویت تلگرام…'
+            );
+        }
+      };
+
+      const onUpdate = update => {
+        if (!update || update._ !== 'updateAuthorizationState') return;
+        queue = queue.then(() => processState(update.authorization_state)).catch(finish);
+      };
+
+      client.on('update', onUpdate);
+      // Attach first, then query the current state to avoid missing an early TDLib update.
+      void client.invoke({ _: 'getAuthorizationState' }).then(state => {
+        if (!settled && state && attemptId === this.attemptId) {
+          onUpdate({ _: 'updateAuthorizationState', authorization_state: state });
+        }
+      }).catch(finish);
+    });
+  }
+
   async loginWithQr(client, attemptId) {
     return new Promise((resolve, reject) => {
       let settled = false;
@@ -479,15 +635,18 @@ class TdlibService {
       }
       this.reportStage('prepare-local-database', 'در حال آماده‌سازی پایگاه دادهٔ محلی رمزگذاری‌شده…');
       const dir = this.dataDir();
-      fs.mkdirSync(path.join(dir, 'database'), { recursive: true });
-      fs.mkdirSync(path.join(dir, 'files'), { recursive: true });
+      const databaseDirectory = path.join(dir, 'database');
+      const filesDirectory = path.join(dir, 'files');
+      const databaseKey = this.getDatabaseKey();
+      fs.mkdirSync(databaseDirectory, { recursive: true });
+      fs.mkdirSync(filesDirectory, { recursive: true });
       this.reportStage('create-client', 'در حال ساخت کلاینت و بازکردن موتور تلگرام…');
       client = this.client = tdl.createClient({
         apiId: parsedId,
         apiHash: hash,
-        databaseDirectory: path.join(dir, 'database'),
-        filesDirectory: path.join(dir, 'files'),
-        databaseEncryptionKey: this.getDatabaseKey()
+        databaseDirectory,
+        filesDirectory,
+        databaseEncryptionKey: databaseKey
       });
       this.reportStage('client-created', 'موتور ساخته شد؛ در حال دریافت وضعیت احراز هویت…');
 
@@ -563,22 +722,12 @@ class TdlibService {
 
       const loginTask = loginMethod === 'qr'
         ? this.loginWithQr(client, attemptId)
-        : client.login({
-            getPhoneNumber: () => this.requestAuthInput('phone', attemptId),
-            getAuthCode: () => this.requestAuthInput('code', attemptId),
-            getPassword: () => this.requestAuthInput('password', attemptId),
-            getEmailAddress: () => this.requestAuthInput('email', attemptId),
-            getEmailCode: () => this.requestAuthInput('email-code', attemptId),
-            getName: async () => ({ firstName: await this.requestAuthInput('name', attemptId) }),
-            confirmOnAnotherDevice: link => {
-              this.authPromptSeen = true;
-              this.reportStage('awaiting-qr-confirmation', 'این تلاش ورود نیاز به تأیید QR روی دستگاه دیگر دارد…');
-              this.onPrompt?.({
-                type: 'qr',
-                label: 'برای ادامه، QR ورود را با تلگرام گوشی اسکن کن',
-                link
-              });
-            }
+        : this.loginWithPhoneStateMachine(client, attemptId, {
+            apiId: parsedId,
+            apiHash: hash,
+            databaseDirectory,
+            filesDirectory,
+            databaseKey
           });
       const firstPromptTimeout = new Promise((_, reject) => {
         firstAuthPromptTimer = setTimeout(() => {
