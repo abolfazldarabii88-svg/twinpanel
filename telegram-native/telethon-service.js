@@ -128,7 +128,6 @@ class TelethonService {
   clearChatHistory(chatId) { return this.request('clear-chat-history', { chatId: String(chatId) }); }
   leaveChat(chatId) { return this.request('leave-chat', { chatId: String(chatId) }); }
   listDialogFolders() { return this.request('list-dialog-folders'); }
-  shareDialogFolder(id, title, chatIds) { return this.request('share-dialog-folder', { id: Number(id), title: String(title || ''), chatIds: Array.isArray(chatIds) ? chatIds.map(String) : [] }); }
   saveDialogFolder(folder) { return this.request('save-dialog-folder', folder || {}); }
   deleteDialogFolder(id) { return this.request('delete-dialog-folder', { id: Number(id) }); }
   getProfile() { return this.request('profile'); }
