@@ -234,3 +234,5 @@ Do not create a release or installer while this parity work is in progress unles
 ### Latest parity work
 - Telegram custom dialog folders are requested from the account and rendered as dynamic chat-list filters. Folder matching currently handles explicit included/excluded peers, groups, broadcasts, contacts/non-contacts, bots, and exclusion flags; server-account verification remains required.
 - Scheduled messages can be listed for the active conversation and canceled by message ID from the new queue control.
+
+- Media uploads now emit progress events from Telethon through the main/preload bridge; the attachment button displays live progress for the active conversation. Multi-file album progress is per active upload segment, not a per-file queue with pause/cancel yet.
