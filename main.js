@@ -3,7 +3,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 const { autoUpdater } = require('electron-updater');
-const { TdlibService } = require('./telegram-native/tdlib-service');
+const { GramJsService } = require('./telegram-native/gramjs-service');
 // Embedded ChatGPT/Telegram media and Web Audio can otherwise remain blocked by Chromium autoplay policy.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 let mainWindow;
@@ -11,7 +11,7 @@ let nativeTelegramWindow = null; // Compatibility fallback; the native client is
 let nativeTelegramGuest = null;
 let pendingNativeAuthPrompt = null;
 let nativeAuthPromptId = 0;
-const tdlibService = new TdlibService();
+const tdlibService = new GramJsService();
 const nativeTelegramFile = () => pathToFileURL(path.join(__dirname, 'telegram-native', 'index.html')).href;
 const nativeTelegramPreload = () => pathToFileURL(path.join(__dirname, 'preload.js')).href;
 const isNativeTelegramUrl = value => {
