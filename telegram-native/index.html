@@ -187,7 +187,7 @@ function handleTelegramUpdate(update){
  }
  if(realChats)void loadChats(search.value);
 }
-if(api){api.onAuthPrompt(authPrompt);api.onStatus(setStatus);api.onUpdate(handleTelegramUpdate);api.credentialsStatus().then(state=>setApiCredentialUi(!!state.saved)).catch(()=>setApiCredentialUi(false));}
+if(api){api.onAuthPrompt(authPrompt);api.onStatus(setStatus);api.onUpdate(handleTelegramUpdate);if(api.onUploadProgress)api.onUploadProgress(value=>{if(String(value.chatId)!==String(active))return;const button=document.getElementById('attachBtn');const percent=Math.max(0,Math.min(100,Number(value.percent)||0));button.title='در حال ارسال '+(value.fileName||'فایل')+' — '+percent+'٪';button.textContent=percent>=100?'ارسال شد':'ارسال '+percent+'٪';if(percent>=100){setTimeout(()=>{button.textContent='فایل';button.title='ارسال فایل'},1600)}});api.credentialsStatus().then(state=>setApiCredentialUi(!!state.saved)).catch(()=>setApiCredentialUi(false));}
 document.getElementById('apiCredentialEdit').addEventListener('click',()=>{setApiCredentialUi(false);document.getElementById('apiId').value='';document.getElementById('apiHash').value='';document.getElementById('apiId').focus();});
 document.getElementById('authForm').addEventListener('submit',e=>{e.preventDefault();if(!pendingPrompt)return;api.submitAuthInput(pendingPrompt.type,document.getElementById('authValue').value);pendingPrompt=null;document.getElementById('authOverlay').hidden=true});
 document.getElementById('cancelAuth').addEventListener('click',async()=>{pendingPrompt=null;document.getElementById('authOverlay').hidden=true;try{await api.cancelConnect()}catch(e){showToast(e.message||'لغو اتصال ناموفق بود')}});
