@@ -359,7 +359,7 @@ class TdlibService {
     });
   }
 
-  async connect({ apiId, apiHash, loginMethod = 'phone' }, targetWebContents) {
+  async connect({ apiId, apiHash, loginMethod = 'phone', proxy = null }, targetWebContents) {
     if (this.cancelPromise) await this.cancelPromise;
     if (this.connected) return this.status();
     if (this.connecting) throw new Error('تلاش اتصال قبلی هنوز فعال است. پنجرهٔ ورود قبلی را ببند یا اتصال را لغو کن؛ نیازی به انتظار نیم‌ساعته نیست.');
@@ -368,6 +368,33 @@ class TdlibService {
     const hash = String(apiHash || '').trim();
     if (!Number.isInteger(parsedId) || parsedId <= 0 || !/^[a-f0-9]{32}$/i.test(hash)) {
       throw new Error('API ID باید عدد معتبر و API Hash باید ۳۲ نویسهٔ هگزادسیمال باشد.');
+    }
+    const proxyType = String(proxy?.type || '').trim().toLowerCase();
+    let proxyRequest = null;
+    if (proxyType) {
+      const server = String(proxy?.server || '').trim();
+      const port = Number(proxy?.port);
+      if (!server || server.length > 253 || /[\\s/]/.test(server) || !Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error('میزبان و درگاه پروکسی معتبر نیست؛ آدرس را بدون http:// یا socks5:// و درگاه را بین ۱ تا ۶۵۵۳۵ وارد کن.');
+      }
+      const username = String(proxy?.username || '');
+      const password = String(proxy?.password || '');
+      let type;
+      if (proxyType === 'socks5') {
+        type = { _: 'proxyTypeSocks5', username, password };
+      } else if (proxyType === 'http') {
+        type = { _: 'proxyTypeHttp', username, password, http_only: false };
+      } else if (proxyType === 'mtproto') {
+        const secret = String(proxy?.secret || '').trim();
+        if (!/^[a-f0-9]{32,64}$/i.test(secret) || secret.length % 2 !== 0) {
+          throw new Error('Secret پروکسی MTProto باید یک مقدار هگزادسیمال معتبر با طول زوج باشد.');
+        }
+        type = { _: 'proxyTypeMtproto', secret };
+      } else {
+        throw new Error('نوع پروکسی پشتیبانی نمی‌شود؛ SOCKS5، HTTP یا MTProto را انتخاب کن.');
+      }
+      // Proxy credentials stay in memory and are never written into diagnostics or user data.
+      proxyRequest = { _: 'addProxy', proxy: { _: 'proxy', server, port, type }, enable: true };
     }
     this.ensureSafeStorage();
     this.connecting = true;
@@ -490,6 +517,18 @@ class TdlibService {
         this.reportStage('tdlib-runtime-error', 'موتور تلگرام خطای داخلی گزارش کرد؛ برای جزئیات بیشتر گزارش را بررسی کن.');
       });
 
+      if (proxyRequest) {
+        const proxyLabels = { socks5: 'SOCKS5', http: 'HTTP', mtproto: 'MTProto' };
+        this.reportStage('configure-proxy', 'در حال فعال‌کردن پروکسی ' + proxyLabels[proxyType] + ' برای اتصال تلگرام…');
+        try {
+          const added = await client.invoke(proxyRequest);
+          if (!added || added._ === 'error') throw new Error('Proxy rejected');
+          this.reportStage('proxy-enabled', 'پروکسی ثبت و فعال شد؛ در حال اتصال به تلگرام…');
+        } catch {
+          throw new Error('فعال‌سازی پروکسی ناموفق بود؛ نوع پروکسی، میزبان، درگاه و مشخصات آن را بررسی کن.');
+        }
+      }
+
       const loginTask = loginMethod === 'qr'
         ? this.loginWithQr(client, attemptId)
         : client.login({
@@ -513,7 +552,7 @@ class TdlibService {
         firstAuthPromptTimer = setTimeout(() => {
           if (attemptId === this.attemptId && !this.authPromptSeen) {
             reject(new Error(loginMethod === 'qr'
-              ? 'TDLib طی ۲۵ ثانیه پس از درخواست QR هیچ وضعیت جدیدی برنگرداند؛ لینک QR هنوز دریافت نشده و ساخت تصویر شروع نشده است. اتصال شبکهٔ تلگرام را بررسی کن یا موقتاً ورود با شماره را انتخاب کن.'
+              ? 'TDLib طی ۲۵ ثانیه پس از درخواست QR هیچ وضعیت جدیدی برنگرداند؛ اتصال مستقیم به سرورهای تلگرام برقرار نشد. شبکه/VPN را بررسی کن یا یک پروکسی سالم را در فرم اتصال تنظیم کن.'
               : 'TDLib طی ۲۵ ثانیه هیچ پنجرهٔ ورود نساخت. اتصال را لغو کن و دوباره امتحان کن.'));
           }
         }, 25000);
