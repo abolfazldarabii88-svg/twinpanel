@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
+from telethon.tl.functions.channels import GetFullChannelRequest
+from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned
@@ -126,6 +128,27 @@ async def handle(method, args):
         if not link:
             raise RuntimeError("تلگرام لینک دعوتی برنگرداند.")
         return {"link": str(link)}
+    if method == "get-chat-info":
+        entity = entity_for(args.get("chatId"))
+        try:
+            full_entity = await client.get_entity(entity)
+            if getattr(full_entity, "broadcast", False) or getattr(full_entity, "megagroup", False):
+                result = await client(GetFullChannelRequest(channel=full_entity))
+                full_chat = result.full_chat
+                participants_count = getattr(full_chat, "participants_count", None)
+                about = getattr(full_chat, "about", "") or ""
+                admins_count = getattr(full_chat, "admins_count", None)
+            elif getattr(full_entity, "title", None) is not None:
+                result = await client(GetFullChatRequest(chat_id=int(full_entity.id)))
+                full_chat = result.full_chat
+                participants_count = len(getattr(full_chat, "participants", []) or [])
+                about = getattr(full_chat, "about", "") or ""
+                admins_count = None
+            else:
+                return {"title": get_display_name(full_entity), "username": getattr(full_entity, "username", None), "type": "user", "verified": bool(getattr(full_entity, "verified", False)), "bot": bool(getattr(full_entity, "bot", False))}
+            return {"title": getattr(full_entity, "title", None) or get_display_name(full_entity), "username": getattr(full_entity, "username", None), "type": "channel" if getattr(full_entity, "broadcast", False) else "group", "about": about[:3000], "participantsCount": participants_count, "adminsCount": admins_count, "verified": bool(getattr(full_entity, "verified", False)), "megagroup": bool(getattr(full_entity, "megagroup", False))}
+        except Exception as exc:
+            raise RuntimeError("اطلاعات کامل این گفتگو از تلگرام دریافت نشد.") from exc
     if method == "get-chat-members":
         entity = entity_for(args.get("chatId"))
         members = []
