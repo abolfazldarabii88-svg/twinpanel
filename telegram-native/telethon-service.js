@@ -117,6 +117,7 @@ class TelethonService {
   getProfile() { return this.request('profile'); }
   getChatInfo(chatId) { return this.request('get-chat-info', { chatId: String(chatId) }); }
   getChatMembers(chatId) { return this.request('get-chat-members', { chatId: String(chatId) }); }
+  exportChatInviteLink(chatId) { return this.request('export-chat-invite-link', { chatId: String(chatId) }); }
   exportChatInviteLink(chatId, expireSeconds = 0, usageLimit = 0) { return this.request('export-chat-invite-link', { chatId: String(chatId), expireSeconds: Number(expireSeconds) || 0, usageLimit: Number(usageLimit) || 0 }); }
   searchChats(query, limit = 30) { return this.request('search-chats', { query: String(query || ''), limit }); }
   searchGlobalMessages(query, limit = 30) { return this.request('search-global-messages', { query: String(query || ''), limit }); }
