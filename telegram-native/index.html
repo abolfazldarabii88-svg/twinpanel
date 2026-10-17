@@ -271,14 +271,14 @@ document.getElementById('scheduleBtn').addEventListener('click',async()=>{if(!ap
 // TwinPanel keyboard shortcuts: Ctrl+F in-chat search, Ctrl+K chat search, Ctrl+Shift+F global search, Ctrl+Enter send, Escape dismiss search/reply.
 document.addEventListener('keydown',e=>{
  const key=(e.key||'').toLowerCase();
- if((e.ctrlKey||e.metaKey)&&!e.altKey&&key==='f'){
+ if((e.ctrlKey||e.metaKey)&&e.shiftKey&&!e.altKey&&key==='f'){
+  e.preventDefault();document.getElementById('globalSearchBtn')?.click();return;
+ }
+ if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&key==='f'){
   e.preventDefault();const target=document.getElementById('messageSearch');target?.focus();target?.select();return;
  }
  if((e.ctrlKey||e.metaKey)&&!e.altKey&&key==='k'){
   e.preventDefault();const target=document.getElementById('search');target?.focus();target?.select();return;
- }
- if((e.ctrlKey||e.metaKey)&&e.shiftKey&&key==='f'){
-  e.preventDefault();document.getElementById('globalSearchBtn')?.click();return;
  }
  if((e.ctrlKey||e.metaKey)&&!e.altKey&&key==='enter'){
   const input=document.getElementById('messageInput');
