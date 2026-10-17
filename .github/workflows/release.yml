@@ -45,6 +45,11 @@ jobs:
           node scripts/check-inline-scripts.js
       - name: Install dependencies
         run: npm ci
+      - name: Set package version from release branch
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^release/v', ''
+          npm version $version --no-git-tag-version
       - name: Build installer and updater metadata without publishing
         run: npm run dist:ci
       - name: Resolve release version

@@ -109,7 +109,9 @@ class TelethonService {
   }
   getDiagnostics() { return { stage: this.diagnosticStage, message: this.lastMessage, engine: 'Telethon', connected: this.connected }; }
   submitAuthInput(type, value) { return this.request('auth-input', { type, value: String(value || '') }); }
+  // Polling and profile helpers are exposed by the native service.
   listChats(limit = 60) { return this.request('list-chats', { limit }); }
+  getProfile() { return this.request('profile'); }
   searchChats(query, limit = 30) { return this.request('search-chats', { query: String(query || ''), limit }); }
   getChatHistory(chatId, limit = 40) { return this.request('history', { chatId: String(chatId), limit }); }
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }

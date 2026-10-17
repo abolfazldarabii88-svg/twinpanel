@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import os
 import sys
@@ -17,6 +18,7 @@ connected = False
 connecting = False
 me = None
 dialogs_cache = {}
+media_data_cache = {}
 pending_auth = asyncio.Queue()
 tasks = set()
 diagnostic_stage = "ready"
@@ -99,6 +101,11 @@ async def handle(method, args):
     global client, connected, connecting, me, diagnostic_stage, last_message
     if method == "status":
         return status()
+    if method == "profile":
+        if not client or not connected or not me:
+            raise RuntimeError("ابتدا حساب تلگرام را متصل کن.")
+        full = await client.get_me()
+        return {"id": str(full.id), "name": get_display_name(full), "username": getattr(full, "username", None), "firstName": getattr(full, "first_name", None), "lastName": getattr(full, "last_name", None), "isPremium": bool(getattr(full, "premium", False)), "bot": bool(getattr(full, "bot", False))}
     if method == "credentials-status":
         return {"saved": False}
     if method == "connect":
@@ -177,14 +184,36 @@ async def handle(method, args):
             text = (msg.message or "").strip()
             if not text and msg.media:
                 text = "رسانه / فایل"
-            result.append({
+            item = {
                 "id": str(msg.id),
                 "chatId": str(args.get("chatId")),
                 "date": int(msg.date.timestamp()) if msg.date else int(time.time()),
                 "outgoing": bool(msg.out),
                 "text": text[:4096],
                 "contentType": type(msg.media).__name__ if msg.media else "text"
-            })
+            }
+            cache_key = str(args.get("chatId")) + ":" + str(msg.id)
+            is_image = bool(msg.photo or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("image/")))
+            is_video = bool(msg.video or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("video/")))
+            if is_video:
+                item["contentType"] = "video"
+            if is_image or is_video:
+                if cache_key in media_data_cache:
+                    item["mediaDataUrl"] = media_data_cache[cache_key]
+                else:
+                    try:
+                        media_bytes = await client.download_media(msg, file=bytes)
+                        max_size = 8 * 1024 * 1024 if is_video else 4 * 1024 * 1024
+                        if media_bytes and len(media_bytes) <= max_size:
+                            mime = getattr(msg.file, "mime_type", None) or ("video/mp4" if is_video else "image/jpeg")
+                            data_url = "data:" + mime + ";base64," + base64.b64encode(media_bytes).decode("ascii")
+                            media_data_cache[cache_key] = data_url
+                            item["mediaDataUrl"] = data_url
+                            if len(media_data_cache) > 150:
+                                media_data_cache.pop(next(iter(media_data_cache)))
+                    except Exception:
+                        pass
+            result.append(item)
         return result
     if method == "send-text":
         entity = entity_for(args.get("chatId"))
