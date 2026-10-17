@@ -6,7 +6,7 @@ import sys
 import time
 from pathlib import Path
 
-from telethon import TelegramClient
+from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.account import UpdateNotifySettingsRequest
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings
@@ -156,6 +156,38 @@ async def handle(method, args):
             me = await client.get_me()
         connected = True
         connecting = False
+
+        async def publish_message_update(kind, message, chat_id):
+            try:
+                body = (message.message or "").strip()
+                if not body and message.media:
+                    body = "رسانه / فایل"
+                item = {
+                    "kind": kind,
+                    "chatId": str(chat_id or ""),
+                    "id": str(message.id),
+                    "date": int(message.date.timestamp()) if message.date else int(time.time()),
+                    "outgoing": bool(message.out),
+                    "text": body[:4096],
+                    "contentType": type(message.media).__name__ if message.media else "text"
+                }
+                event("update", item)
+            except Exception:
+                pass
+
+        async def on_new_message(update_event):
+            await publish_message_update("new", update_event.message, update_event.chat_id)
+
+        async def on_edited_message(update_event):
+            await publish_message_update("edit", update_event.message, update_event.chat_id)
+
+        async def on_deleted_messages(update_event):
+            for message_id in update_event.deleted_ids or []:
+                event("update", {"kind": "delete", "chatId": str(update_event.chat_id or ""), "id": str(message_id)})
+
+        client.add_event_handler(on_new_message, events.NewMessage)
+        client.add_event_handler(on_edited_message, events.MessageEdited)
+        client.add_event_handler(on_deleted_messages, events.MessageDeleted)
         event("prompt", {"type": "cancelled"})
         set_status("connected", "حساب تلگرام با موفقیت متصل شد.")
         return {**status(), "account": getattr(me, "first_name", "") or get_display_name(me), "userId": str(me.id)}
