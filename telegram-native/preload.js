@@ -5,8 +5,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 function isNativeTelegramDocument() {
   try {
     const url = new URL(location.href);
-    return url.protocol === 'file:' &&
-      /\\/telegram-native\\/index\\.html$/i.test(decodeURIComponent(url.pathname).replace(/\\\\/g, '/'));
+    const pathname = decodeURIComponent(url.pathname).replace(/\\\\/g, '/').toLowerCase();
+    return url.protocol === 'file:' && pathname.endsWith('/telegram-native/index.html');
   } catch {
     return false;
   }
