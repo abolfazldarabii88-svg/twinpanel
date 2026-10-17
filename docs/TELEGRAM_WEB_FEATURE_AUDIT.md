@@ -43,10 +43,10 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Code blocks, spoilers, blockquotes | Missing | Need entity-aware rendering and composer |
 | Mentions, hashtags, links, bot commands | Partial | Plain text only; no autocomplete or structured entities |
 | Reply/quote | Present in code — unverified | Basic reply to a selected message; no quote formatting/thread UI |
-| Forward with/without attribution | Missing | Forward API and destination picker needed |
+| Forward with/without attribution | Partial | Forward API and exact-title destination picker implemented; no attribution-choice UI; real-account permissions/behavior unverified |
 | Edit message text/media | Partial | Text edit path only; media caption/edit support missing |
 | Delete own / delete for everyone | Partial | Delete path requests revoke; permissions and UI choices need testing |
-| Pin/unpin | Missing | Message and chat pin actions absent |
+| Pin/unpin message | Partial | Pin message API and selected-message control implemented; unpin UI and real-account permission checks still missing |
 | Scheduled / recurring messages | Missing | Scheduler and UI absent |
 | Sent/read state and read receipts | Missing | No message status model or reliable read state |
 | Typing indicators / online status | Missing | No live updates |
@@ -56,7 +56,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Multi-select / bulk actions | Missing | No selection mode |
 | Copy text / copy message link | Missing | No context menu/actions |
 | Report message / user | Missing | No reporting flow |
-| Save/forward attribution choices | Missing | No forwarding flow |
+| Save/forward attribution choices | Partial | Basic forward-to-chat flow exists; attribution choices and save/copy workflows remain missing |
 | Message effects / reactions / read-by list | Missing | No reaction or effect UI/API |
 | Per-chat cloud drafts | Missing | Composer draft is not saved per chat |
 | Context menu / shortcuts / drag-drop / clipboard | Missing | Minimal click actions only |
