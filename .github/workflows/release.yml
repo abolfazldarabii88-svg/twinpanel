@@ -1,5 +1,6 @@
 name: Build and publish TwinPanel for Windows
 
+# Release publishing is intentionally manual. Never publish on a routine push.
 on:
   workflow_dispatch:
 
@@ -16,21 +17,63 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Validate JavaScript syntax
         run: |
           node --check main.js
           node --check preload.js
           node --check scripts/make-icon.js
+          node --check scripts/write-telegram-credentials.js
+          node --check telegram-native/preload.js
           node --check telegram-native/tdlib-service.js
           node --check telegram-native/tdlib-bridge.js
-      - name: Install dependencies
-        run: npm ci
-      - name: Build and publish installer and updater metadata
-        run: npm run publish:win
+
+      - name: Create local Telegram app credentials for packaging
+        run: node scripts/write-telegram-credentials.js
+        env:
+          TWINPANEL_TELEGRAM_API_ID: ${{ secrets.TWINPANEL_TELEGRAM_API_ID }}
+          TWINPANEL_TELEGRAM_API_HASH: ${{ secrets.TWINPANEL_TELEGRAM_API_HASH }}
+
+      - name: Build Windows installer without publishing
+        run: npm run dist
+
+      - name: Verify release files
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $required = @(
+            "release/TwinPanel-Setup-$version.exe",
+            "release/TwinPanel-Setup-$version.exe.blockmap",
+            "release/latest.yml"
+          )
+          foreach ($file in $required) {
+            if (!(Test-Path $file)) { throw "Required release asset is missing: $file" }
+          }
+
+      - name: Publish all update assets in one GitHub Release
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = node -p "require('./package.json').version"
+          $tag = "v$version"
+          gh release view $tag --json tagName 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            throw "Release $tag already exists. Bump package.json and package-lock.json first."
+          }
+          $assets = @(
+            "release/TwinPanel-Setup-$version.exe",
+            "release/TwinPanel-Setup-$version.exe.blockmap",
+            "release/latest.yml"
+          )
+          gh release create $tag $assets --title "TwinPanel $version" --generate-notes --target $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Release publishing failed." }
