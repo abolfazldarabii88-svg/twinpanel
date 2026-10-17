@@ -365,7 +365,7 @@ document.addEventListener('keydown',event=>{
   if(key==='k'){event.preventDefault();search.focus();search.select();return}
   if(key==='f'&&event.shiftKey){event.preventDefault();document.getElementById('globalSearchBtn').click();return}
   if(key==='f'&&!event.shiftKey){event.preventDefault();messageSearch.focus();messageSearch.select();return}
-  if(key==='enter'&&!typing){event.preventDefault();document.getElementById('composer').requestSubmit();return}
+  if(key==='enter'&&(!typing||target.id==='messageInput')){event.preventDefault();document.getElementById('composer').requestSubmit();return}
  }
  if(event.key==='F1'){event.preventDefault();showToast('میانبرها: Ctrl+K گفتگوها · Ctrl+F جست‌وجوی همین گفتگو · Ctrl+Shift+F جست‌وجوی سراسری · Alt+↑ قدیمی‌تر · Alt+↓ جدیدترین · Esc بستن/پاک‌کردن')}
  if(event.altKey&&!event.ctrlKey&&!event.metaKey&&event.key==='ArrowUp'){event.preventDefault();if(!document.getElementById('olderBtn').disabled)loadOlderMessages();return}
@@ -385,6 +385,15 @@ document.getElementById('chats').addEventListener('keydown',event=>{
  const items=[...chats.querySelectorAll('button.chat')];if(!items.length)return;
  const index=items.indexOf(document.activeElement);if(index<0)return;
  event.preventDefault();items[Math.max(0,Math.min(items.length-1,index+(event.key==='ArrowDown'?1:-1)))].focus();
+});
+
+
+messages.addEventListener('keydown',event=>{
+ if(!['ArrowDown','ArrowUp'].includes(event.key)||event.altKey||event.ctrlKey||event.metaKey)return;
+ const bubble=event.target.closest&&event.target.closest('.bubble');if(!bubble)return;
+ if(event.target.closest('a,button,input,textarea,video'))return;
+ const items=[...messages.querySelectorAll('.bubble[tabindex="0"]')];const index=items.indexOf(bubble);if(index<0)return;
+ const next=items[index+(event.key==='ArrowDown'?1:-1)];if(next){event.preventDefault();next.focus({preventScroll:true});next.scrollIntoView({block:'nearest',behavior:'smooth'})}
 });
 
 </script></body></html>
