@@ -292,6 +292,7 @@ ipcMain.handle('telegram-native:history-before', (_event, chatId, offsetId, limi
 ipcMain.handle('telegram-native:history-around', (_event, chatId, messageId) => tdlibService.getChatHistoryAround(chatId, messageId));
 ipcMain.handle('telegram-native:preview', (_event, chatId, limit) => tdlibService.getUnreadPreview(chatId, limit));
 ipcMain.handle('telegram-native:send-text', (_event, chatId, body) => tdlibService.sendTextMessage(chatId, body));
+ipcMain.handle('telegram-native:schedule-message', (_event, chatId, body, scheduleAt) => tdlibService.scheduleMessage(chatId, body, scheduleAt));
 ipcMain.handle('telegram-native:reply-text', (_event, chatId, messageId, body) => tdlibService.replyTextMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:edit-message', (_event, chatId, messageId, body) => tdlibService.editMessage(chatId, messageId, body));
 ipcMain.handle('telegram-native:delete-message', (_event, chatId, messageId) => tdlibService.deleteMessage(chatId, messageId));
