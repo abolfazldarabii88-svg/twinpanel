@@ -250,3 +250,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Invite link generation now offers optional expiration (1 hour, 1 day, 1 week, 1 month, or none) and a usage limit (up to 1,000). Telegram admin rights are required; these options have not yet been validated against a live account.
 
 - Chat information panel added for users, groups, and channels; it displays available usernames, descriptions, verification status, and group/channel participant/admin counts. Availability depends on Telegram's returned full-chat data and permissions.
+
+- Group/channel invite-link generation added. The UI requests a link through Telegram and copies/displays it; Telegram permissions may restrict this to admins or existing invite links. Live-account verification is still pending.
