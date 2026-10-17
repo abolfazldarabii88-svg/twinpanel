@@ -27,8 +27,9 @@ Rebuild the Telegram Web experience inside TwinPanel's native Telegram pane, usi
 - [ ] Chat list search, global search, in-chat search, date search, hashtag search, public-post search where API permits.
 - [x] Basic older-message history pagination with scroll-position preservation (verification pending).
 - [ ] Jump-to-date, unread divider, jump to latest, and efficient rendering of very long histories.
-- [x] Send, edit and delete outgoing messages (code implemented; real-account verification pending).
-- [ ] Reply/quote, forward, pin/unpin, copy text/link, select multiple, report, save/forward attribution choices.
+- [x] Send, reply to, edit and delete messages (reply/edit/delete implemented in code; real-account verification pending).
+- [x] Basic reply/quote to a selected message (code implemented; real-account verification pending).
+- [ ] Forward, pin/unpin, copy text/link, select multiple, report, save/forward attribution choices.
 - [ ] Per-chat cloud drafts and local draft restoration.
 - [ ] Correct delivery/read states, typing indicators and read receipts where Telegram exposes them.
 - [ ] Message context menus, keyboard shortcuts, drag-and-drop and clipboard behavior.
