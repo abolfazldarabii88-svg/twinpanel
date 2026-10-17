@@ -121,6 +121,7 @@ class TelethonService {
   searchGlobalMessages(query, limit = 30) { return this.request('search-global-messages', { query: String(query || ''), limit }); }
   getChatHistory(chatId, limit = 40) { return this.request('history', { chatId: String(chatId), limit }); }
   searchChatMessages(chatId, query, limit = 50) { return this.request('search-chat-messages', { chatId: String(chatId), query: String(query || ''), limit }); }
+  listPinnedMessages(chatId) { return this.request('list-pinned-messages', { chatId: String(chatId) }); }
   getChatHistoryBefore(chatId, offsetId, limit = 50) { return this.request('history-before', { chatId: String(chatId), offsetId: Number(offsetId), limit }); }
   getChatHistoryAround(chatId, messageId) { return this.request('history-around', { chatId: String(chatId), messageId: Number(messageId) }); }
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }
