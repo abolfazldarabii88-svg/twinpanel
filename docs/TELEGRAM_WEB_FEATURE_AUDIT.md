@@ -367,3 +367,11 @@ Do not create a release or installer while this parity work is in progress unles
 
 - Private per-chat notes: each conversation has an optional local notes panel with character count and clear action. Notes are stored in localStorage under a conversation-specific key, loaded when switching chats, and are never sent to Telegram. The chat-list search also matches local notes; these notes remain device-local and are not synced or encrypted by this feature.
 - Private notes can be toggled with Ctrl+Shift+N (Cmd+Shift+N on macOS); the shortcut focuses the note editor when opening it.
+
+
+## UI redesign — Aurora glass (2026-10-18)
+
+- Reworked the native Telegram workspace presentation with a macOS/iOS-inspired translucent glass surface, layered aurora lighting, softer rounded geometry, refined chat bubbles and controls, and restrained micro-animations.
+- Added focus-visible states, reduced-motion support, thin scrollbar styling, more responsive layouts, and a mobile single-conversation presentation breakpoint.
+- Kept existing element IDs and event wiring intact so the redesign remains a presentation-layer change rather than replacing the Telegram features.
+- Performance note: glass blur is limited to major surfaces; on low-memory hardware, validate scrolling and media rendering in the actual Electron build before treating the design as final.
