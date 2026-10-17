@@ -9,7 +9,7 @@ class TelethonService {
     this.connected = false; this.connecting = false; this.onPrompt = null; this.onStatus = null; this.onUpdate = null;
     this.diagnosticStage = 'ready'; this.lastMessage = 'برای اتصال، API ID و API Hash را وارد کن.';
   }
-  setCallbacks({ onPrompt, onStatus, onUpdate } = {}) { this.onPrompt = onPrompt; this.onStatus = onStatus; this.onUpdate = onUpdate; }
+  setCallbacks({ onPrompt, onStatus, onUpdate, onProgress } = {}) { this.onPrompt = onPrompt; this.onStatus = onStatus; this.onUpdate = onUpdate; this.onProgress = onProgress; }
   status(message = '') {
     return { connected: this.connected, connecting: this.connecting, engine: 'Telethon',
       stage: this.connected ? 'connected' : (this.connecting ? 'authorizing' : 'ready'),
