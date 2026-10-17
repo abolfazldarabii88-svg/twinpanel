@@ -13,7 +13,7 @@ from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivac
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
@@ -494,6 +494,18 @@ async def handle(method, args):
                 matched.append(cid)
             result.append({"id": folder_id, "title": title or f"پوشه {folder_id}", "chatIds": matched, "contacts": bool(getattr(folder, "contacts", False)), "nonContacts": bool(getattr(folder, "non_contacts", False)), "groups": bool(getattr(folder, "groups", False)), "broadcasts": bool(getattr(folder, "broadcasts", False)), "bots": bool(getattr(folder, "bots", False)), "excludeMuted": bool(getattr(folder, "exclude_muted", False)), "excludeRead": bool(getattr(folder, "exclude_read", False)), "excludeArchived": bool(getattr(folder, "exclude_archived", False)), "includeIds": sorted(included), "excludeIds": sorted(excluded)})
         return result
+    if method == "clear-chat-history":
+        entity = entity_for(args.get("chatId"))
+        peer = await client.get_input_entity(entity)
+        await client(DeleteHistoryRequest(peer=peer, max_id=0, just_clear=True, revoke=False))
+        return {"ok": True, "chatId": str(args.get("chatId"))}
+    if method == "leave-chat":
+        entity = entity_for(args.get("chatId"))
+        if getattr(entity, "first_name", None) is not None or getattr(entity, "username", None) and not (getattr(entity, "broadcast", False) or getattr(entity, "megagroup", False)):
+            raise RuntimeError("خروج از این گفتگو پشتیبانی نمی‌شود؛ فقط گروه و کانال.")
+        await client.delete_dialog(entity)
+        dialogs_cache.pop(str(args.get("chatId")), None)
+        return {"ok": True, "chatId": str(args.get("chatId"))}
     if method == "delete-contact":
         peer_id = str(args.get("chatId") or "")
         entity = entity_for(peer_id)
