@@ -1042,7 +1042,11 @@ async def handle(method, args):
         message_id = int(args.get("messageId") or 0)
         if message_id <= 0:
             raise RuntimeError("شناسهٔ پیام معتبر نیست.")
-        forwarded = await client.forward_messages(target, [message_id], from_peer=source)
+        drop_author = bool(args.get("dropAuthor", False))
+        drop_media_captions = bool(args.get("dropMediaCaptions", False))
+        if drop_media_captions and not drop_author:
+            raise RuntimeError("حذف کپشن رسانه فقط همراه با حذف انتساب فرستنده مجاز است.")
+        forwarded = await client.forward_messages(target, [message_id], from_peer=source, drop_author=drop_author, drop_media_captions=drop_media_captions)
         item = forwarded[0] if isinstance(forwarded, list) else forwarded
         return {"ok": True, "id": str(item.id) if item else ""}
     if method == "download-message-media":
