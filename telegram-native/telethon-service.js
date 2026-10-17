@@ -118,6 +118,7 @@ class TelethonService {
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }
   sendTextMessage(chatId, text) { return this.request('send-text', { chatId: String(chatId), text: String(text || '') }); }
   sendMedia(chatId, filePath, caption = '') { return this.request('send-media', { chatId: String(chatId), filePath: String(filePath || ''), caption: String(caption || '') }); }
+  replyTextMessage(chatId, messageId, text) { return this.request('reply-text', { chatId: String(chatId), messageId: String(messageId), text: String(text || '') }); }
   editMessage(chatId, messageId, text) { return this.request('edit-message', { chatId: String(chatId), messageId: String(messageId), text: String(text || '') }); }
   deleteMessage(chatId, messageId) { return this.request('delete-message', { chatId: String(chatId), messageId: String(messageId) }); }
   setChatMuted(chatId, muted) { return this.request('mute-chat', { chatId: String(chatId), muted: !!muted }); }
