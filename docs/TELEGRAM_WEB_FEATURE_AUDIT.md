@@ -229,3 +229,8 @@ Do not create a release or installer while this parity work is in progress unles
 - Chat list now includes a dedicated unread-only filter using each dialog's unread count.
 
 - Conversation pin/unpin controls added; pinned conversations sort ahead of unpinned dialogs in the list.
+
+
+### Latest parity work
+- Telegram custom dialog folders are requested from the account and rendered as dynamic chat-list filters. Folder matching currently handles explicit included/excluded peers, groups, broadcasts, contacts/non-contacts, bots, and exclusion flags; server-account verification remains required.
+- Scheduled messages can be listed for the active conversation and canceled by message ID from the new queue control.
