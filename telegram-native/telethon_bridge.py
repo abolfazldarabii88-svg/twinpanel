@@ -37,7 +37,7 @@ diagnostic_stage = "ready"
 last_message = "برای اتصال، API ID و API Hash را وارد کن."
 
 def emit(value):
-    sys.stdout.write(json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n")
+    sys.stdout.write(json.dumps(value, ensure_ascii=True, separators=(",", ":")) + "\n")
     sys.stdout.flush()
 
 def event(name, value):
