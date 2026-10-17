@@ -39,6 +39,17 @@
 </div>
 <input id="apiId" inputmode="numeric" placeholder="API ID" required style="min-width:100px;flex:1;padding:8px;border-radius:8px">
 <input id="apiHash" type="password" placeholder="API Hash" required autocomplete="off" style="min-width:140px;flex:1;padding:8px;border-radius:8px">
+<div style="display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-top:4px">
+ <select id="proxyType" aria-label="نوع پروکسی" style="min-width:145px;flex:1;padding:8px;border-radius:8px">
+  <option value="">اتصال مستقیم</option><option value="socks5">پروکسی SOCKS5</option><option value="http">پروکسی HTTP</option><option value="mtproto">پروکسی MTProto</option>
+ </select>
+ <input id="proxyServer" hidden autocomplete="off" placeholder="میزبان پروکسی (IP/دامنه)" style="min-width:155px;flex:2;padding:8px;border-radius:8px">
+ <input id="proxyPort" hidden type="number" min="1" max="65535" inputmode="numeric" placeholder="درگاه" style="min-width:80px;flex:1;padding:8px;border-radius:8px">
+ <input id="proxyUsername" hidden autocomplete="off" placeholder="نام کاربری پروکسی (اختیاری)" style="min-width:145px;flex:1;padding:8px;border-radius:8px">
+ <input id="proxyPassword" hidden type="password" autocomplete="new-password" placeholder="رمز پروکسی (اختیاری)" style="min-width:130px;flex:1;padding:8px;border-radius:8px">
+ <input id="proxySecret" hidden autocomplete="off" placeholder="Secret هگزادسیمال MTProto" style="min-width:180px;flex:2;padding:8px;border-radius:8px">
+</div>
+<div id="proxyHint" style="width:100%;font-size:11px;line-height:1.7;color:#9eafd0">اگر اتصال مستقیم به تلگرام انجام نشد، پروکسی سالم خودت را انتخاب کن. اطلاعات پروکسی فقط هنگام اتصال روی همین دستگاه استفاده می‌شود و ذخیره یا ارسال نمی‌شود.</div>
 <button id="connectButton" type="submit">اتصال به تلگرام</button>
 <button id="cancelConnectButton" type="button" hidden>لغو اتصال</button>
 <button id="diagnosticsButton" type="button">کپی گزارش اتصال</button>
@@ -140,13 +151,26 @@ async function authPrompt(p){
 if(api){api.onAuthPrompt(authPrompt);api.onStatus(setStatus)}
 document.getElementById('authForm').addEventListener('submit',e=>{e.preventDefault();if(!pendingPrompt)return;api.submitAuthInput(pendingPrompt.type,document.getElementById('authValue').value);pendingPrompt=null;document.getElementById('authOverlay').hidden=true});
 document.getElementById('cancelAuth').addEventListener('click',async()=>{pendingPrompt=null;document.getElementById('authOverlay').hidden=true;try{await api.cancelConnect()}catch(e){showToast(e.message||'لغو اتصال ناموفق بود')}});
+ const proxyTypeSelect=document.getElementById('proxyType');
+ function updateProxyFields(){
+  const type=proxyTypeSelect.value,active=!!type,credentials=type==='socks5'||type==='http',mtproto=type==='mtproto';
+  const toggle=(id,show)=>{const el=document.getElementById(id);el.hidden=!show;el.required=show&&(id==='proxyServer'||id==='proxyPort'||id==='proxySecret');};
+  toggle('proxyServer',active);toggle('proxyPort',active);toggle('proxyUsername',credentials);toggle('proxyPassword',credentials);toggle('proxySecret',mtproto);
+  document.getElementById('proxyHint').textContent=type==='mtproto'
+   ? 'میزبان، درگاه و Secret هگزادسیمال MTProto را وارد کن؛ اطلاعات فقط روی همین دستگاه استفاده می‌شود.'
+   : type==='socks5'||type==='http'
+    ? 'میزبان و درگاه پروکسی را وارد کن. آدرس را بدون پیشوند socks5:// یا http:// بنویس؛ نام کاربری و رمز در صورت نیاز اختیاری‌اند.'
+    : 'اگر اتصال مستقیم به تلگرام انجام نشد، پروکسی سالم خودت را انتخاب کن. اطلاعات پروکسی فقط هنگام اتصال روی همین دستگاه استفاده می‌شود و ذخیره یا ارسال نمی‌شود.';
+ }
+ proxyTypeSelect.addEventListener('change',updateProxyFields);updateProxyFields();
 document.getElementById('connectForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const btn=document.getElementById('connectButton'),cancel=document.getElementById('cancelConnectButton');
  connectUiActive=true;lastConnectionStatusAt=Date.now();btn.disabled=true;btn.textContent='در حال راه‌اندازی موتور…';cancel.hidden=false;
  document.getElementById('connectionProgress').textContent='اتصال آغاز شد؛ منتظر وضعیت موتور تلگرام هستم…';
  try{
-   const s=await api.connect({apiId:document.getElementById('apiId').value,apiHash:document.getElementById('apiHash').value,loginMethod:document.querySelector('input[name="loginMethod"]:checked')?.value||'qr'});
+    const proxy={type:proxyTypeSelect.value,server:document.getElementById('proxyServer').value,port:document.getElementById('proxyPort').value,username:document.getElementById('proxyUsername').value,password:document.getElementById('proxyPassword').value,secret:document.getElementById('proxySecret').value};
+    const s=await api.connect({apiId:document.getElementById('apiId').value,apiHash:document.getElementById('apiHash').value,loginMethod:document.querySelector('input[name="loginMethod"]:checked')?.value||'qr',proxy});
    setStatus(s);realChats=[];await loadChats();showToast('اتصال برقرار شد.');
  }catch(err){
    const msg=err.message||'اتصال برقرار نشد';
