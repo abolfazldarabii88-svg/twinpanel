@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     listChats: limit => ipcRenderer.invoke('telegram-native:list-chats', limit),
     listDialogFolders: () => ipcRenderer.invoke('telegram-native:list-dialog-folders'),
     getProfile: () => ipcRenderer.invoke('telegram-native:profile'),
+    getChatMembers: chatId => ipcRenderer.invoke('telegram-native:get-chat-members', chatId),
     searchChats: query => ipcRenderer.invoke('telegram-native:search-chats', query),
     searchGlobalMessages: (query, limit) => ipcRenderer.invoke('telegram-native:search-global-messages', query, limit),
     history: (chatId, limit) => ipcRenderer.invoke('telegram-native:history', chatId, limit),
