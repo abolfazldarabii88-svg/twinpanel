@@ -339,3 +339,5 @@ Do not create a release or installer while this parity work is in progress unles
 - Chat switching shortcut: Ctrl+Tab advances to the next visible conversation and Ctrl+Shift+Tab moves to the previous one, wrapping around the currently displayed chat list.
 
 - Unread-chat navigation: Alt+Shift+Down/Up cycles through unread, non-archived conversations without marking them read; it clears global-search mode before opening the selected conversation. If there are no unread chats, it reports that instead of changing selection.
+
+- Per-chat draft previews: locally saved drafts appear in the corresponding chat-list row with a distinct preview style, update while typing, and revert to the latest known message preview when cleared. Drafts stay local to the device; this does not send or sync them to Telegram.
