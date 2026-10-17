@@ -314,6 +314,7 @@ async def handle(method, args):
                 text_body = msg.message or ""
                 found.append({
                     "id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None,
                     "chatId": chat_id,
                     "title": get_display_name(chat) if chat else "گفتگو",
                     "date": int(msg.date.timestamp()) if msg.date else int(time.time()),
@@ -403,6 +404,7 @@ async def handle(method, args):
                 body = "رسانه / فایل"
             result.append({
                 "id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None,
                 "chatId": str(args.get("chatId")),
                 "date": stamp,
                 "outgoing": bool(msg.out),
@@ -425,7 +427,8 @@ async def handle(method, args):
             text = msg.message or ""
             if not text and msg.media:
                 text = "رسانه / فایل"
-            item = {"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text"}
+            item = {"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text"}
             result.append(item)
         return result
     if method == "list-pinned-messages":
@@ -435,7 +438,8 @@ async def handle(method, args):
             body = (msg.message or "").strip()
             if not body and msg.media:
                 body = "رسانه / فایل"
-            result.append({"id": str(msg.id), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "text": body[:500], "outgoing": bool(msg.out), "contentType": type(msg.media).__name__ if msg.media else "text"})
+            result.append({"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "text": body[:500], "outgoing": bool(msg.out), "contentType": type(msg.media).__name__ if msg.media else "text"})
         return result
     if method == "send-typing-action":
         entity = entity_for(args.get("chatId"))
@@ -450,7 +454,8 @@ async def handle(method, args):
             body = (msg.message or "").strip()
             if not body and msg.media:
                 body = "[رسانه / فایل: " + type(msg.media).__name__ + "]"
-            rows.append({"id": str(msg.id), "date": msg.date.isoformat() if msg.date else "", "outgoing": bool(msg.out), "text": body[:4096]})
+            rows.append({"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "date": msg.date.isoformat() if msg.date else "", "outgoing": bool(msg.out), "text": body[:4096]})
         rows.reverse()
         return {"messages": rows, "count": len(rows), "limited": len(rows) >= limit}
     if method == "search-chat-messages":
@@ -463,7 +468,8 @@ async def handle(method, args):
             text = msg.message or ""
             if not text and msg.media:
                 text = "رسانه / فایل"
-            result.append({"id": str(msg.id), "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text", "searchResult": True})
+            result.append({"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "chatId": str(args.get("chatId")), "date": int(msg.date.timestamp()) if msg.date else int(time.time()), "outgoing": bool(msg.out), "text": text[:4096], "entities": serialize_entities(msg), "reactions": serialize_reactions(msg), "contentType": type(msg.media).__name__ if msg.media else "text", "searchResult": True})
         return result
     if method in ("history", "preview", "history-before"):
         entity = entity_for(args.get("chatId"))
@@ -477,6 +483,7 @@ async def handle(method, args):
                 text = "رسانه / فایل"
             item = {
                 "id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None,
                 "chatId": str(args.get("chatId")),
                 "date": int(msg.date.timestamp()) if msg.date else int(time.time()),
                 "outgoing": bool(msg.out),
@@ -514,7 +521,8 @@ async def handle(method, args):
         result = await client(GetScheduledHistoryRequest(peer=peer, hash=0))
         items = []
         for msg in getattr(result, "messages", []) or []:
-            items.append({"id": str(msg.id), "text": (getattr(msg, "message", "") or "")[:500], "date": int(msg.date.timestamp()) if getattr(msg, "date", None) else None})
+            items.append({"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "text": (getattr(msg, "message", "") or "")[:500], "date": int(msg.date.timestamp()) if getattr(msg, "date", None) else None})
         return items
     if method == "edit-scheduled-message":
         entity = entity_for(args.get("chatId"))
@@ -546,14 +554,16 @@ async def handle(method, args):
         if schedule_at < int(time.time()) + 60:
             raise RuntimeError("زمان ارسال باید دست‌کم یک دقیقه در آینده باشد.")
         msg = await client.send_message(entity, body, schedule=datetime.fromtimestamp(schedule_at, timezone.utc))
-        return {"id": str(msg.id), "scheduleAt": schedule_at}
+        return {"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "scheduleAt": schedule_at}
     if method == "send-text":
         entity = entity_for(args.get("chatId"))
         body = str(args.get("text") or "").strip()
         if not body or len(body) > 4096:
             raise RuntimeError("متن پیام خالی است یا بیش از حد طولانی است.")
         msg = await client.send_message(entity, body)
-        return {"id": str(msg.id), "text": body}
+        return {"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "text": body}
     if method == "reply-text":
         entity = entity_for(args.get("chatId"))
         message_id = int(args.get("messageId") or 0)
@@ -561,7 +571,8 @@ async def handle(method, args):
         if message_id <= 0 or not body or len(body) > 4096:
             raise RuntimeError("شناسهٔ پیام یا متن پاسخ معتبر نیست.")
         msg = await client.send_message(entity, body, reply_to=message_id)
-        return {"id": str(msg.id), "text": body, "replyToMessageId": str(message_id)}
+        return {"id": str(msg.id),
+                "replyToId": str(getattr(getattr(msg, "reply_to", None), "reply_to_msg_id", "") or "") or None, "text": body, "replyToMessageId": str(message_id)}
     if method == "edit-message":
         entity = entity_for(args.get("chatId"))
         message_id = int(args.get("messageId") or 0)
