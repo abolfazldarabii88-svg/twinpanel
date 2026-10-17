@@ -212,3 +212,8 @@ A row may move to **Verified** only after:
 5. the workflow is compared against the pinned Telegram Web K reference.
 
 Do not create a release or installer while this parity work is in progress unless the user explicitly asks for one. Keep changes on the development branch/PR.
+
+
+### Newly implemented in this pass
+- Multiple selected files are sent as Telegram media-group albums (batches of up to 10 files).
+- Selected messages can be forwarded to Saved Messages from the message action toolbar.
