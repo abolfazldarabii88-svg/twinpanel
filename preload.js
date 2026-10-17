@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     qrImageStatus: state => ipcRenderer.invoke('telegram-native:qr-image-status', state),
     submitAuthInput: (type, value) => ipcRenderer.invoke('telegram-native:auth-input', { type, value }),
     listChats: limit => ipcRenderer.invoke('telegram-native:list-chats', limit),
+    getProfile: () => ipcRenderer.invoke('telegram-native:profile'),
     searchChats: query => ipcRenderer.invoke('telegram-native:search-chats', query),
     history: (chatId, limit) => ipcRenderer.invoke('telegram-native:history', chatId, limit),
     preview: (chatId, limit) => ipcRenderer.invoke('telegram-native:preview', chatId, limit),
