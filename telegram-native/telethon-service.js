@@ -132,6 +132,7 @@ class TelethonService {
   getMessageLink(chatId, messageId) { return this.request('message-link', { chatId: String(chatId), messageId: String(messageId) }); }
   downloadMessageMedia(chatId, messageId) { return this.request('download-message-media', { chatId: String(chatId), messageId: String(messageId) }); }
   setChatMuted(chatId, muted) { return this.request('mute-chat', { chatId: String(chatId), muted: !!muted }); }
+  setChatMutedUntil(chatId, seconds) { return this.request('mute-chat-until', { chatId: String(chatId), seconds: Number(seconds) || 0 }); }
   setChatUnread(chatId, unread) { return this.request('set-chat-unread', { chatId: String(chatId), unread: !!unread }); }
   setChatArchived(chatId, archived) { return this.request('set-chat-archived', { chatId: String(chatId), archived: !!archived }); }
   async close() {
