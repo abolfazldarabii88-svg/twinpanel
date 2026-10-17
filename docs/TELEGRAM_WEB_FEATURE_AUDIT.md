@@ -23,7 +23,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Recent message history | get_messages | Present in code — unverified |
 | Date separators in conversation history | Renderer groups adjacent messages by local calendar date | Present in code — unverified; timezone and long-history behavior still need runtime testing |
 | Older history pagination | history-before, merge and scroll restoration | Present in code — unverified |
-| Per-conversation scroll position | Renderer stores the current scroll offset and restores it when returning to a chat | Present in code — unverified; history refresh and long-chat behavior still need runtime testing |
+| Per-conversation scroll position | Renderer stores offsets per chat, restores them after switching chats, and persists up to 200 chat offsets in local storage across app restarts; restoration clamps to the current scroll range and preserves a valid zero offset | Present in code — unverified; storage, history refresh and long-chat behavior still need runtime testing |
 | Jump to latest messages | Native conversation control scrolls to the bottom of the loaded history | Present in code — unverified; live-update and long-history behavior still need testing |
 | Send plain text | send-text | Present in code — unverified |
 | Reply to selected message | reply-text plus UI state | Present in code — unverified |
