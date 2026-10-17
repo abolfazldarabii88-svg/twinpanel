@@ -15,7 +15,7 @@ from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.bots import GetBotInfoRequest
 from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, GetRecentStickersRequest, ExportChatInviteRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, SendScheduledMessagesRequest, GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, GetRecentStickersRequest, ExportChatInviteRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel, InputUser, InputDocument, InputMediaDocument
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
@@ -881,6 +881,13 @@ async def handle(method, args):
             raise RuntimeError("متن پیام حداکثر می‌تواند ۴۰۹۶ نویسه باشد.")
         peer = await client.get_input_entity(entity)
         await client.edit_message(entity, message_id, body)
+        return {"ok": True, "id": str(message_id)}
+    if method == "send-scheduled-message-now":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        if message_id <= 0:
+            raise RuntimeError("شناسهٔ پیام زمان‌بندی‌شده معتبر نیست.")
+        await client(SendScheduledMessagesRequest(peer=await client.get_input_entity(entity), id=[message_id]))
         return {"ok": True, "id": str(message_id)}
     if method == "cancel-scheduled-message":
         entity = entity_for(args.get("chatId"))
