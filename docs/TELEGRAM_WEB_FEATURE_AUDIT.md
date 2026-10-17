@@ -292,3 +292,9 @@ Do not create a release or installer while this parity work is in progress unles
 - Added rendering for Telegram spoiler entities, with click-to-reveal and click-to-hide behavior.
 - Added blockquote/expandable-blockquote presentation and preformatted block styling.
 - This uses Telegram-provided entity metadata when present. Overlapping/nested entity combinations and real-account appearance still require acceptance testing.
+
+
+### Reaction display — 2026-10-17
+- Message history, server-side in-chat/global search, date search, and live updates now serialize available Telegram reaction emoji/count/chosen metadata where supported by the returned message object.
+- The native renderer displays reaction chips and clicking a chip requests that reaction through the existing Telethon action. Custom emoji reactions currently use a generic sparkle marker; choosing premium/custom emoji is not implemented.
+- Reaction rendering and toggle semantics require real-account verification; syntax CI does not prove Telegram permissions or server behavior.
