@@ -325,6 +325,7 @@ ipcMain.handle('telegram-native:mute-chat', (_event, chatId, muted) => tdlibServ
 ipcMain.handle('telegram-native:mute-chat-until', (_event, chatId, seconds) => tdlibService.setChatMutedUntil(chatId, seconds));
 ipcMain.handle('telegram-native:set-chat-unread', (_event, chatId, unread) => tdlibService.setChatUnread(chatId, unread));
 ipcMain.handle('telegram-native:set-chat-archived', (_event, chatId, archived) => tdlibService.setChatArchived(chatId, archived));
+ipcMain.handle('telegram-native:set-chat-pinned', (_event, chatId, pinned) => tdlibService.setChatPinned(chatId, pinned));
 ipcMain.handle('twinpanel:toggle-fullscreen', event => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return false;
