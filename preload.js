@@ -68,6 +68,7 @@ contextBridge.exposeInMainWorld('twinPanel', {
     getMessageLink: (chatId, messageId) => ipcRenderer.invoke('telegram-native:message-link', chatId, messageId),
     downloadMessageMedia: (chatId, messageId) => ipcRenderer.invoke('telegram-native:download-message-media', chatId, messageId),
     selectMedia: () => ipcRenderer.invoke('telegram-native:select-media'),
+    sendVoice: (chatId, filePath, caption) => ipcRenderer.invoke('telegram-native:send-voice', chatId, filePath, caption),
     sendMedia: (chatId, filePath, caption) => ipcRenderer.invoke('telegram-native:send-media', chatId, filePath, caption),
     sendMediaBatch: (chatId, filePaths, caption) => ipcRenderer.invoke('telegram-native:send-media-batch', chatId, filePaths, caption),
     muteChat: (chatId, muted) => ipcRenderer.invoke('telegram-native:mute-chat', chatId, muted),
