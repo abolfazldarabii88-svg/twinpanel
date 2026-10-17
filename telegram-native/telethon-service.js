@@ -113,6 +113,8 @@ class TelethonService {
   submitAuthInput(type, value) { return this.request('auth-input', { type, value: String(value || '') }); }
   // Polling and profile helpers are exposed by the native service.
   listChats(limit = 60) { return this.request('list-chats', { limit }); }
+  listForumTopics(chatId) { return this.request('list-forum-topics', { chatId: String(chatId) }); }
+  topicHistory(chatId, topicId, limit = 50) { return this.request('topic-history', { chatId: String(chatId), topicId: String(topicId), limit: Number(limit) }); }
   listContacts() { return this.request('list-contacts'); }
   addContact(phone, firstName, lastName = '') { return this.request('add-contact', { phone: String(phone || ''), firstName: String(firstName || ''), lastName: String(lastName || '') }); }
   deleteContact(chatId) { return this.request('delete-contact', { chatId: String(chatId) }); }
@@ -141,7 +143,7 @@ class TelethonService {
   getChatHistoryAround(chatId, messageId) { return this.request('history-around', { chatId: String(chatId), messageId: Number(messageId) }); }
   getChatMessagesOnDate(chatId, startTimestamp, endTimestamp, limit = 100) { return this.request('messages-on-date', { chatId: String(chatId), startTimestamp: Number(startTimestamp), endTimestamp: Number(endTimestamp), limit: Number(limit) }); }
   getUnreadPreview(chatId, limit = 20) { return this.request('preview', { chatId: String(chatId), limit }); }
-  sendTextMessage(chatId, text) { return this.request('send-text', { chatId: String(chatId), text: String(text || '') }); }
+  sendTextMessage(chatId, text, topicId = null) { return this.request('send-text', { chatId: String(chatId), text: String(text || ''), topicId: topicId == null ? null : String(topicId) }); }
   sendPoll(chatId, question, options, anonymous = true, multipleChoice = false) { return this.request('send-poll', { chatId: String(chatId), question: String(question || ''), options: Array.isArray(options) ? options.map(String) : [], anonymous: !!anonymous, multipleChoice: !!multipleChoice }); }
   searchGifs(query) { return this.request('search-gifs', { query: String(query || '') }); }
   sendGif(chatId, token) { return this.request('send-gif', { chatId: String(chatId), token: String(token || '') }); }
