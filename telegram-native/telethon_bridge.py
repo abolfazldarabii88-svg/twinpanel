@@ -13,7 +13,7 @@ from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivac
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.contacts import ImportContactsRequest
 from telethon.tl.functions.messages import GetFullChatRequest
-from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
+from telethon.tl.functions.messages import MarkDialogUnreadRequest, SendReactionRequest, GetDialogFiltersRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteHistoryRequest, DeleteScheduledMessagesRequest, GetForumTopicsRequest, SendVoteRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest
 from telethon.tl.functions.folders import EditPeerFoldersRequest
 from telethon.tl.types import InputFolderPeer, InputMessagesFilterPinned, InputPhoneContact, DialogFilter, InputChannel
 from telethon.tl.types import InputNotifyPeer, InputPeerNotifySettings, ReactionEmoji, SendMessageTypingAction, Poll, PollAnswer, TextWithEntities, InputMediaPoll, InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants
@@ -696,6 +696,22 @@ async def handle(method, args):
                 "reactions": serialize_reactions(msg),
                 "contentType": type(msg.media).__name__ if msg.media else "text"
             }
+            if type(msg.media).__name__ == "MessageMediaPoll":
+                poll_obj = getattr(msg.media, "poll", None)
+                poll_results = getattr(msg.media, "results", None)
+                answer_results = {bytes(getattr(item, "option", b"")): item for item in (getattr(poll_results, "results", None) or [])}
+                poll_answers = []
+                for answer in getattr(poll_obj, "answers", None) or []:
+                    option = bytes(getattr(answer, "option", b""))
+                    answer_text = getattr(answer, "text", "")
+                    answer_text = getattr(answer_text, "text", answer_text)
+                    answer_result = answer_results.get(option)
+                    poll_answers.append({"option": base64.b64encode(option).decode("ascii"), "text": str(answer_text), "voters": int(getattr(answer_result, "voters", 0) or 0), "chosen": bool(getattr(answer_result, "chosen", False)), "correct": bool(getattr(answer_result, "correct", False))})
+                question = getattr(poll_obj, "question", "")
+                question = getattr(question, "text", question)
+                item["poll"] = {"question": str(question), "answers": poll_answers, "totalVoters": int(getattr(poll_results, "total_voters", 0) or 0), "multipleChoice": bool(getattr(poll_obj, "multiple_choice", False)), "quiz": bool(getattr(poll_obj, "quiz", False)), "closed": bool(getattr(poll_obj, "closed", False)), "publicVoters": bool(getattr(poll_obj, "public_voters", False))}
+                item["text"] = ""
+                item["contentType"] = "poll"
             cache_key = str(args.get("chatId")) + ":" + str(msg.id)
             is_image = bool(msg.photo or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("image/")))
             is_video = bool(msg.video or (msg.document and str(getattr(msg.file, "mime_type", "")).startswith("video/")))
@@ -792,6 +808,23 @@ async def handle(method, args):
         except Exception as exc:
             raise RuntimeError("ارسال GIF از تلگرام ناموفق بود.") from exc
         return {"ok": True}
+    if method == "vote-poll":
+        entity = entity_for(args.get("chatId"))
+        message_id = int(args.get("messageId") or 0)
+        options = args.get("options") or []
+        if message_id <= 0 or not isinstance(options, list) or not options or len(options) > 10:
+            raise RuntimeError("گزینهٔ رأی‌گیری معتبر نیست.")
+        decoded = []
+        for option in options:
+            try:
+                raw = base64.b64decode(str(option), validate=True)
+            except Exception as exc:
+                raise RuntimeError("شناسهٔ گزینهٔ نظرسنجی معتبر نیست.") from exc
+            if not raw or len(raw) > 16:
+                raise RuntimeError("شناسهٔ گزینهٔ نظرسنجی معتبر نیست.")
+            decoded.append(raw)
+        await client(SendVoteRequest(peer=await client.get_input_entity(entity), msg_id=message_id, options=decoded))
+        return {"ok": True, "messageId": str(message_id)}
     if method == "send-poll":
         entity = entity_for(args.get("chatId"))
         question = str(args.get("question") or "").strip()
