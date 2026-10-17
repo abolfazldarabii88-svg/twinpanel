@@ -1,25 +1,44 @@
-const { app, BrowserWindow, shell, ipcMain, Menu, dialog } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, Menu, dialog, webContents } = require('electron');
 const path = require('node:path');
 const { autoUpdater } = require('electron-updater');
 const { TdlibService } = require('./telegram-native/tdlib-service');
 // Embedded ChatGPT/Telegram media and Web Audio can otherwise remain blocked by Chromium autoplay policy.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 let mainWindow;
-let nativeTelegramWindow;
+let telegramPanelWebContents = null;
+let telegramNativeMode = false;
 let pendingNativeAuthPrompt = null;
 let nativeAuthPromptId = 0;
+
+function isNativeTelegramSender(event) {
+  return !!(
+    telegramNativeMode &&
+    telegramPanelWebContents &&
+    !telegramPanelWebContents.isDestroyed() &&
+    event &&
+    event.sender &&
+    event.sender.id === telegramPanelWebContents.id
+  );
+}
+
+function requireNativeTelegramSender(event) {
+  if (!isNativeTelegramSender(event)) {
+    throw new Error('این عملیات فقط در حالت کلاینت اختصاصی تلگرام مجاز است.');
+  }
+}
+
 const tdlibService = new TdlibService();
 tdlibService.setCallbacks({
   onPrompt: prompt => {
     const packet = { id: ++nativeAuthPromptId, prompt };
     pendingNativeAuthPrompt = packet;
-    if (nativeTelegramWindow && !nativeTelegramWindow.isDestroyed()) {
-      nativeTelegramWindow.webContents.send('telegram-native:auth-prompt', packet);
+    if (telegramNativeMode && telegramPanelWebContents && !telegramPanelWebContents.isDestroyed()) {
+      telegramPanelWebContents.send('telegram-native:auth-prompt', packet);
     }
   },
   onStatus: value => {
-    if (nativeTelegramWindow && !nativeTelegramWindow.isDestroyed()) {
-      nativeTelegramWindow.webContents.send('telegram-native:status-update', value);
+    if (telegramNativeMode && telegramPanelWebContents && !telegramPanelWebContents.isDestroyed()) {
+      telegramPanelWebContents.send('telegram-native:status-update', value);
     }
   }
 });
@@ -162,51 +181,95 @@ function createWindow() {
   });
   mainWindow.on('closed', () => { mainWindow = null; });
 }
-ipcMain.handle('twinpanel:open-native-telegram', async () => {
-  if (nativeTelegramWindow && !nativeTelegramWindow.isDestroyed()) {
-    nativeTelegramWindow.show();
-    nativeTelegramWindow.focus();
-    return { ok: true, reused: true };
+ipcMain.handle('twinpanel:register-telegram-panel', (event, id) => {
+  if (!mainWindow || event.sender.id !== mainWindow.webContents.id) {
+    throw new Error('ثبت پنل تلگرام از مبدأ نامعتبر انجام شد.');
   }
-  nativeTelegramWindow = new BrowserWindow({
-    width: 1240, height: 800, minWidth: 820, minHeight: 560,
-    title: 'TwinPanel — تلگرام اختصاصی (آزمایشی)',
-    backgroundColor: '#090d18',
-    icon: path.join(__dirname, 'assets', 'twinpanel.ico'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true
-    }
-  });
-  nativeTelegramWindow.on('closed', () => {
-    nativeTelegramWindow = null;
-    if (tdlibService.connecting && !tdlibService.connected) {
-      void tdlibService.cancelConnect();
-    }
-  });
-  await nativeTelegramWindow.loadFile(path.join(__dirname, 'telegram-native', 'index.html'));
-  return { ok: true, prototype: true };
+  const child = webContents.fromId(Number(id));
+  if (!child || child.isDestroyed() || child.getType() !== 'webview') {
+    throw new Error('پنل تلگرام هنوز آماده نیست؛ چند ثانیه بعد دوباره تلاش کن.');
+  }
+  let allowedLocation = false;
+  try {
+    const url = new URL(child.getURL());
+    const nativePath = decodeURIComponent(url.pathname).replace(/\\/g, '/').toLowerCase();
+    const isTelegramWeb = url.protocol === 'https:' &&
+      (url.hostname === 'web.telegram.org' || url.hostname.endsWith('.telegram.org'));
+    const isNativePage = url.protocol === 'file:' && nativePath.endsWith('/telegram-native/index.html');
+    allowedLocation = isTelegramWeb || isNativePage;
+  } catch {}
+  if (!allowedLocation) throw new Error('محتوای پنل با تلگرام شناخته‌شده مطابقت ندارد.');
+
+  if (telegramPanelWebContents !== child) {
+    telegramPanelWebContents = child;
+    child.once('destroyed', () => {
+      if (telegramPanelWebContents === child) {
+        telegramPanelWebContents = null;
+        telegramNativeMode = false;
+        pendingNativeAuthPrompt = null;
+        if (tdlibService.connecting && !tdlibService.connected) void tdlibService.cancelConnect();
+      }
+    });
+  }
+  return { ok: true };
 });
-ipcMain.handle('telegram-native:status', () => tdlibService.status());
-ipcMain.handle('telegram-native:connect', (event, credentials) => tdlibService.connect(credentials, event.sender));
-ipcMain.handle('telegram-native:cancel-connect', () => tdlibService.cancelConnect());
-ipcMain.handle('telegram-native:diagnostics', () => tdlibService.getDiagnostics());
+
+ipcMain.handle('twinpanel:toggle-native-telegram', async event => {
+  if (!mainWindow || event.sender.id !== mainWindow.webContents.id) {
+    throw new Error('تغییر حالت تلگرام از مبدأ نامعتبر انجام شد.');
+  }
+  const child = telegramPanelWebContents;
+  if (!child || child.isDestroyed()) {
+    throw new Error('پنل تلگرام هنوز بارگذاری نشده؛ چند ثانیه صبر کن و دوباره بزن.');
+  }
+
+  if (telegramNativeMode) {
+    telegramNativeMode = false;
+    pendingNativeAuthPrompt = null;
+    if (tdlibService.connecting && !tdlibService.connected) await tdlibService.cancelConnect();
+    await child.loadURL('https://web.telegram.org/k/');
+    return { ok: true, native: false };
+  }
+
+  telegramNativeMode = true;
+  pendingNativeAuthPrompt = null;
+  try {
+    await child.loadFile(path.join(__dirname, 'telegram-native', 'index.html'));
+    return { ok: true, native: true };
+  } catch (error) {
+    telegramNativeMode = false;
+    throw new Error('بازکردن کلاینت اختصاصی در پنل تلگرام ناموفق بود: ' + String(error && error.message || 'خطای نامشخص'));
+  }
+});
+
+ipcMain.handle('telegram-native:status', event => {
+  requireNativeTelegramSender(event);
+  return tdlibService.status();
+});
+ipcMain.handle('telegram-native:connect', (event) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.connect({ loginMethod: 'qr' }, event.sender);
+});
+ipcMain.handle('telegram-native:cancel-connect', event => {
+  requireNativeTelegramSender(event);
+  return tdlibService.cancelConnect();
+});
+ipcMain.handle('telegram-native:diagnostics', event => {
+  requireNativeTelegramSender(event);
+  return tdlibService.getDiagnostics();
+});
 ipcMain.handle('telegram-native:take-auth-prompt', event => {
-  if (!nativeTelegramWindow || event.sender.id !== nativeTelegramWindow.webContents.id) return null;
+  requireNativeTelegramSender(event);
   return pendingNativeAuthPrompt;
 });
 ipcMain.handle('telegram-native:ack-auth-prompt', (event, id) => {
-  if (!nativeTelegramWindow || event.sender.id !== nativeTelegramWindow.webContents.id) return false;
+  requireNativeTelegramSender(event);
   if (pendingNativeAuthPrompt && pendingNativeAuthPrompt.id === Number(id)) pendingNativeAuthPrompt = null;
   return true;
 });
 ipcMain.handle('telegram-native:qr-data-url', async (event, link) => {
+  requireNativeTelegramSender(event);
   const value = String(link || '');
-  if (!nativeTelegramWindow || event.sender.id !== nativeTelegramWindow.webContents.id) {
-    throw new Error('پنجرهٔ نمایش QR معتبر نیست.');
-  }
   if (!value.startsWith('tg://login?token=') || value.length > 2048) {
     tdlibService.reportStage('qr-link-invalid', 'لینک دریافتی برای ساخت QR معتبر نیست؛ محتوای لینک ثبت نشد.');
     throw new Error('لینک ورود QR تلگرام معتبر نیست.');
@@ -215,7 +278,7 @@ ipcMain.handle('telegram-native:qr-data-url', async (event, link) => {
   try {
     const QRCode = require('qrcode');
     const dataUrl = await QRCode.toDataURL(value, { errorCorrectionLevel: 'M', margin: 2, width: 300 });
-    tdlibService.reportStage('qr-image-generated', 'تصویر QR ساخته شد؛ منتظر بارگذاری آن در پنجره هستم…');
+    tdlibService.reportStage('qr-image-generated', 'تصویر QR ساخته شد؛ منتظر بارگذاری آن در پنل هستم…');
     return dataUrl;
   } catch {
     tdlibService.reportStage('qr-image-generation-failed', 'ساخت تصویر QR ناموفق بود؛ لینک ورود در گزارش ثبت نشد.');
@@ -223,24 +286,43 @@ ipcMain.handle('telegram-native:qr-data-url', async (event, link) => {
   }
 });
 ipcMain.handle('telegram-native:qr-image-status', (event, state) => {
-  if (!nativeTelegramWindow || event.sender.id !== nativeTelegramWindow.webContents.id) return false;
+  requireNativeTelegramSender(event);
   const stages = {
-    loaded: ['qr-image-loaded', 'تصویر QR در پنجره با موفقیت بارگذاری شد.'],
-    'load-error': ['qr-image-load-failed', 'تصویر QR ساخته شد اما پنجره نتوانست آن را بارگذاری کند.']
+    loaded: ['qr-image-loaded', 'تصویر QR در پنل با موفقیت بارگذاری شد.'],
+    'load-error': ['qr-image-load-failed', 'تصویر QR ساخته شد اما پنل نتوانست آن را بارگذاری کند.']
   };
   const item = stages[String(state || '')];
   if (!item) return false;
   tdlibService.reportStage(item[0], item[1]);
   return true;
 });
-ipcMain.handle('telegram-native:auth-input', (_event, payload) => tdlibService.submitAuthInput(payload?.type, payload?.value));
-ipcMain.handle('telegram-native:list-chats', (_event, limit) => tdlibService.listChats(limit));
-ipcMain.handle('telegram-native:search-chats', (_event, query) => tdlibService.searchChats(query));
-ipcMain.handle('telegram-native:history', (_event, chatId, limit) => tdlibService.getChatHistory(chatId, limit));
-ipcMain.handle('telegram-native:preview', (_event, chatId, limit) => tdlibService.getUnreadPreview(chatId, limit));
-ipcMain.handle('telegram-native:send-text', (_event, chatId, body) => tdlibService.sendTextMessage(chatId, body));
-ipcMain.handle('telegram-native:select-media', async () => {
-  const result = await dialog.showOpenDialog(nativeTelegramWindow && !nativeTelegramWindow.isDestroyed() ? nativeTelegramWindow : mainWindow, {
+ipcMain.handle('telegram-native:auth-input', (event, payload) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.submitAuthInput(payload?.type, payload?.value);
+});
+ipcMain.handle('telegram-native:list-chats', (event, limit) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.listChats(limit);
+});
+ipcMain.handle('telegram-native:search-chats', (event, query) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.searchChats(query);
+});
+ipcMain.handle('telegram-native:history', (event, chatId, limit) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.getChatHistory(chatId, limit);
+});
+ipcMain.handle('telegram-native:preview', (event, chatId, limit) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.getUnreadPreview(chatId, limit);
+});
+ipcMain.handle('telegram-native:send-text', (event, chatId, body) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.sendTextMessage(chatId, body);
+});
+ipcMain.handle('telegram-native:select-media', async event => {
+  requireNativeTelegramSender(event);
+  const result = await dialog.showOpenDialog(mainWindow, {
     title: 'انتخاب فایل برای تلگرام',
     properties: ['openFile'],
     filters: [{ name: 'Media and documents', extensions: ['png','jpg','jpeg','webp','gif','mp4','mp3','ogg','opus','pdf','txt','zip','doc','docx'] }]
@@ -256,8 +338,14 @@ ipcMain.handle('telegram-native:select-media', async () => {
   fs.copyFileSync(source, target);
   return { path: target, name: path.basename(source) };
 });
-ipcMain.handle('telegram-native:send-media', (_event, chatId, filePath, caption) => tdlibService.sendMedia(chatId, filePath, caption));
-ipcMain.handle('telegram-native:mute-chat', (_event, chatId, muted) => tdlibService.setChatMuted(chatId, muted));
+ipcMain.handle('telegram-native:send-media', (event, chatId, filePath, caption) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.sendMedia(chatId, filePath, caption);
+});
+ipcMain.handle('telegram-native:mute-chat', (event, chatId, muted) => {
+  requireNativeTelegramSender(event);
+  return tdlibService.setChatMuted(chatId, muted);
+});
 ipcMain.handle('twinpanel:toggle-fullscreen', event => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return false;
@@ -274,7 +362,7 @@ ipcMain.handle('twinpanel:download-update', async () => {
   catch (error) { status('error', 'دریافت آپدیت ناموفق بود.'); return { ok: false, message: error.message }; }
 });
 ipcMain.handle('twinpanel:install-update', () => { if (app.isPackaged) autoUpdater.quitAndInstall(); return { ok: true }; });
-autoUpdater.autoDownload = false;
+autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 autoUpdater.on('checking-for-update', () => status('checking', 'در حال بررسی نسخهٔ جدید…'));
 autoUpdater.on('update-available', info => status('available', 'نسخهٔ ' + info.version + ' آمادهٔ دریافت است.', { version: info.version }));
