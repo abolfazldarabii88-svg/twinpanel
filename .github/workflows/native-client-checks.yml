@@ -1,0 +1,40 @@
+name: TwinPanel native Telegram checks
+
+on:
+  pull_request:
+    branches:
+      - 'release/v*'
+  push:
+    branches:
+      - 'feature/telegram-web-parity'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate JavaScript syntax
+        run: |
+          node --check main.js
+          node --check preload.js
+          node --check scripts/make-icon.js
+          node --check scripts/check-inline-scripts.js
+          node --check telegram-native/telethon-service.js
+          node scripts/check-inline-scripts.js
+      - name: Validate Telethon bridge syntax
+        run: python -m py_compile telegram-native/telethon_bridge.py
