@@ -136,6 +136,7 @@ class TelethonService {
   setChatMutedUntil(chatId, seconds) { return this.request('mute-chat-until', { chatId: String(chatId), seconds: Number(seconds) || 0 }); }
   setChatUnread(chatId, unread) { return this.request('set-chat-unread', { chatId: String(chatId), unread: !!unread }); }
   setChatArchived(chatId, archived) { return this.request('set-chat-archived', { chatId: String(chatId), archived: !!archived }); }
+  setChatPinned(chatId, pinned) { return this.request('set-chat-pinned', { chatId: String(chatId), pinned: !!pinned }); }
   async close() {
     const child = this.child; this.child = null; this.connected = false; this.connecting = false;
     this.failAll(new Error('TwinPanel بسته شد.'));
