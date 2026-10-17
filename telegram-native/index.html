@@ -437,4 +437,7 @@ function resizeComposer(){composerTextarea.style.height='auto';composerTextarea.
 composerTextarea.addEventListener('input',resizeComposer);
 composerTextarea.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();document.getElementById('composer').requestSubmit()}});
 
+
+document.addEventListener('keydown',event=>{if(!(event.ctrlKey||event.metaKey)||event.altKey||event.key!=='Tab')return;const items=[...chats.querySelectorAll('button.chat')];if(items.length<2)return;event.preventDefault();const current=items.findIndex(item=>item.classList.contains('active'));const delta=event.shiftKey?-1:1;items[(current+delta+items.length)%items.length].click()});
+
 </script></body></html>
