@@ -46,7 +46,7 @@ Reference: [Official Telegram Web K feature inventory](https://github.com/Telegr
 | Forward with/without attribution | Partial | Forward API and exact-title destination picker implemented; no attribution-choice UI; real-account permissions/behavior unverified |
 | Edit message text/media | Partial | Text edit path only; media caption/edit support missing |
 | Delete own / delete for everyone | Partial | Delete path requests revoke; permissions and UI choices need testing |
-| Pin/unpin message | Partial | Pin message API and selected-message control implemented; unpin UI and real-account permission checks still missing |
+| Pin/unpin message | Partial | Pin and unpin API actions and selected-message controls implemented; real-account permission checks still missing |
 | Scheduled / recurring messages | Missing | Scheduler and UI absent |
 | Sent/read state and read receipts | Missing | No message status model or reliable read state |
 | Typing indicators / online status | Missing | No live updates |
