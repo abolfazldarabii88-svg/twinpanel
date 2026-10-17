@@ -118,6 +118,10 @@ body[data-theme="aurora"]{--bg:#08151c;--panel:#10252c;--panel-head:#16343a;--li
 main{padding:7px}
 body[data-mode="telegram"] #gptPanel,body[data-mode="telegram"] #splitter,
 body[data-mode="chatgpt"] #tgPanel,body[data-mode="chatgpt"] #splitter{display:none}
+#tgNative{display:none;width:100%;height:100%;flex:1;background:var(--bg)}
+body[data-tg-client="native"] #tg{display:none!important}
+body[data-tg-client="native"] #tgNative{display:flex!important}
+body:not([data-tg-client="native"]) #tgNative{display:none!important}
 body[data-mode="telegram"] main,body[data-mode="chatgpt"] main{display:grid;grid-template-columns:minmax(0,1fr);padding:6px}
 body[data-mode="telegram"] #tgPanel,body[data-mode="chatgpt"] #gptPanel{display:flex;grid-column:1;min-width:0;width:100%}
 body[data-mode="telegram"] .panel,body[data-mode="chatgpt"] .panel{border-radius:12px}
@@ -136,7 +140,7 @@ body[data-theme="glass"] .btn.primary,body[data-theme="glass"] .mode-btn.active{
 <body data-theme="purple">
 <header class="topbar">
  <div class="brand"><button class="btn settings-btn" id="settingsBtn" title="تنظیمات" aria-label="تنظیمات"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"/><path d="m19.4 13.5 1.1.8-1.2 2.1-1.3-.5a7.9 7.9 0 0 1-1.5.9l-.2 1.4h-2.5l-.3-1.4a7.9 7.9 0 0 1-1.7-.4l-1.1 1-2-1.2.4-1.4a7.6 7.6 0 0 1-1-1.4l-1.4-.2v-2.5l1.4-.3a7.6 7.6 0 0 1 .7-1.6l-.7-1.2 1.7-1.7 1.2.7a7.6 7.6 0 0 1 1.7-.6l.3-1.4h2.5l.2 1.4a7.9 7.9 0 0 1 1.5.9l1.4-.4 1.2 2-1 1.1a7.6 7.6 0 0 1 .3 1.7Z"/></svg></button><div class="logo" aria-hidden="true"><svg viewBox="0 0 64 64"><defs><linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#4338ca"/></linearGradient></defs><rect width="64" height="64" rx="19" fill="url(#brandGrad)"/><path d="M13 15h38v10H35v26H25V25H13z" fill="#fff"/><path d="M43 32h8v19h-8z" fill="#c4b5fd"/></svg></div><div><div class="brand-title">TwinPanel</div></div></div>
- <div class="actions compact-actions"><button class="btn mode-btn" data-mode="both" title="نمایش هر دو برنامه">دو پنل</button><button class="btn mode-btn" data-mode="telegram" title="نمایش تلگرام">تلگرام</button><button class="btn" id="openNativeTelegram" title="باز کردن کلاینت تلگرام آزمایشی">تلگرام اختصاصی ↗</button><button class="btn mode-btn" data-mode="chatgpt" title="نمایش ChatGPT">ChatGPT</button><button class="btn" id="fullBtn" title="ورود/خروج از حالت متمرکز تمام‌صفحه">⛶ تمرکز</button></div>
+ <div class="actions compact-actions"><button class="btn mode-btn" data-mode="both" title="نمایش هر دو برنامه">دو پنل</button><button class="btn mode-btn" data-mode="telegram" title="نمایش تلگرام">تلگرام</button><button class="btn" id="toggleTelegramClient" title="تعویض بین Telegram Web و کلاینت اختصاصی">تلگرام اختصاصی</button><button class="btn mode-btn" data-mode="chatgpt" title="نمایش ChatGPT">ChatGPT</button><button class="btn" id="fullBtn" title="ورود/خروج از حالت متمرکز تمام‌صفحه">⛶ تمرکز</button></div>
 </header>
 <div id="dynamicIsland" role="button" tabindex="0" aria-expanded="false" aria-controls="islandPopover" aria-live="polite" title="باز کردن کنترل‌های Dynamic Island"><span class="island-app-icon" id="islandAppIcon" aria-hidden="true">✳</span><span class="island-mark"></span><span class="island-label" id="islandLabel">TwinPanel آماده است</span><span class="island-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
 <div id="islandPopover" hidden><div class="island-pop-title" id="islandPopoverTitle">TwinPanel آماده است</div><button class="btn primary" id="islandSwitch">رفتن به برنامهٔ در حال پخش</button><button class="btn" id="islandSound">افکت صوتی: روشن</button><button class="btn" id="islandClose">بستن</button></div>
@@ -147,8 +151,9 @@ body[data-theme="glass"] .btn.primary,body[data-theme="glass"] .mode-btn.active{
  </section>
  <div id="splitter" role="separator" tabindex="0" aria-orientation="vertical" aria-label="تغییر اندازهٔ پنل‌ها" title="برای تغییر اندازه بکشید"></div>
  <section class="panel" id="tgPanel">
-  <div class="panel-head"><div class="panel-title"><span class="dot"></span>Telegram</div><div class="tools"><button class="btn iconbtn" id="reloadTg" title="تازه‌سازی تلگرام">↻ تازه‌سازی</button></div></div>
+  <div class="panel-head"><div class="panel-title"><span class="dot"></span><span id="telegramPanelLabel">Telegram Web</span></div><div class="tools"><button class="btn iconbtn" id="reloadTg" title="تازه‌سازی تلگرام">↻ تازه‌سازی</button></div></div>
   <webview id="tg" src="https://web.telegram.org/k/" partition="persist:telegram" allowpopups></webview>
+  <webview id="tgNative" partition="persist:telegram-native" allowpopups></webview>
  </section>
 </main>
 <button id="exitFocus">✕ خروج از حالت متمرکز</button>
@@ -176,10 +181,31 @@ function setMode(mode,save=true){
  requestAnimationFrame(()=>{if(splitter)splitter.setAttribute('aria-valuenow',String(Math.round(parseFloat(getComputedStyle(workspace).getPropertyValue('--left-width'))||30)));});
 }
 document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
-$('openNativeTelegram').addEventListener('click',async()=>{try{if(window.twinPanel?.openNativeTelegram)await window.twinPanel.openNativeTelegram();else alert('این قابلیت فقط در نسخهٔ دسکتاپ فعال است.');}catch{alert('پنجرهٔ آزمایشی تلگرام باز نشد.');}});
+let telegramClient='web';
+function nativeThemeValues(){const css=getComputedStyle(document.body);const read=name=>css.getPropertyValue(name).trim();return {bg:read('--bg'),panel:read('--panel'),head:read('--panel-head'),line:read('--line'),muted:read('--muted'),text:read('--text'),accent:read('--accent'),accent2:read('--accent2')};}
+function syncNativeTelegramTheme(){const view=$('tgNative');if(!view||!view.getAttribute('src'))return;const values=nativeThemeValues();const code='if(typeof window.applyTwinPanelTheme === "function") window.applyTwinPanelTheme('+JSON.stringify(values)+')';try{const result=view.executeJavaScript(code);if(result&&typeof result.catch==='function')result.catch(()=>{});}catch{}}
+async function setTelegramClient(client,save=true){
+ client=client==='native'?'native':'web';
+ const view=$('tgNative');
+ if(client==='native'&&!view.getAttribute('src')){
+  if(!window.twinPanel?.getNativeTelegramViewConfig)throw new Error('کلاینت اختصاصی فقط در نسخهٔ دسکتاپ در دسترس است.');
+  const config=await window.twinPanel.getNativeTelegramViewConfig();
+  view.setAttribute('preload',config.preload);
+  view.setAttribute('src',config.url);
+ }
+ telegramClient=client;document.body.dataset.tgClient=client;
+ $('tg').style.display=client==='native'?'none':'flex';view.style.display=client==='native'?'flex':'none';
+ $('toggleTelegramClient').textContent=client==='native'?'تلگرام وب':'تلگرام اختصاصی';
+ $('toggleTelegramClient').classList.toggle('primary',client==='native');
+ $('telegramPanelLabel').textContent=client==='native'?'Telegram · اختصاصی':'Telegram Web';
+ if(save)localStorage.setItem('twinpanel.telegramClient',client);
+ syncNativeTelegramTheme();
+}
+$('tgNative').addEventListener('dom-ready',syncNativeTelegramTheme);
+$('toggleTelegramClient').addEventListener('click',async()=>{try{await setTelegramClient(telegramClient==='native'?'web':'native');}catch(error){alert(error?.message||'کلاینت تلگرام باز نشد.');}});
 function openSettings(){settingsOverlay.classList.add('open');}
 function closeSettings(){settingsOverlay.classList.remove('open');}
-function applyTheme(theme){const allowed=['purple','midnight','graphite','light','glass','oled','ocean','emerald','rose','sunset','cyber','nord','dracula','lavender','crimson','amber','forest','slate','mint','sakura','sand','cobalt','copper','mono','aurora'];document.body.dataset.theme=allowed.includes(theme)?theme:'purple';$('themeSelect').value=document.body.dataset.theme;localStorage.setItem('twinpanel.theme',document.body.dataset.theme);}
+function applyTheme(theme){const allowed=['purple','midnight','graphite','light','glass','oled','ocean','emerald','rose','sunset','cyber','nord','dracula','lavender','crimson','amber','forest','slate','mint','sakura','sand','cobalt','copper','mono','aurora'];document.body.dataset.theme=allowed.includes(theme)?theme:'purple';$('themeSelect').value=document.body.dataset.theme;localStorage.setItem('twinpanel.theme',document.body.dataset.theme);syncNativeTelegramTheme();}
 function applyLeftWidth(value,save=true){const width=Math.max(22,Math.min(55,Number(value)||30));workspace.style.setProperty('--left-width',width+'%');splitter.setAttribute('aria-valuenow',String(Math.round(width)));if(save)localStorage.setItem('twinpanel.leftWidth',String(width));}
 function loadSettings(){applyTheme(localStorage.getItem('twinpanel.theme')||'purple');applyLeftWidth(localStorage.getItem('twinpanel.leftWidth')||30,false);setMode(localStorage.getItem('twinpanel.mode')||'both',false);setFocusMode(false);setSoundEnabled(localStorage.getItem('twinpanel.sound')!=='0');setIslandEnabled(localStorage.getItem('twinpanel.island')!=='0');}
 
@@ -260,6 +286,7 @@ function endDrag(){dragging=false;splitter.classList.remove('dragging');}
 splitter.addEventListener('pointerup',endDrag);splitter.addEventListener('pointercancel',endDrag);
 splitter.addEventListener('keydown',e=>{const current=parseFloat(getComputedStyle(workspace).getPropertyValue('--left-width'))||30;if(e.key==='ArrowLeft'){e.preventDefault();applyLeftWidth(current+2);}if(e.key==='ArrowRight'){e.preventDefault();applyLeftWidth(current-2);}});
 loadSettings();
+if(localStorage.getItem('twinpanel.telegramClient')==='native')void setTelegramClient('native',false).catch(()=>{});
 </script>
 </body>
 </html>
