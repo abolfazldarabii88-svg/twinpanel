@@ -23,6 +23,7 @@ if (!Number.isSafeInteger(credentials.apiId) || credentials.apiId <= 0) {
   process.exit(1);
 }
 
-const target = path.join(__dirname, '..', 'telegram-native', 'app-credentials.json');
+const target = path.join(__dirname, '..', 'build-secret', 'telegram-app-credentials.json');
+fs.mkdirSync(path.dirname(target), { recursive: true });
 fs.writeFileSync(target, JSON.stringify(credentials) + '\n', { encoding: 'utf8', mode: 0o600 });
 console.log('TwinPanel Telegram app credentials validated and staged for packaging (values redacted).');
