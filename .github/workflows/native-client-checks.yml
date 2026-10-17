@@ -40,11 +40,11 @@ jobs:
           node scripts/check-inline-scripts.js
       - name: Validate Telethon API imports
         run: |
-          python -c "from telethon.tl.functions.messages import GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, DeleteHistoryRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest"
+          python -c "from telethon.tl.functions.messages import GetForumTopicsRequest, CreateForumTopicRequest, EditForumTopicRequest, SendVoteRequest, GetRecentStickersRequest, DeleteHistoryRequest, UpdateDialogFilterRequest, DeleteDialogFilterRequest, GetScheduledHistoryRequest, DeleteScheduledMessagesRequest, ExportChatInviteRequest, EditScheduledMessageRequest, SetTypingRequest, SendMediaRequest"
           python -c "from telethon.tl.functions.account import UpdateNotifySettingsRequest, GetPrivacyRequest, SetPrivacyRequest, GetAuthorizationsRequest, ResetAuthorizationRequest"
           python -c "from telethon.tl.functions.contacts import ImportContactsRequest"
           python -c "from telethon.tl.functions.bots import GetBotInfoRequest"
           python -c "from telethon.tl.functions.stories import GetAllStoriesRequest, GetStoriesByIDRequest, ReadStoriesRequest, IncrementStoryViewsRequest"
-          python -c "from telethon.tl.types import InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants, DialogFilter, InputChannel, InputUser, InputPhoneContact, Poll, PollAnswer, TextWithEntities, InputMediaPoll"
+          python -c "from telethon.tl.types import InputPrivacyKeyStatusTimestamp, InputPrivacyKeyPhoneNumber, InputPrivacyKeyProfilePhoto, InputPrivacyKeyForwards, InputPrivacyKeyChatInvite, InputPrivacyKeyPhoneCall, InputPrivacyValueAllowAll, InputPrivacyValueDisallowAll, InputPrivacyValueAllowContacts, InputPrivacyValueAllowUsers, InputPrivacyValueDisallowUsers, InputPrivacyValueAllowChatParticipants, InputPrivacyValueDisallowChatParticipants, DialogFilter, InputChannel, InputUser, InputPhoneContact, InputDocument, InputMediaDocument, Poll, PollAnswer, TextWithEntities, InputMediaPoll"
       - name: Validate Telethon bridge syntax
         run: python -m py_compile telegram-native/telethon_bridge.py
