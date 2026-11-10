@@ -125,7 +125,7 @@ async function testAi() {
   const c = await readConfig();
   const base = validUrl(c.ai.baseUrl);
   if (!base || !c.ai.apiKey) return { ok:false, message:"Set a valid AI Router URL and API key first." };
-  const endpoint = new URL("/models", base.href.endsWith("/") ? base : new URL(base.href + "/"));
+  const endpoint = new URL((base.href.endsWith("/") ? base.href.slice(0,-1) : base.href) + "/models");
   try {
     const r = await timedFetch(endpoint, { headers:{ authorization:`Bearer ${c.ai.apiKey}` } }, 10000);
     return { ok:r.ok, message:`AI Router replied with HTTP ${r.status}.` };
