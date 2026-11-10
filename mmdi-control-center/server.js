@@ -33,7 +33,7 @@ async function readConfig() {
     const saved = JSON.parse(await fs.readFile(CONFIG_FILE, "utf8"));
     return {
       ...structuredClone(defaults), ...saved,
-      network: { ...defaults.network, ...saved.network },
+      network: { ...defaults.network, ...saved.network, mode: saved.network?.mode === "system" ? "auto" : (saved.network?.mode || defaults.network.mode) },
       telegram: { ...defaults.telegram, ...saved.telegram },
       ai: { ...defaults.ai, ...saved.ai },
       mcp: { ...defaults.mcp, ...saved.mcp },
