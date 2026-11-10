@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mmdi Control Center</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141c30;--line:#26334d;--muted:#91a0ba;--text:#edf3ff;--accent:#7c9cff;--green:#57d6a0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#1a2a4b 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.5 Segoe UI,Arial,sans-serif}
+main{max-width:1180px;margin:auto;padding:32px 22px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}
+h1{font-size:25px;margin:0}p{color:var(--muted);margin:5px 0}.pill{border:1px solid var(--line);padding:7px 12px;border-radius:99px;color:var(--green);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:15px}.card{background:linear-gradient(145deg,#17223a,#11192b);border:1px solid var(--line);border-radius:16px;padding:20px;min-height:155px}
+.card h2{font-size:17px;margin:0 0 7px}.card p{font-size:13px}.status{display:inline-block;margin-top:16px;color:var(--green);font-size:12px}
+.notice{margin-top:18px;padding:15px 17px;border:1px solid #394969;border-radius:13px;color:#c7d4ed;background:#111a2b;font-size:13px}
+footer{margin-top:28px;color:var(--muted);font-size:12px}
+</style></head>
+<body><main>
+<header class="top"><div><h1>Mmdi Control Center</h1><p>Local-first management for MmdiBot</p></div><span class="pill">Standalone workspace · Scaffold</span></header>
+<section class="grid">
+<article class="card"><h2>Network Manager</h2><p>Direct connection, Windows VPN detection, proxy profiles and separate health checks.</p><span class="status">Backend integration pending</span></article>
+<article class="card"><h2>Telegram Manager</h2><p>Keep Telegram Bot API and GramJS / MTProto connections independently configurable.</p><span class="status">Backend integration pending</span></article>
+<article class="card"><h2>AI Router</h2><p>Configure router endpoint, model selection and API credentials securely.</p><span class="status">Backend integration pending</span></article>
+<article class="card"><h2>MCP Server</h2><p>Monitor server health, registered tools, access settings and service lifecycle.</p><span class="status">Backend integration pending</span></article>
+<article class="card"><h2>Diagnostics</h2><p>Inspect DNS, HTTPS, proxy and service connectivity without exposing secrets.</p><span class="status">Backend integration pending</span></article>
+<article class="card"><h2>Data & Backups</h2><p>Plan safe backups and status checks without touching existing sessions or memory.</p><span class="status">Read-only placeholder</span></article>
+</section>
+<div class="notice"><strong>Safe scaffold:</strong> This page is a UI shell only. It does not yet control VPN, proxies, Telegram, AI Router, databases or MCP. Those actions require a local backend with explicit validation and secret handling.</div>
+<footer>All Mmdi Control Center files are isolated in this folder. Existing TwinPanel files are untouched.</footer>
+</main></body></html>
