@@ -193,8 +193,8 @@ async function readProjectEnv() {
   const raw = await fs.readFile(envPath, "utf8").catch(() => null);
   const values = Object.create(null);
   if (raw !== null) {
-    for (const line of raw.replace(/^\\uFEFF/, "").split(/\\r?\\n/)) {
-      const m = line.match(/^\\s*(?:export\\s+)?([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(.*?)\\s*$/);
+    for (const line of raw.replace(/^\uFEFF/, "").split(/\r?\n/)) {
+      const m = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
       if (!m) continue;
       let value = m[2].trim();
       if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) value = value.slice(1, -1);
@@ -237,7 +237,7 @@ async function testTelegram() {
   const env = await readProjectEnv();
   const token = c.telegram.botToken || env.telegram.botToken;
   if (!token) return { ok:false, message:"Bot API token was not found in dashboard settings or the project .env file." };
-  const base = validUrl(c.telegram.botApiBase || env.telegram.botApiBase) || new URL("https://api.telegram.org");
+  const base = validUrl(env.telegram.botApiBase || c.telegram.botApiBase) || new URL("https://api.telegram.org");
   const url = new URL(`/bot${token}/getMe`, base);
   try {
     const r = await timedFetch(url, {}, 10000);
