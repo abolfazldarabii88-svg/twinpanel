@@ -1,40 +1,51 @@
 # Mmdi Control Center
 
-Standalone local-first control panel in its own folder inside the TwinPanel repository. It does not import, modify, or start TwinPanel.
+Standalone Windows-first local dashboard in this folder. It is separate from TwinPanel and does not edit TwinPanel files.
 
-## Run on Windows
+## Start
 
-1. Install Node.js 20 or newer.
-2. Open PowerShell in this folder.
-3. Run `npm start`.
-4. Open **http://127.0.0.1:4317**.
+1. Install Node.js 20+ and Bun (the MmdiBot runtime).
+2. Download this repository ZIP from GitHub, then extract it.
+3. Open the extracted `mmdi-control-center` folder.
+4. Double-click `start.bat`.
+5. The dashboard opens at **http://127.0.0.1:4317**.
+6. Keep the terminal window open while using the dashboard. Close it with Ctrl+C.
 
-No npm packages are required. Stop the server with Ctrl+C.
+You can also run `node server.js` from PowerShell. No npm install is needed.
 
-## Implemented in this version
+## Features
 
-- Local dashboard and Node.js backend.
-- Configuration stored outside this repository at `%USERPROFILE%\.mmdi-control-center\config.json` on Windows.
-- Secret values are masked and never returned by the config API.
-- Read-only Windows VPN and WinHTTP proxy detection.
-- DNS and direct HTTPS diagnostics for Telegram.
-- Telegram Bot API token test using `getMe`.
-- AI Router reachability test using the OpenAI-compatible `/models` endpoint.
-- MCP endpoint HTTP reachability check.
-- Redacted settings backup export.
+- Local-only dashboard bound to 127.0.0.1.
+- Settings stored outside the repository in `%USERPROFILE%\\.mmdi-control-center\\config.json`.
+- Secret values are masked in API responses; backups redact credentials.
+- Detects Windows VPN profiles and WinHTTP proxy state.
+- Connects/disconnects Windows VPN profiles using `rasdial` (VPN credentials must already be saved in Windows if required).
+- Starts and stops the local MmdiBot using the fixed command `bun run start`.
+- Captures recent startup output for troubleshooting.
+- When starting MmdiBot in Manual mode, passes HTTP(S)/SOCKS proxy URL through proxy environment variables. If the field contains a Telegram `https://t.me/proxy?... ` link, its server/port/secret are translated into `TELEGRAM_PROXY_IP`, `TELEGRAM_PROXY_PORT`, and `TELEGRAM_PROXY_SECRET` for GramJS.
+- Tests Telegram Bot API `getMe`, OpenAI-compatible AI Router `/models`, DNS/HTTPS reachability, and MCP endpoint reachability.
+- Exports a redacted settings backup.
 
-## Network limitation
+## Configure MmdiBot
 
-Manual proxy URLs are saved as profiles but this version does not route HTTP requests through them. MTProxy is for Telegram MTProto/GramJS and does not proxy Bot API HTTPS. Diagnostics use Node's default network route. Use a working Windows VPN/system route for Bot API traffic.
+Open the **اجرای MmdiBot** tab and set the project folder. Default path is:
 
-## Not integrated yet
+`%USERPROFILE%\\Desktop\\mmdi-source`
 
-This version does not start/stop MmdiBot or MCP processes, manage the MCP tool registry, edit the existing MmdiBot environment, or access Telegram sessions, databases, or memory. Existing MmdiBot data is not modified. Those integrations require exact local/deployed service control details.
+The folder must contain a `package.json` with a `start` script and a working Bun installation. The dashboard does not alter the MmdiBot database, Telegram session, history, or the project's `.env` file.
 
-## Security
+## Network behavior and limitations
 
-- Binds to 127.0.0.1 only.
-- Rejects non-local Host/Origin requests.
-- Stores secrets outside Git under the current user's home directory.
-- Backup deliberately redacts credentials and excludes Telegram sessions and MmdiBot data.
-- Never commit `.env`, credentials, session files, databases, or backups.
+- **System/VPN mode**: MmdiBot inherits the current Windows network route. The dashboard can connect/disconnect Windows VPN profiles listed by `Get-VpnConnection`; third-party VPN apps that do not register a Windows VPN profile are not controlled here.
+- **Manual mode**: proxy variables are passed only to the MmdiBot process launched by this dashboard. Support depends on the HTTP client/runtime used by the project. The dashboard's own connectivity tests still use the Windows default route.
+- **MTProxy**: a `t.me/proxy` link is passed to the project's GramJS MTProto configuration. MTProxy does not automatically proxy Telegram Bot API HTTPS or AI Router HTTPS requests.
+- For Bot API and AI Router HTTPS connectivity, a working Windows VPN/system route is the most reliable choice unless the application's HTTP client explicitly supports the selected HTTP/SOCKS proxy.
+- The MCP test checks HTTP reachability only; it does not perform the full MCP initialize/tools-list handshake or change individual tool permissions.
+- Telegram/API credentials entered in this dashboard are stored for diagnostic tests. They are not written into the MmdiBot project's `.env` because the project's exact configuration mapping must be verified before safely changing that file.
+
+## Safety
+
+- Do not publish `%USERPROFILE%\\.mmdi-control-center\\config.json`.
+- Do not commit API keys, bot tokens, proxy secrets, Telegram sessions, or database files.
+- The panel binds to localhost only and does not expose a remote admin interface.
+- Keep your existing MmdiBot folder and its database/session backup intact.
