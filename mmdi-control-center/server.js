@@ -2,7 +2,7 @@ import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
@@ -13,9 +13,12 @@ const PORT = Number(process.env.PORT || 4317);
 const DATA_DIR = path.join(os.homedir(), ".mmdi-control-center");
 const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 const MAX_BODY = 64 * 1024;
+let mmdiProcess = null;
+let mmdiLog = [];
 
 const defaults = {
-  network: { mode: "system", proxyUrl: "", proxyName: "" },
+  network: { mode: "system", proxyUrl: "", proxyName: "", vpnProfile: "" },
+  mmdi: { projectDir: path.join(os.homedir(), "Desktop", "mmdi-source") },
   telegram: { botToken: "", apiId: "", apiHash: "", botApiBase: "https://api.telegram.org" },
   ai: { baseUrl: "", apiKey: "", model: "" },
   mcp: { endpoint: "" }
@@ -37,6 +40,7 @@ function safeConfig(c) {
   const mask = v => v ? "••••••••" : "";
   return {
     network: { ...c.network, proxyUrl: c.network.proxyUrl ? "•••••••• (saved)" : "" },
+    mmdi: { ...c.mmdi },
     telegram: { ...c.telegram, botToken: mask(c.telegram.botToken), apiHash: mask(c.telegram.apiHash) },
     ai: { ...c.ai, apiKey: mask(c.ai.apiKey) },
     mcp: { ...c.mcp }
@@ -96,6 +100,56 @@ async function networkStatus() {
   }
   return result;
 }
+
+async function listVpnProfiles() {
+  if (process.platform !== "win32") return [];
+  try {
+    const { stdout } = await execFileAsync("powershell.exe", ["-NoProfile","-NonInteractive","-Command","Get-VpnConnection -ErrorAction SilentlyContinue | Select-Object -Property Name,ConnectionStatus | ConvertTo-Json -Compress"], {timeout:7000,windowsHide:true});
+    const parsed = stdout.trim() ? JSON.parse(stdout) : [];
+    return (Array.isArray(parsed) ? parsed : [parsed]).filter(x => x && typeof x.Name === "string").map(x => ({name:x.Name,status:x.ConnectionStatus}));
+  } catch { return []; }
+}
+async function vpnAction(action, profile) {
+  if (process.platform !== "win32") return {ok:false,message:"Windows only."};
+  const name = cleanString(profile,128);
+  const profiles = await listVpnProfiles();
+  if (!name || !profiles.some(x => x.name === name)) return {ok:false,message:"Choose a VPN profile detected in Windows."};
+  try {
+    const args = action === "connect" ? [name] : [name,"/disconnect"];
+    const r = await execFileAsync("rasdial.exe",args,{timeout:25000,windowsHide:true});
+    return {ok:true,message:(r.stdout || r.stderr || "Command completed").trim().slice(0,800),profiles:await listVpnProfiles()};
+  } catch(e) { return {ok:false,message:String(e.stderr || e.message).slice(0,800),profiles:await listVpnProfiles()}; }
+}
+function processSnapshot() { return {running:!!mmdiProcess && mmdiProcess.exitCode === null,pid:mmdiProcess?.pid || null,log:mmdiLog.slice(-60)}; }
+async function startMmdi() {
+  if (mmdiProcess && mmdiProcess.exitCode === null) return {ok:true,message:"Already running.",...processSnapshot()};
+  const c = await readConfig();
+  const dir = path.resolve(cleanString(c.mmdi?.projectDir,1000));
+  const st = await fs.stat(dir).catch(()=>null);
+  if (!st?.isDirectory()) return {ok:false,message:"MmdiBot project folder not found. Set its local path."};
+  const pkg = await fs.readFile(path.join(dir,"package.json"),"utf8").catch(()=>"");
+  if (!pkg.includes('"start"')) return {ok:false,message:"No start script found in selected package.json."};
+  const bin = process.platform === "win32" ? "bun.exe" : "bun";
+  mmdiLog = [];
+  const child = spawn(bin,["run","start"],{cwd:dir,windowsHide:true,shell:false,env:process.env,stdio:["ignore","pipe","pipe"]});
+  mmdiProcess = child;
+  const append = chunk => { mmdiLog.push(chunk.toString("utf8")); if(mmdiLog.length>100)mmdiLog=mmdiLog.slice(-100); };
+  child.stdout.on("data",append); child.stderr.on("data",append);
+  child.on("error",e=>append("\n[launcher] "+e.message));
+  child.on("exit",(code,signal)=>append("\n[process exited code="+code+" signal="+signal+"]"));
+  await new Promise(resolve=>setTimeout(resolve,900));
+  return {ok:child.exitCode===null,message:child.exitCode===null?"MmdiBot launched. Check logs for readiness.":"MmdiBot exited during startup.",...processSnapshot()};
+}
+async function stopMmdi() {
+  if (!mmdiProcess || mmdiProcess.exitCode !== null) return {ok:true,message:"Not running.",...processSnapshot()};
+  const pid=mmdiProcess.pid;
+  if(process.platform==="win32") {
+    try { await execFileAsync("taskkill.exe",["/PID",String(pid),"/T","/F"],{timeout:10000,windowsHide:true}); }
+    catch(e) { if(mmdiProcess.exitCode===null) return {ok:false,message:e.message,...processSnapshot()}; }
+  } else mmdiProcess.kill("SIGTERM");
+  return {ok:true,message:"Stop signal sent.",...processSnapshot()};
+}
+
 async function diagnostics() {
   const out = { time: new Date().toISOString(), dns: "unknown", telegramHttps: "unknown", details: {} };
   try {
@@ -155,8 +209,10 @@ async function handle(req, res) {
       network: {
         mode: ["direct","system","manual"].includes(incoming.network?.mode) ? incoming.network.mode : current.network.mode,
         proxyUrl: take(incoming.network,"proxyUrl",1000) || current.network.proxyUrl,
-        proxyName: take(incoming.network,"proxyName",100)
+        proxyName: take(incoming.network,"proxyName",100),
+        vpnProfile: take(incoming.network,"vpnProfile",128)
       },
+      mmdi: { projectDir: take(incoming.mmdi,"projectDir",1000) || current.mmdi?.projectDir || defaults.mmdi.projectDir },
       telegram: {
         botToken: take(incoming.telegram,"botToken",500) || current.telegram.botToken,
         apiId: take(incoming.telegram,"apiId",30) || current.telegram.apiId,
@@ -173,6 +229,12 @@ async function handle(req, res) {
     await writeConfig(next);
     return send(res, 200, { ok:true, config:safeConfig(next) });
   }
+  if (req.method === "GET" && url.pathname === "/api/vpn/profiles") return send(res,200,{profiles:await listVpnProfiles()});
+  if (req.method === "POST" && url.pathname === "/api/vpn/connect") { const b=await bodyJson(req); return send(res,200,await vpnAction("connect",b.profile)); }
+  if (req.method === "POST" && url.pathname === "/api/vpn/disconnect") { const b=await bodyJson(req); return send(res,200,await vpnAction("disconnect",b.profile)); }
+  if (req.method === "GET" && url.pathname === "/api/mmdi/status") return send(res,200,processSnapshot());
+  if (req.method === "POST" && url.pathname === "/api/mmdi/start") return send(res,200,await startMmdi());
+  if (req.method === "POST" && url.pathname === "/api/mmdi/stop") return send(res,200,await stopMmdi());
   if (req.method === "POST" && url.pathname === "/api/test/telegram") return send(res,200,await testTelegram());
   if (req.method === "POST" && url.pathname === "/api/test/ai") return send(res,200,await testAi());
   if (req.method === "POST" && url.pathname === "/api/test/mcp") return send(res,200,await testMcp());
