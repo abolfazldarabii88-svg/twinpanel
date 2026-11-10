@@ -163,7 +163,7 @@ async function startMmdi() {
   const bin = process.platform === "win32" ? "bun.exe" : "bun";
   mmdiLog = [];
   const childEnv = { ...process.env };
-  for (const key of ["HTTP_PROXY","HTTPS_PROXY","ALL_PROXY","http_proxy","https_proxy","all_proxy","TELEGRAM_PROXY_IP","TELEGRAM_PROXY_PORT","TELEGRAM_PROXY_SECRET"]) delete childEnv[key];
+  for (const key of ["TELEGRAM_PROXY_IP","TELEGRAM_PROXY_PORT","TELEGRAM_PROXY_SECRET"]) delete childEnv[key];
   if (c.network?.mode === "manual" && c.network.proxyUrl) {
     const proxy = parseManualProxy(c.network.proxyUrl);
     if (proxy.kind === "invalid") return {ok:false,message:proxy.message || "Proxy profile URL is invalid."};
