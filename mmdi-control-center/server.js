@@ -26,10 +26,16 @@ const defaults = {
 
 async function readConfig() {
   try {
-    return { ...structuredClone(defaults), ...JSON.parse(await fs.readFile(CONFIG_FILE, "utf8")) };
-  } catch {
-    return structuredClone(defaults);
-  }
+    const saved = JSON.parse(await fs.readFile(CONFIG_FILE, "utf8"));
+    return {
+      ...structuredClone(defaults), ...saved,
+      network: { ...defaults.network, ...saved.network },
+      telegram: { ...defaults.telegram, ...saved.telegram },
+      ai: { ...defaults.ai, ...saved.ai },
+      mcp: { ...defaults.mcp, ...saved.mcp },
+      mmdi: { ...defaults.mmdi, ...saved.mmdi }
+    };
+  } catch { return structuredClone(defaults); }
 }
 async function writeConfig(next) {
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -131,7 +137,23 @@ async function startMmdi() {
   if (!pkg.includes('"start"')) return {ok:false,message:"No start script found in selected package.json."};
   const bin = process.platform === "win32" ? "bun.exe" : "bun";
   mmdiLog = [];
-  const child = spawn(bin,["run","start"],{cwd:dir,windowsHide:true,shell:false,env:process.env,stdio:["ignore","pipe","pipe"]});
+  const childEnv = { ...process.env };
+  if (c.network?.mode === "manual" && c.network.proxyUrl) {
+    try {
+      const proxyLink = new URL(c.network.proxyUrl);
+      if (proxyLink.hostname === "t.me" && proxyLink.pathname === "/proxy") {
+        childEnv.TELEGRAM_PROXY_IP = proxyLink.searchParams.get("server") || "";
+        childEnv.TELEGRAM_PROXY_PORT = proxyLink.searchParams.get("port") || "";
+        childEnv.TELEGRAM_PROXY_SECRET = proxyLink.searchParams.get("secret") || "";
+        childEnv.TELEGRAM_USE_WSS = "false";
+      } else {
+        childEnv.HTTPS_PROXY = c.network.proxyUrl;
+        childEnv.HTTP_PROXY = c.network.proxyUrl;
+        childEnv.ALL_PROXY = c.network.proxyUrl;
+      }
+    } catch { return {ok:false,message:"Proxy profile URL is invalid."}; }
+  }
+  const child = spawn(bin,["run","start"],{cwd:dir,windowsHide:true,shell:false,env:childEnv,stdio:["ignore","pipe","pipe"]});
   mmdiProcess = child;
   const append = chunk => { mmdiLog.push(chunk.toString("utf8")); if(mmdiLog.length>100)mmdiLog=mmdiLog.slice(-100); };
   child.stdout.on("data",append); child.stderr.on("data",append);
