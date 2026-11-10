@@ -133,6 +133,7 @@ async function networkStatus() {
   } else {
     result.proxy = process.env.HTTPS_PROXY || process.env.https_proxy || "No HTTPS_PROXY environment variable";
   }
+  if (result.mode === "auto") result.autoProxy = await discoverLocalProxy();
   return result;
 }
 
