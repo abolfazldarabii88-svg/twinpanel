@@ -1,10 +1,13 @@
 import http from "node:http";
+import https from "node:https";
+import tls from "node:tls";
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import { discoverLocalProxy } from "./network-auto.js";
 
 const execFileAsync = promisify(execFile);
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -15,9 +18,12 @@ const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 const MAX_BODY = 64 * 1024;
 let mmdiProcess = null;
 let mmdiLog = [];
+let activeAutoProxy = null;
+let autoWatchBusy = false;
+let autoWatchTimer = null;
 
 const defaults = {
-  network: { mode: "system", proxyUrl: "", proxyName: "", vpnProfile: "" },
+  network: { mode: "auto", proxyUrl: "", proxyName: "", vpnProfile: "" },
   mmdi: { projectDir: path.join(os.homedir(), "Desktop", "mmdi-source") },
   telegram: { botToken: "", apiId: "", apiHash: "", botApiBase: "https://api.telegram.org" },
   ai: { baseUrl: "", apiKey: "", model: "" },
@@ -29,7 +35,7 @@ async function readConfig() {
     const saved = JSON.parse(await fs.readFile(CONFIG_FILE, "utf8"));
     return {
       ...structuredClone(defaults), ...saved,
-      network: { ...defaults.network, ...saved.network },
+      network: { ...defaults.network, ...saved.network, mode: saved.network?.mode === "system" ? "auto" : (saved.network?.mode || defaults.network.mode) },
       telegram: { ...defaults.telegram, ...saved.telegram },
       ai: { ...defaults.ai, ...saved.ai },
       mcp: { ...defaults.mcp, ...saved.mcp },
@@ -113,6 +119,76 @@ async function timedFetch(url, options={}, timeout=9000) {
   try { return await fetch(url, { ...options, signal: controller.signal, redirect: "error" }); }
   finally { clearTimeout(timer); }
 }
+
+// Node's fetch in the Control Center does not inherit the proxy injected into
+// the separately launched Bun process. For HTTP CONNECT proxies, tunnel HTTPS
+// explicitly so diagnostics and "Get Me" use the same discovered Psiphon route.
+async function fetchThroughHttpProxy(targetUrl, proxyUrl, options={}, timeout=10000) {
+  const target = new URL(targetUrl);
+  const proxy = new URL(proxyUrl);
+  if (proxy.protocol !== "http:") throw new Error("Only HTTP CONNECT proxies are supported by this test helper.");
+  if (target.protocol !== "https:") throw new Error("Proxy tunnel helper expects an HTTPS target.");
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let secureSocket;
+    const timer = setTimeout(() => finish(new Error("Proxy request timed out.")), timeout);
+    const finish = (error, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (error) { secureSocket?.destroy(); reject(error); }
+      else resolve(value);
+    };
+    const connectReq = http.request({
+      host: proxy.hostname,
+      port: Number(proxy.port || 80),
+      method: "CONNECT",
+      path: target.host,
+      headers: { Host: target.host }
+    });
+    connectReq.once("connect", (response, socket) => {
+      if (response.statusCode !== 200) { socket.destroy(); finish(new Error("Proxy CONNECT returned HTTP " + response.statusCode)); return; }
+      secureSocket = tls.connect({ socket, servername: target.hostname });
+      secureSocket.once("error", error => finish(error));
+      secureSocket.once("secureConnect", () => {
+        const req = https.request({
+          protocol: target.protocol,
+          hostname: target.hostname,
+          port: target.port || 443,
+          method: options.method || "GET",
+          path: target.pathname + target.search,
+          headers: options.headers || {},
+          agent: false,
+          createConnection: () => secureSocket
+        }, response => {
+          const chunks = [];
+          response.on("data", chunk => chunks.push(chunk));
+          response.once("end", () => finish(null, {
+            status: response.statusCode || 0,
+            ok: (response.statusCode || 0) >= 200 && (response.statusCode || 0) < 300,
+            json: async () => JSON.parse(Buffer.concat(chunks).toString("utf8"))
+          }));
+        });
+        req.once("error", error => finish(error));
+        if (options.body) req.write(options.body);
+        req.end();
+      });
+    });
+    connectReq.once("error", error => finish(error));
+    connectReq.end();
+  });
+}
+async function networkAwareFetch(url, options={}, timeout=10000) {
+  const config = await readConfig();
+  if (config.network?.mode === "auto") {
+    const proxy = await discoverLocalProxy();
+    if (proxy.ok && proxy.kind === "http") return fetchThroughHttpProxy(url, proxy.url, options, timeout);
+  } else if (config.network?.mode === "manual") {
+    const manual = parseManualProxy(config.network.proxyUrl);
+    if (manual.kind === "url" && manual.url.startsWith("http:")) return fetchThroughHttpProxy(url, manual.url, options, timeout);
+  }
+  return timedFetch(url, options, timeout);
+}
 async function networkStatus() {
   const result = { platform: process.platform, mode: (await readConfig()).network.mode, proxy: "unknown", vpn: [], note: "System detection is read-only." };
   if (process.platform === "win32") {
@@ -129,6 +205,7 @@ async function networkStatus() {
   } else {
     result.proxy = process.env.HTTPS_PROXY || process.env.https_proxy || "No HTTPS_PROXY environment variable";
   }
+  if (result.mode === "auto") result.autoProxy = await discoverLocalProxy();
   return result;
 }
 
@@ -164,7 +241,21 @@ async function startMmdi() {
   mmdiLog = [];
   const childEnv = { ...process.env };
   for (const key of ["HTTP_PROXY","HTTPS_PROXY","ALL_PROXY","http_proxy","https_proxy","all_proxy","TELEGRAM_PROXY_IP","TELEGRAM_PROXY_PORT","TELEGRAM_PROXY_SECRET"]) delete childEnv[key];
-  if (c.network?.mode === "manual" && c.network.proxyUrl) {
+  activeAutoProxy = null;
+  if (c.network?.mode === "auto") {
+    const detected = await discoverLocalProxy();
+    if (!detected.ok) return {ok:false,message:"Auto network could not find a working local proxy. " + detected.reason,network:detected};
+    activeAutoProxy = detected;
+    childEnv.HTTP_PROXY = detected.url;
+    childEnv.HTTPS_PROXY = detected.url;
+    childEnv.ALL_PROXY = detected.url;
+    childEnv.http_proxy = detected.url;
+    childEnv.https_proxy = detected.url;
+    childEnv.all_proxy = detected.url;
+    childEnv.NODE_USE_ENV_PROXY = "1";
+  } else if (c.network?.mode === "system") {
+    // Use the current Windows network route without pinning a proxy port.
+  } else if (c.network?.mode === "manual" && c.network.proxyUrl) {
     const proxy = parseManualProxy(c.network.proxyUrl);
     if (proxy.kind === "invalid") return {ok:false,message:proxy.message || "Proxy profile URL is invalid."};
     if (proxy.kind === "mtproxy") {
@@ -185,10 +276,33 @@ async function startMmdi() {
   child.on("error",e=>append("\n[launcher] "+e.message));
   child.on("exit",(code,signal)=>append("\n[process exited code="+code+" signal="+signal+"]"));
   await new Promise(resolve=>setTimeout(resolve,900));
-  return {ok:child.exitCode===null,message:child.exitCode===null?"MmdiBot launched. Check logs for readiness.":"MmdiBot exited during startup.",...processSnapshot()};
+  if (child.exitCode === null && c.network?.mode === "auto") startAutoNetworkWatcher();
+  return {ok:child.exitCode===null,message:child.exitCode===null?"MmdiBot launched. Check logs for readiness.":"MmdiBot exited during startup.",network:activeAutoProxy,...processSnapshot()};
 }
+function startAutoNetworkWatcher() {
+  if (autoWatchTimer) clearInterval(autoWatchTimer);
+  autoWatchTimer = setInterval(async () => {
+    if (autoWatchBusy || !mmdiProcess || mmdiProcess.exitCode !== null) return;
+    autoWatchBusy = true;
+    try {
+      const config = await readConfig();
+      if (config.network?.mode !== "auto") return;
+      const next = await discoverLocalProxy();
+      if (!next.ok || !activeAutoProxy || next.url === activeAutoProxy.url) return;
+      mmdiLog.push("\\n[network] Proxy changed; restarting MmdiBot with the newly detected route.");
+      await stopMmdi();
+      await new Promise(resolve => setTimeout(resolve, 700));
+      await startMmdi();
+    } catch (error) {
+      mmdiLog.push("\\n[network] Automatic reconfiguration failed: " + error.message);
+    } finally { autoWatchBusy = false; }
+  }, 15000);
+  autoWatchTimer.unref?.();
+}
+
 async function stopMmdi() {
   if (!mmdiProcess || mmdiProcess.exitCode !== null) return {ok:true,message:"Not running.",...processSnapshot()};
+  if (autoWatchTimer) { clearInterval(autoWatchTimer); autoWatchTimer = null; }
   const pid=mmdiProcess.pid;
   if(process.platform==="win32") {
     try { await execFileAsync("taskkill.exe",["/PID",String(pid),"/T","/F"],{timeout:10000,windowsHide:true}); }
@@ -205,10 +319,12 @@ async function diagnostics() {
     out.dns = "ok"; out.details.dnsAddress = a.address;
   } catch (e) { out.dns = "failed"; out.details.dnsError = e.code || e.message; }
   try {
-    const r = await timedFetch("https://api.telegram.org", {}, 7000);
+    const r = await networkAwareFetch("https://api.telegram.org", {}, 7000);
     out.telegramHttps = `reachable (HTTP ${r.status})`;
   } catch (e) { out.telegramHttps = "failed"; out.details.telegramError = e.name === "AbortError" ? "timeout" : (e.cause?.code || e.message); }
-  out.details.proxyNote = "These checks use Node's default network route. The saved proxy profile is not automatically applied to requests.";
+  const networkConfig = (await readConfig()).network;
+  if (networkConfig?.mode === "auto") out.details.autoProxy = await discoverLocalProxy();
+  out.details.proxyNote = "Diagnostics report the system route; MmdiBot auto mode separately discovers a local proxy and injects it into the bot process.";
   return out;
 }
 async function readProjectEnv() {
@@ -264,7 +380,7 @@ async function testTelegram() {
   const base = validUrl(env.telegram.botApiBase || c.telegram.botApiBase) || new URL("https://api.telegram.org");
   const url = new URL(`/bot${token}/getMe`, base);
   try {
-    const r = await timedFetch(url, {}, 10000);
+    const r = await networkAwareFetch(url, {}, 10000);
     const data = await r.json();
     return data.ok ? { ok:true, username:data.result.username || "", id:data.result.id } : { ok:false, message:data.description || "Telegram rejected the token." };
   } catch (e) { return { ok:false, message:e.name === "AbortError" ? "Request timed out. Check HTTPS route/VPN/proxy." : (e.cause?.code || e.message) }; }
@@ -277,7 +393,7 @@ async function testAi() {
   if (!base || !apiKey) return { ok:false, message:"AI Router URL or API key was not found in dashboard settings or project .env." };
   const endpoint = new URL((base.href.endsWith("/") ? base.href.slice(0,-1) : base.href) + "/models");
   try {
-    const r = await timedFetch(endpoint, { headers:{ authorization:`Bearer ${apiKey}` } }, 10000);
+    const r = await networkAwareFetch(endpoint, { headers:{ authorization:`Bearer ${apiKey}` } }, 10000);
     return { ok:r.ok, message:`AI Router replied with HTTP ${r.status}.` };
   } catch (e) { return { ok:false, message:e.name === "AbortError" ? "Request timed out." : (e.cause?.code || e.message) }; }
 }
@@ -304,7 +420,7 @@ async function handle(req, res) {
     const take = (obj,key,max=2048) => cleanString(obj?.[key],max);
     const next = {
       network: {
-        mode: ["direct","system","manual"].includes(incoming.network?.mode) ? incoming.network.mode : current.network.mode,
+        mode: ["auto","direct","system","manual"].includes(incoming.network?.mode) ? incoming.network.mode : current.network.mode,
         proxyUrl: incoming.network?.mode === "manual" ? (take(incoming.network,"proxyUrl",1000) || current.network.proxyUrl) : "",
         proxyName: take(incoming.network,"proxyName",100),
         vpnProfile: take(incoming.network,"vpnProfile",128)

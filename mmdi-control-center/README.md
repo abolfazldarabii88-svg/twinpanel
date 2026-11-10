@@ -18,7 +18,7 @@ You can also run `node server.js` from PowerShell. No npm install is needed.
 - Local-only dashboard bound to 127.0.0.1.
 - Settings stored outside the repository in `%USERPROFILE%\\.mmdi-control-center\\config.json`.
 - Secret values are masked in API responses; backups redact credentials.
-- Detects Windows VPN profiles and WinHTTP proxy state.
+- Detects Windows VPN profiles and WinHTTP proxy state.\n- Smart Auto mode discovers local HTTP CONNECT/SOCKS5 listeners, tests the proxy protocol, passes the selected route to the MmdiBot process, and rechecks every 15 seconds; when the detected proxy endpoint changes, it restarts MmdiBot with the new endpoint.
 - Connects/disconnects Windows VPN profiles using `rasdial` (VPN credentials must already be saved in Windows if required).
 - Starts and stops the local MmdiBot using the fixed command `bun run start`.
 - Captures recent startup output for troubleshooting.
@@ -36,7 +36,7 @@ The folder must contain a `package.json` with a `start` script and a working Bun
 
 ## Network behavior and limitations
 
-- **System/VPN mode**: MmdiBot inherits the current Windows network route. The dashboard can connect/disconnect Windows VPN profiles listed by `Get-VpnConnection`; third-party VPN apps that do not register a Windows VPN profile are not controlled here.
+- **Auto mode (recommended)**: scans local listening ports, probes HTTP CONNECT and SOCKS5, and passes the detected local proxy to MmdiBot using proxy environment variables. It rechecks every 15 seconds and restarts MmdiBot if the proxy endpoint changes. This is intended for local proxy clients such as Psiphon; it does not guarantee support for every VPN application or every HTTP client.\n- **System/VPN mode**: MmdiBot inherits the current Windows network route. The dashboard can connect/disconnect Windows VPN profiles listed by `Get-VpnConnection`; third-party VPN apps that do not register a Windows VPN profile are not controlled here.
 - **Manual mode**: proxy variables are passed only to the MmdiBot process launched by this dashboard. Support depends on the HTTP client/runtime used by the project. The dashboard's own connectivity tests still use the Windows default route.
 - **MTProxy**: a `t.me/proxy` link is passed to the project's GramJS MTProto configuration. MTProxy does not automatically proxy Telegram Bot API HTTPS or AI Router HTTPS requests.
 - For Bot API and AI Router HTTPS connectivity, a working Windows VPN/system route is the most reliable choice unless the application's HTTP client explicitly supports the selected HTTP/SOCKS proxy.
