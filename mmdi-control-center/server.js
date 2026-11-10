@@ -1,4 +1,6 @@
 import http from "node:http";
+import https from "node:https";
+import tls from "node:tls";
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -116,6 +118,76 @@ async function timedFetch(url, options={}, timeout=9000) {
   const timer = setTimeout(() => controller.abort(), timeout);
   try { return await fetch(url, { ...options, signal: controller.signal, redirect: "error" }); }
   finally { clearTimeout(timer); }
+}
+
+// Node's fetch in the Control Center does not inherit the proxy injected into
+// the separately launched Bun process. For HTTP CONNECT proxies, tunnel HTTPS
+// explicitly so diagnostics and "Get Me" use the same discovered Psiphon route.
+async function fetchThroughHttpProxy(targetUrl, proxyUrl, options={}, timeout=10000) {
+  const target = new URL(targetUrl);
+  const proxy = new URL(proxyUrl);
+  if (proxy.protocol !== "http:") throw new Error("Only HTTP CONNECT proxies are supported by this test helper.");
+  if (target.protocol !== "https:") throw new Error("Proxy tunnel helper expects an HTTPS target.");
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let secureSocket;
+    const timer = setTimeout(() => finish(new Error("Proxy request timed out.")), timeout);
+    const finish = (error, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (error) { secureSocket?.destroy(); reject(error); }
+      else resolve(value);
+    };
+    const connectReq = http.request({
+      host: proxy.hostname,
+      port: Number(proxy.port || 80),
+      method: "CONNECT",
+      path: target.host,
+      headers: { Host: target.host }
+    });
+    connectReq.once("connect", (response, socket) => {
+      if (response.statusCode !== 200) { socket.destroy(); finish(new Error("Proxy CONNECT returned HTTP " + response.statusCode)); return; }
+      secureSocket = tls.connect({ socket, servername: target.hostname });
+      secureSocket.once("error", error => finish(error));
+      secureSocket.once("secureConnect", () => {
+        const req = https.request({
+          protocol: target.protocol,
+          hostname: target.hostname,
+          port: target.port || 443,
+          method: options.method || "GET",
+          path: target.pathname + target.search,
+          headers: options.headers || {},
+          agent: false,
+          createConnection: () => secureSocket
+        }, response => {
+          const chunks = [];
+          response.on("data", chunk => chunks.push(chunk));
+          response.once("end", () => finish(null, {
+            status: response.statusCode || 0,
+            ok: (response.statusCode || 0) >= 200 && (response.statusCode || 0) < 300,
+            json: async () => JSON.parse(Buffer.concat(chunks).toString("utf8"))
+          }));
+        });
+        req.once("error", error => finish(error));
+        if (options.body) req.write(options.body);
+        req.end();
+      });
+    });
+    connectReq.once("error", error => finish(error));
+    connectReq.end();
+  });
+}
+async function networkAwareFetch(url, options={}, timeout=10000) {
+  const config = await readConfig();
+  if (config.network?.mode === "auto") {
+    const proxy = await discoverLocalProxy();
+    if (proxy.ok && proxy.kind === "http") return fetchThroughHttpProxy(url, proxy.url, options, timeout);
+  } else if (config.network?.mode === "manual") {
+    const manual = parseManualProxy(config.network.proxyUrl);
+    if (manual.kind === "url" && manual.url.startsWith("http:")) return fetchThroughHttpProxy(url, manual.url, options, timeout);
+  }
+  return timedFetch(url, options, timeout);
 }
 async function networkStatus() {
   const result = { platform: process.platform, mode: (await readConfig()).network.mode, proxy: "unknown", vpn: [], note: "System detection is read-only." };
@@ -247,7 +319,7 @@ async function diagnostics() {
     out.dns = "ok"; out.details.dnsAddress = a.address;
   } catch (e) { out.dns = "failed"; out.details.dnsError = e.code || e.message; }
   try {
-    const r = await timedFetch("https://api.telegram.org", {}, 7000);
+    const r = await networkAwareFetch("https://api.telegram.org", {}, 7000);
     out.telegramHttps = `reachable (HTTP ${r.status})`;
   } catch (e) { out.telegramHttps = "failed"; out.details.telegramError = e.name === "AbortError" ? "timeout" : (e.cause?.code || e.message); }
   const networkConfig = (await readConfig()).network;
@@ -308,7 +380,7 @@ async function testTelegram() {
   const base = validUrl(env.telegram.botApiBase || c.telegram.botApiBase) || new URL("https://api.telegram.org");
   const url = new URL(`/bot${token}/getMe`, base);
   try {
-    const r = await timedFetch(url, {}, 10000);
+    const r = await networkAwareFetch(url, {}, 10000);
     const data = await r.json();
     return data.ok ? { ok:true, username:data.result.username || "", id:data.result.id } : { ok:false, message:data.description || "Telegram rejected the token." };
   } catch (e) { return { ok:false, message:e.name === "AbortError" ? "Request timed out. Check HTTPS route/VPN/proxy." : (e.cause?.code || e.message) }; }
@@ -321,7 +393,7 @@ async function testAi() {
   if (!base || !apiKey) return { ok:false, message:"AI Router URL or API key was not found in dashboard settings or project .env." };
   const endpoint = new URL((base.href.endsWith("/") ? base.href.slice(0,-1) : base.href) + "/models");
   try {
-    const r = await timedFetch(endpoint, { headers:{ authorization:`Bearer ${apiKey}` } }, 10000);
+    const r = await networkAwareFetch(endpoint, { headers:{ authorization:`Bearer ${apiKey}` } }, 10000);
     return { ok:r.ok, message:`AI Router replied with HTTP ${r.status}.` };
   } catch (e) { return { ok:false, message:e.name === "AbortError" ? "Request timed out." : (e.cause?.code || e.message) }; }
 }
