@@ -82,6 +82,31 @@ function cleanString(value, max=2048) {
 function validUrl(value, protocols=["http:", "https:"]) {
   try { const u = new URL(value); return protocols.includes(u.protocol) ? u : null; } catch { return null; }
 }
+function parseManualProxy(value) {
+  const raw = cleanString(value, 1000);
+  if (!raw) return { kind: "none" };
+  // Telegram commonly shares MTProxy links as https://t.me/proxy?...;
+  // also accept the same link without a scheme.
+  let normalized = raw;
+  if (/^(?:t\.me|telegram\.me)\/proxy(?:\?|$)/i.test(normalized)) normalized = "https://" + normalized;
+  let u;
+  try { u = new URL(normalized); } catch { return { kind: "invalid" }; }
+  const host = u.hostname.toLowerCase().replace(/^www\./, "");
+  if ((host === "t.me" || host === "telegram.me") && u.pathname.replace(/\/$/, "") === "/proxy") {
+    const server = (u.searchParams.get("server") || "").trim();
+    const portText = (u.searchParams.get("port") || "").trim();
+    const secret = (u.searchParams.get("secret") || "").trim();
+    const port = Number(portText);
+    if (!server || !/^\d{1,5}$/.test(portText) || !Number.isInteger(port) || port < 1 || port > 65535 || !secret) {
+      return { kind: "invalid", message: "MTProxy link must contain valid server, port and secret parameters." };
+    }
+    return { kind: "mtproxy", server, port: String(port), secret };
+  }
+  if (["http:", "https:", "socks:", "socks5:"].includes(u.protocol) && u.hostname) {
+    return { kind: "url", url: u.href };
+  }
+  return { kind: "invalid" };
+}
 async function timedFetch(url, options={}, timeout=9000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -140,19 +165,18 @@ async function startMmdi() {
   const childEnv = { ...process.env };
   for (const key of ["HTTP_PROXY","HTTPS_PROXY","ALL_PROXY","http_proxy","https_proxy","all_proxy","TELEGRAM_PROXY_IP","TELEGRAM_PROXY_PORT","TELEGRAM_PROXY_SECRET"]) delete childEnv[key];
   if (c.network?.mode === "manual" && c.network.proxyUrl) {
-    try {
-      const proxyLink = new URL(c.network.proxyUrl);
-      if (proxyLink.hostname === "t.me" && proxyLink.pathname === "/proxy") {
-        childEnv.TELEGRAM_PROXY_IP = proxyLink.searchParams.get("server") || "";
-        childEnv.TELEGRAM_PROXY_PORT = proxyLink.searchParams.get("port") || "";
-        childEnv.TELEGRAM_PROXY_SECRET = proxyLink.searchParams.get("secret") || "";
-        childEnv.TELEGRAM_USE_WSS = "false";
-      } else {
-        childEnv.HTTPS_PROXY = c.network.proxyUrl;
-        childEnv.HTTP_PROXY = c.network.proxyUrl;
-        childEnv.ALL_PROXY = c.network.proxyUrl;
-      }
-    } catch { return {ok:false,message:"Proxy profile URL is invalid."}; }
+    const proxy = parseManualProxy(c.network.proxyUrl);
+    if (proxy.kind === "invalid") return {ok:false,message:proxy.message || "Proxy profile URL is invalid."};
+    if (proxy.kind === "mtproxy") {
+      childEnv.TELEGRAM_PROXY_IP = proxy.server;
+      childEnv.TELEGRAM_PROXY_PORT = proxy.port;
+      childEnv.TELEGRAM_PROXY_SECRET = proxy.secret;
+      childEnv.TELEGRAM_USE_WSS = "false";
+    } else if (proxy.kind === "url") {
+      childEnv.HTTPS_PROXY = proxy.url;
+      childEnv.HTTP_PROXY = proxy.url;
+      childEnv.ALL_PROXY = proxy.url;
+    }
   }
   const child = spawn(bin,["run","start"],{cwd:dir,windowsHide:true,shell:false,env:childEnv,stdio:["ignore","pipe","pipe"]});
   mmdiProcess = child;
