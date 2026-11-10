@@ -187,11 +187,58 @@ async function diagnostics() {
   out.details.proxyNote = "These checks use Node's default network route. The saved proxy profile is not automatically applied to requests.";
   return out;
 }
+async function readProjectEnv() {
+  const c = await readConfig();
+  const envPath = path.join(path.resolve(c.mmdi?.projectDir || defaults.mmdi.projectDir), ".env");
+  const raw = await fs.readFile(envPath, "utf8").catch(() => null);
+  const values = Object.create(null);
+  if (raw !== null) {
+    for (const line of raw.replace(/^\\uFEFF/, "").split(/\\r?\\n/)) {
+      const m = line.match(/^\\s*(?:export\\s+)?([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(.*?)\\s*$/);
+      if (!m) continue;
+      let value = m[2].trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) value = value.slice(1, -1);
+      values[m[1]] = value;
+    }
+  }
+  const pick = (...names) => {
+    for (const name of names) {
+      const value = values[name] ?? process.env[name];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+    return "";
+  };
+  return {
+    exists: raw !== null,
+    telegram: {
+      botToken: pick("TELEGRAM_BOT_TOKEN", "BOT_TOKEN", "TELEGRAM_TOKEN"),
+      apiId: pick("TELEGRAM_API_ID", "API_ID", "APIID"),
+      apiHash: pick("TELEGRAM_API_HASH", "API_HASH"),
+      botApiBase: pick("TELEGRAM_BOT_API_BASE", "BOT_API_BASE_URL")
+    },
+    ai: {
+      baseUrl: pick("OPENAI_BASE_URL", "OPENAI_API_BASE_URL", "OPENAI_API_BASE", "AI_BASE_URL"),
+      apiKey: pick("OPENAI_API_KEY", "AI_API_KEY"),
+      model: pick("OPENAI_MODEL", "AI_MODEL")
+    }
+  };
+}
+async function projectEnvStatus() {
+  const env = await readProjectEnv();
+  return {
+    envFileFound: env.exists,
+    telegram: { botTokenConfigured: !!env.telegram.botToken, apiIdConfigured: !!env.telegram.apiId, apiHashConfigured: !!env.telegram.apiHash },
+    ai: { baseUrlConfigured: !!env.ai.baseUrl, apiKeyConfigured: !!env.ai.apiKey, modelConfigured: !!env.ai.model },
+    note: "Only configuration presence is returned. Secret values are never sent to the browser."
+  };
+}
 async function testTelegram() {
   const c = await readConfig();
-  if (!c.telegram.botToken) return { ok:false, message:"Bot API token is not configured." };
-  const base = validUrl(c.telegram.botApiBase) || new URL("https://api.telegram.org");
-  const url = new URL(`/bot${c.telegram.botToken}/getMe`, base);
+  const env = await readProjectEnv();
+  const token = c.telegram.botToken || env.telegram.botToken;
+  if (!token) return { ok:false, message:"Bot API token was not found in dashboard settings or the project .env file." };
+  const base = validUrl(c.telegram.botApiBase || env.telegram.botApiBase) || new URL("https://api.telegram.org");
+  const url = new URL(`/bot${token}/getMe`, base);
   try {
     const r = await timedFetch(url, {}, 10000);
     const data = await r.json();
@@ -200,11 +247,13 @@ async function testTelegram() {
 }
 async function testAi() {
   const c = await readConfig();
-  const base = validUrl(c.ai.baseUrl);
-  if (!base || !c.ai.apiKey) return { ok:false, message:"Set a valid AI Router URL and API key first." };
+  const env = await readProjectEnv();
+  const base = validUrl(c.ai.baseUrl || env.ai.baseUrl);
+  const apiKey = c.ai.apiKey || env.ai.apiKey;
+  if (!base || !apiKey) return { ok:false, message:"AI Router URL or API key was not found in dashboard settings or project .env." };
   const endpoint = new URL((base.href.endsWith("/") ? base.href.slice(0,-1) : base.href) + "/models");
   try {
-    const r = await timedFetch(endpoint, { headers:{ authorization:`Bearer ${c.ai.apiKey}` } }, 10000);
+    const r = await timedFetch(endpoint, { headers:{ authorization:`Bearer ${apiKey}` } }, 10000);
     return { ok:r.ok, message:`AI Router replied with HTTP ${r.status}.` };
   } catch (e) { return { ok:false, message:e.name === "AbortError" ? "Request timed out." : (e.cause?.code || e.message) }; }
 }
@@ -220,6 +269,7 @@ async function testMcp() {
 async function handle(req, res) {
   if (!localRequest(req)) return send(res, 403, { error:"Local requests only." });
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
+  if (req.method === "GET" && url.pathname === "/api/env/status") return send(res,200,await projectEnvStatus());
   if (req.method === "GET" && url.pathname === "/api/status") {
     const c = await readConfig();
     return send(res, 200, { config:safeConfig(c), network:await networkStatus(), dataDirectory:DATA_DIR });
