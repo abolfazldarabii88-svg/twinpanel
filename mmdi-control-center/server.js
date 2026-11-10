@@ -138,6 +138,7 @@ async function startMmdi() {
   const bin = process.platform === "win32" ? "bun.exe" : "bun";
   mmdiLog = [];
   const childEnv = { ...process.env };
+  for (const key of ["HTTP_PROXY","HTTPS_PROXY","ALL_PROXY","http_proxy","https_proxy","all_proxy","TELEGRAM_PROXY_IP","TELEGRAM_PROXY_PORT","TELEGRAM_PROXY_SECRET"]) delete childEnv[key];
   if (c.network?.mode === "manual" && c.network.proxyUrl) {
     try {
       const proxyLink = new URL(c.network.proxyUrl);
@@ -230,7 +231,7 @@ async function handle(req, res) {
     const next = {
       network: {
         mode: ["direct","system","manual"].includes(incoming.network?.mode) ? incoming.network.mode : current.network.mode,
-        proxyUrl: take(incoming.network,"proxyUrl",1000) || current.network.proxyUrl,
+        proxyUrl: incoming.network?.mode === "manual" ? (take(incoming.network,"proxyUrl",1000) || current.network.proxyUrl) : "",
         proxyName: take(incoming.network,"proxyName",100),
         vpnProfile: take(incoming.network,"vpnProfile",128)
       },
@@ -242,7 +243,7 @@ async function handle(req, res) {
         botApiBase: validUrl(take(incoming.telegram,"botApiBase",500))?.origin || current.telegram.botApiBase
       },
       ai: {
-        baseUrl: validUrl(take(incoming.ai,"baseUrl",1000))?.origin || current.ai.baseUrl,
+        baseUrl: (validUrl(take(incoming.ai,"baseUrl",1000))?.href.replace(/\/+$/,"")) || current.ai.baseUrl,
         apiKey: take(incoming.ai,"apiKey",1000) || current.ai.apiKey,
         model: take(incoming.ai,"model",200)
       },
