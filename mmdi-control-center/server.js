@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import { discoverLocalProxy } from "./network-auto.js";
 
 const execFileAsync = promisify(execFile);
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -15,9 +16,12 @@ const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 const MAX_BODY = 64 * 1024;
 let mmdiProcess = null;
 let mmdiLog = [];
+let activeAutoProxy = null;
+let autoWatchBusy = false;
+let autoWatchTimer = null;
 
 const defaults = {
-  network: { mode: "system", proxyUrl: "", proxyName: "", vpnProfile: "" },
+  network: { mode: "auto", proxyUrl: "", proxyName: "", vpnProfile: "" },
   mmdi: { projectDir: path.join(os.homedir(), "Desktop", "mmdi-source") },
   telegram: { botToken: "", apiId: "", apiHash: "", botApiBase: "https://api.telegram.org" },
   ai: { baseUrl: "", apiKey: "", model: "" },
@@ -164,7 +168,21 @@ async function startMmdi() {
   mmdiLog = [];
   const childEnv = { ...process.env };
   for (const key of ["HTTP_PROXY","HTTPS_PROXY","ALL_PROXY","http_proxy","https_proxy","all_proxy","TELEGRAM_PROXY_IP","TELEGRAM_PROXY_PORT","TELEGRAM_PROXY_SECRET"]) delete childEnv[key];
-  if (c.network?.mode === "manual" && c.network.proxyUrl) {
+  activeAutoProxy = null;
+  if (c.network?.mode === "auto") {
+    const detected = await discoverLocalProxy();
+    if (!detected.ok) return {ok:false,message:"Auto network could not find a working local proxy. " + detected.reason,network:detected};
+    activeAutoProxy = detected;
+    childEnv.HTTP_PROXY = detected.url;
+    childEnv.HTTPS_PROXY = detected.url;
+    childEnv.ALL_PROXY = detected.url;
+    childEnv.http_proxy = detected.url;
+    childEnv.https_proxy = detected.url;
+    childEnv.all_proxy = detected.url;
+    childEnv.NODE_USE_ENV_PROXY = "1";
+  } else if (c.network?.mode === "system") {
+    // Use the current Windows network route without pinning a proxy port.
+  } else if (c.network?.mode === "manual" && c.network.proxyUrl) {
     const proxy = parseManualProxy(c.network.proxyUrl);
     if (proxy.kind === "invalid") return {ok:false,message:proxy.message || "Proxy profile URL is invalid."};
     if (proxy.kind === "mtproxy") {
@@ -185,10 +203,33 @@ async function startMmdi() {
   child.on("error",e=>append("\n[launcher] "+e.message));
   child.on("exit",(code,signal)=>append("\n[process exited code="+code+" signal="+signal+"]"));
   await new Promise(resolve=>setTimeout(resolve,900));
-  return {ok:child.exitCode===null,message:child.exitCode===null?"MmdiBot launched. Check logs for readiness.":"MmdiBot exited during startup.",...processSnapshot()};
+  if (child.exitCode === null && c.network?.mode === "auto") startAutoNetworkWatcher();
+  return {ok:child.exitCode===null,message:child.exitCode===null?"MmdiBot launched. Check logs for readiness.":"MmdiBot exited during startup.",network:activeAutoProxy,...processSnapshot()};
 }
+function startAutoNetworkWatcher() {
+  if (autoWatchTimer) clearInterval(autoWatchTimer);
+  autoWatchTimer = setInterval(async () => {
+    if (autoWatchBusy || !mmdiProcess || mmdiProcess.exitCode !== null) return;
+    autoWatchBusy = true;
+    try {
+      const config = await readConfig();
+      if (config.network?.mode !== "auto") return;
+      const next = await discoverLocalProxy();
+      if (!next.ok || !activeAutoProxy || next.url === activeAutoProxy.url) return;
+      mmdiLog.push("\\n[network] Proxy changed; restarting MmdiBot with the newly detected route.");
+      await stopMmdi();
+      await new Promise(resolve => setTimeout(resolve, 700));
+      await startMmdi();
+    } catch (error) {
+      mmdiLog.push("\\n[network] Automatic reconfiguration failed: " + error.message);
+    } finally { autoWatchBusy = false; }
+  }, 15000);
+  autoWatchTimer.unref?.();
+}
+
 async function stopMmdi() {
   if (!mmdiProcess || mmdiProcess.exitCode !== null) return {ok:true,message:"Not running.",...processSnapshot()};
+  if (autoWatchTimer) { clearInterval(autoWatchTimer); autoWatchTimer = null; }
   const pid=mmdiProcess.pid;
   if(process.platform==="win32") {
     try { await execFileAsync("taskkill.exe",["/PID",String(pid),"/T","/F"],{timeout:10000,windowsHide:true}); }
@@ -208,7 +249,9 @@ async function diagnostics() {
     const r = await timedFetch("https://api.telegram.org", {}, 7000);
     out.telegramHttps = `reachable (HTTP ${r.status})`;
   } catch (e) { out.telegramHttps = "failed"; out.details.telegramError = e.name === "AbortError" ? "timeout" : (e.cause?.code || e.message); }
-  out.details.proxyNote = "These checks use Node's default network route. The saved proxy profile is not automatically applied to requests.";
+  const networkConfig = (await readConfig()).network;
+  if (networkConfig?.mode === "auto") out.details.autoProxy = await discoverLocalProxy();
+  out.details.proxyNote = "Diagnostics report the system route; MmdiBot auto mode separately discovers a local proxy and injects it into the bot process.";
   return out;
 }
 async function readProjectEnv() {
@@ -304,7 +347,7 @@ async function handle(req, res) {
     const take = (obj,key,max=2048) => cleanString(obj?.[key],max);
     const next = {
       network: {
-        mode: ["direct","system","manual"].includes(incoming.network?.mode) ? incoming.network.mode : current.network.mode,
+        mode: ["auto","direct","system","manual"].includes(incoming.network?.mode) ? incoming.network.mode : current.network.mode,
         proxyUrl: incoming.network?.mode === "manual" ? (take(incoming.network,"proxyUrl",1000) || current.network.proxyUrl) : "",
         proxyName: take(incoming.network,"proxyName",100),
         vpnProfile: take(incoming.network,"vpnProfile",128)
