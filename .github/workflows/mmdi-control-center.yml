@@ -1,0 +1,29 @@
+name: Mmdi Control Center build
+on:
+  push:
+    paths:
+      - "mmdi-control-center/**"
+      - ".github/workflows/mmdi-control-center.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate backend syntax and package metadata
+        run: |
+          node --check mmdi-control-center/server.js
+          node -e "JSON.parse(require('fs').readFileSync('mmdi-control-center/package.json','utf8'))"
+      - name: Create standalone project ZIP
+        run: |
+          zip -r Mmdi-Control-Center.zip mmdi-control-center -x "*/.env" "*/data/*" "*/backups/*" "*/node_modules/*"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mmdi-Control-Center
+          path: Mmdi-Control-Center.zip
+          retention-days: 14
