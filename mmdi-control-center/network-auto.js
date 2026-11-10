@@ -77,13 +77,12 @@ export async function discoverLocalProxy() {
     seen.add(port);
     return !["node","bun","system","svchost"].includes(String(row.Process || "").toLowerCase());
   }).slice(0, 80);
-  for (const row of candidates) {
+  const matches = await Promise.all(candidates.map(async row => {
     const port = Number(row.Port);
     const process = String(row.Process || "");
-    const http = await withTimeout(probeHttp(port), 1800, false);
-    if (http) return { ok: true, kind: "http", url: `http://127.0.0.1:${port}`, port, process };
-    const socks = await withTimeout(probeSocks(port), 1800, false);
-    if (socks) return { ok: true, kind: "socks5", url: `socks5://127.0.0.1:${port}`, port, process };
-  }
-  return { ok: false, reason: "No working local HTTP CONNECT or SOCKS5 proxy was found.", scanned: candidates.length };
+    if (await withTimeout(probeHttp(port), 1800, false)) return { ok: true, kind: "http", url: `http://127.0.0.1:${port}`, port, process };
+    if (await withTimeout(probeSocks(port), 1800, false)) return { ok: true, kind: "socks5", url: `socks5://127.0.0.1:${port}`, port, process };
+    return null;
+  }));
+  return matches.find(Boolean) || { ok: false, reason: "No working local HTTP CONNECT or SOCKS5 proxy was found.", scanned: candidates.length };
 }
