@@ -211,15 +211,15 @@ async function readProjectEnv() {
   return {
     exists: raw !== null,
     telegram: {
-      botToken: pick("TELEGRAM_BOT_TOKEN", "BOT_TOKEN", "TELEGRAM_TOKEN"),
-      apiId: pick("TELEGRAM_API_ID", "API_ID", "APIID"),
-      apiHash: pick("TELEGRAM_API_HASH", "API_HASH"),
+      botToken: pick("TELEGRAM_BOT_TOKEN", "BOT_TOKEN", "TELEGRAM_TOKEN", "BOT_API_TOKEN", "TG_BOT_TOKEN"),
+      apiId: pick("TELEGRAM_API_ID", "API_ID", "APIID", "TG_API_ID"),
+      apiHash: pick("TELEGRAM_API_HASH", "API_HASH", "TG_API_HASH"),
       botApiBase: pick("TELEGRAM_BOT_API_BASE", "BOT_API_BASE_URL")
     },
     ai: {
-      baseUrl: pick("OPENAI_BASE_URL", "OPENAI_API_BASE_URL", "OPENAI_API_BASE", "AI_BASE_URL"),
-      apiKey: pick("OPENAI_API_KEY", "AI_API_KEY"),
-      model: pick("OPENAI_MODEL", "AI_MODEL")
+      baseUrl: pick("OPENAI_BASE_URL", "OPENAI_API_BASE_URL", "OPENAI_API_BASE", "AI_BASE_URL", "AI_ROUTER_BASE_URL"),
+      apiKey: pick("OPENAI_API_KEY", "AI_API_KEY", "AI_ROUTER_API_KEY", "OPENROUTER_API_KEY", "LLM_API_KEY"),
+      model: pick("OPENAI_MODEL", "AI_MODEL", "OPENAI_MODEL_NAME")
     }
   };
 }
