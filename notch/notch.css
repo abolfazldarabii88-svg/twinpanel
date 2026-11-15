@@ -30,7 +30,7 @@ body{overflow:hidden}
 @keyframes workingLook{0%{transform:translateY(-42px) scale(.7);opacity:0}12%{transform:translateY(-42px) scale(.8);opacity:1}28%{transform:translateY(-5px)}43%{transform:translate(8px,-2px)}56%{transform:translate(-8px,-2px)}72%{transform:translateY(2px) scale(1.06)}86%{transform:translateY(0) scale(1.02)}100%{transform:translateY(3px) scale(1)}}
 @keyframes workingScan{0%,22%{transform:translateY(-7px)}40%{transform:translate(7px,-1px)}55%{transform:translate(-7px,-1px)}72%,100%{transform:translate(0,0)}}
 .preview-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:17px;padding:0 12px;opacity:.78}
-.preview-controls button{border:1px solid #ffffff20;border-radius:20px;background:#171717;color:#aaa;padding:5px 9px;font:10px inherit;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.preview-controls button{border:1px solid #ffffff20;border-radius:20px;background:#171717;color:#aaa;padding:5px 9px;font:inherit;font-size:10px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
 .preview-controls button:hover,.preview-controls button.active{background:#292929;color:#fff;border-color:#ffffff60}
 .hint{margin:26px auto;text-align:center;color:#666;font-size:10px;letter-spacing:3px}.hint span{color:#a52b40}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
