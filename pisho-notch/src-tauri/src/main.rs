@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{LogicalSize, PhysicalPosition, WebviewWindow};
+use tauri::{LogicalSize, Manager, PhysicalPosition, WebviewWindow};
 
 fn place_notch(window: &WebviewWindow) {
     if let Ok(Some(monitor)) = window.current_monitor() {
