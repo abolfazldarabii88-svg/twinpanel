@@ -22,6 +22,13 @@ jobs:
       - name: Install Tauri CLI
         run: npm install --global @tauri-apps/cli@^2
 
+      - name: Prepare isolated frontend assets
+        working-directory: pisho-notch
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item index.html, style.css, app.js -Destination dist/
+
       - name: Build NSIS installer
         working-directory: pisho-notch
         run: tauri build --bundles nsis
