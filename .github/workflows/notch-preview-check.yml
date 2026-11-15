@@ -1,0 +1,42 @@
+name: Validate TwinPanel Notch Preview
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "notch/**"
+      - ".github/workflows/notch-preview-check.yml"
+  push:
+    branches:
+      - "feature/notch-character-v1"
+    paths:
+      - "notch/**"
+      - ".github/workflows/notch-preview-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notch-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JavaScript syntax
+        run: node --check notch/notch.js
+      - name: Verify required preview assets
+        shell: pwsh
+        run: |
+          $required = @("notch/index.html", "notch/notch.css", "notch/notch.js", "notch/README.md")
+          foreach ($file in $required) {
+            if (-not (Test-Path $file)) { throw "Missing required file: $file" }
+          }
+      - name: Verify no external image or script dependencies
+        shell: pwsh
+        run: |
+          $html = Get-Content notch/index.html -Raw
+          if ($html -match 'https?://|<img\b') { throw "Preview must remain self-contained and use no raster image assets." }
