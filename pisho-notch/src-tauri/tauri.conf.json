@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Pisho Notch",
+  "version": "0.1.0",
+  "identifier": "com.twinpanel.pishonotch",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Pisho Notch",
+        "width": 184,
+        "height": 46,
+        "center": false,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "shortDescription": "Tiny animated desktop cat eyes",
+    "longDescription": "A compact top-aligned desktop overlay with expressive cat-like eyes that follow the cursor."
+  }
+}

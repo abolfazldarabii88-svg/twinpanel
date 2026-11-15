@@ -1,0 +1,93 @@
+:root {
+  color-scheme: dark;
+  --gaze-x: 0px;
+  --gaze-y: 0px;
+}
+* { box-sizing: border-box; }
+html, body {
+  width: 184px;
+  height: 46px;
+  min-width: 184px;
+  min-height: 46px;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+body {
+  display: block;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+.stage {
+  width: 184px;
+  height: 46px;
+  margin: 0;
+  padding: 0;
+}
+.notch {
+  position: relative;
+  isolation: isolate;
+  width: 184px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.075);
+  border-top: 0;
+  border-radius: 0 0 22px 22px;
+  background: linear-gradient(180deg, rgba(3,5,9,.995), rgba(7,9,14,.99));
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.30),
+    0 3px 18px rgba(0,0,0,.18),
+    inset 0 -1px 0 rgba(255,255,255,.035);
+}
+.notch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(110deg, rgba(255,255,255,.025), transparent 48%, rgba(255,255,255,.012));
+}
+.eye {
+  position: relative;
+  width: 15px;
+  height: 8px;
+  flex: 0 0 15px;
+  border-radius: 52% 48% 50% 50% / 58% 58% 42% 42%;
+  background: #f7f8fb;
+  transform: translate(var(--gaze-x), var(--gaze-y));
+  transition: transform 65ms linear, border-radius 180ms ease, height 180ms ease;
+  box-shadow: 0 0 7px rgba(255,255,255,.12);
+  animation: eye-life 5.4s ease-in-out infinite;
+}
+.eye::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 5px;
+  border-radius: 50%;
+  background: #11151c;
+  transform: translate(-50%, -50%);
+  transition: height 160ms ease, transform 65ms linear;
+}
+.eye-right { animation-delay: -2.1s; }
+.notch.blink .eye {
+  height: 1px;
+  border-radius: 50%;
+  animation: none;
+}
+.notch.blink .eye::after { height: 0; }
+.hint, .ambient { display: none; }
+
+@keyframes eye-life {
+  0%, 100% { border-radius: 52% 48% 50% 50% / 58% 58% 42% 42%; }
+  36% { border-radius: 44% 56% 52% 48% / 48% 66% 34% 52%; }
+  68% { border-radius: 58% 42% 46% 54% / 66% 48% 52% 34%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
