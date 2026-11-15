@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{PhysicalPosition, PhysicalSize, WebviewWindow};
+use tauri::{LogicalSize, PhysicalPosition, WebviewWindow};
 
 fn place_notch(window: &WebviewWindow) {
     if let Ok(Some(monitor)) = window.current_monitor() {
@@ -10,7 +10,7 @@ fn place_notch(window: &WebviewWindow) {
         let x = ((size.width as i32 - width) / 2).max(0);
         let _ = window.set_position(PhysicalPosition::new(x, (10.0 * scale) as i32));
     }
-    let _ = window.set_size(PhysicalSize::new(200, 72));
+    let _ = window.set_size(LogicalSize::new(200.0, 72.0));
     let _ = window.set_always_on_top(true);
 }
 
