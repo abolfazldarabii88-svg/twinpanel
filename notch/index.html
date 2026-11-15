@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080808">
+  <title>TwinPanel — Notch Character Lab</title>
+  <link rel="stylesheet" href="./notch.css">
+</head>
+<body>
+  <main class="desktop" id="desktop">
+    <div class="wallpaper-glow" aria-hidden="true"></div>
+    <section class="notch-space" aria-label="Character preview">
+      <div class="notch-shadow" aria-hidden="true"></div>
+      <section class="notch" id="notch">
+        <div class="face" id="face" data-expression="normal" aria-label="Animated white-eyed character">
+          <div class="brow brow-left"></div><div class="brow brow-right"></div>
+          <div class="eye eye-left"><i></i></div>
+          <div class="eye eye-right"><i></i></div>
+          <div class="spiral spiral-left"></div><div class="spiral spiral-right"></div>
+        </div>
+        <div class="preview-controls">
+          <button data-action="normal">Normal</button>
+          <button data-action="wink">Wink</button>
+          <button data-action="playful">Playful</button>
+          <button data-action="sleep">Sleep</button>
+          <button data-action="angry">Angry</button>
+          <button data-action="dizzy">Dizzy</button>
+          <button data-action="working">Start working</button>
+        </div>
+      </section>
+    </section>
+    <p class="hint">TWINPANEL <span>•</span> CHARACTER LAB <span>—</span> move your pointer across the preview</p>
+  </main>
+  <script src="./notch.js"></script>
+</body>
+</html>
