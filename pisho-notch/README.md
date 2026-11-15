@@ -1,21 +1,30 @@
 # Pisho Notch
 
-A tiny, lightweight desktop-cat eyes prototype for Windows. This is an isolated experiment inside the TwinPanel repository; it does not modify TwinPanel or replace the Windows taskbar.
+A tiny transparent Windows desktop overlay with animated cat-like eyes.
 
-## Current prototype
+## Current Windows prototype
 
-- Two small luminous cat-like eyes in a compact dark glass pill.
-- Gentle idle movement and random blinking.
-- Eyes subtly follow the pointer.
-- Reduced-motion preference is respected.
-- No network calls, API keys, telemetry, or background service.
+- A compact 200 × 72 logical-pixel overlay.
+- Positioned near the top-center of the primary display.
+- Native desktop window configured as always-on-top, borderless, transparent, and hidden from the taskbar.
+- Two luminous cyan eyes with idle motion and automatic blinking.
+- Pupils follow the pointer while it is over the overlay.
+- No API keys, network calls, telemetry, or background service.
 
-## Preview
+## Build the Windows installer
 
-Open `index.html` in a modern browser. This first step is only a visual prototype; native always-on-top desktop overlay packaging and Windows integration will be added later.
+The GitHub Actions workflow at `.github/workflows/pisho-notch-windows.yml` builds an NSIS installer on a Windows runner.
 
-## Next steps
+1. Open the repository's **Actions** tab.
+2. Select **Build Pisho Notch for Windows**.
+3. Choose **Run workflow** on branch `feature/pisho-notch-prototype`.
+4. When the run succeeds, download the `Pisho-Notch-Windows-Installer` artifact.
 
-1. Review the eye shape, size, glow, and animation.
-2. Turn the prototype into a tiny transparent always-on-top Windows window.
-3. Measure memory/CPU usage before adding any controls.
+The installer is a CI artifact, not yet a published GitHub Release.
+
+## Notes
+
+- The overlay does not replace or hide the Windows taskbar.
+- The initial version is deliberately limited to appearance and positioning.
+- Pointer tracking currently responds while the pointer is over the overlay; global desktop pointer tracking can be added separately.
+- RAM/CPU use and behavior across multiple monitors still need testing on a real Windows machine.
