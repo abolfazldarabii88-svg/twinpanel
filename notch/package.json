@@ -1,0 +1,25 @@
+{
+  "name": "twinpanel-pisho-preview",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pisho animated character preview for Windows",
+  "main": "electron-main.js",
+  "scripts": { "dist": "electron-builder --win nsis --x64" },
+  "devDependencies": { "electron": "35.7.5", "electron-builder": "26.0.12" },
+  "build": {
+    "appId": "com.twinpanel.pisho.preview",
+    "productName": "Pisho Preview",
+    "directories": { "output": "release" },
+    "files": ["index.html", "notch.css", "notch.js", "electron-main.js", "package.json"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "artifactName": "Pisho-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
