@@ -7,13 +7,14 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "label": "main",
         "title": "Pisho Notch",
-        "width": 200,
-        "height": 72,
-        "center": true,
+        "width": 184,
+        "height": 46,
+        "center": false,
         "resizable": false,
         "decorations": false,
         "transparent": true,
@@ -31,6 +32,6 @@
     "active": true,
     "targets": ["nsis"],
     "shortDescription": "Tiny animated desktop cat eyes",
-    "longDescription": "A tiny transparent always-on-top desktop overlay with animated cat-like eyes."
+    "longDescription": "A compact top-aligned desktop overlay with expressive cat-like eyes that follow the cursor."
   }
 }
