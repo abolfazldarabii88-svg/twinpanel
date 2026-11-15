@@ -29,6 +29,46 @@ jobs:
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Copy-Item index.html, style.css, app.js -Destination dist/
 
+      - name: Generate Windows application icon
+        working-directory: pisho-notch
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          $iconDir = Join-Path $PWD "src-tauri/icons"
+          New-Item -ItemType Directory -Force -Path $iconDir | Out-Null
+          $bitmap = New-Object System.Drawing.Bitmap 256, 256
+          $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+          $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+          $graphics.Clear([System.Drawing.Color]::Transparent)
+          $bg = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 12, 18, 32))
+          $eye = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 111, 225, 255))
+          $pupil = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255, 5, 18, 31))
+          $graphics.FillEllipse($bg, 12, 12, 232, 232)
+          $graphics.FillEllipse($eye, 48, 82, 68, 92)
+          $graphics.FillEllipse($eye, 140, 82, 68, 92)
+          $graphics.FillEllipse($pupil, 72, 105, 22, 54)
+          $graphics.FillEllipse($pupil, 164, 105, 22, 54)
+          $stream = New-Object System.IO.MemoryStream
+          $bitmap.Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
+          $png = $stream.ToArray()
+          $ico = New-Object byte[] (22 + $png.Length)
+          [Array]::Copy([BitConverter]::GetBytes([UInt16]0), 0, $ico, 0, 2)
+          [Array]::Copy([BitConverter]::GetBytes([UInt16]1), 0, $ico, 2, 2)
+          [Array]::Copy([BitConverter]::GetBytes([UInt16]1), 0, $ico, 4, 2)
+          $ico[6] = 0
+          $ico[7] = 0
+          $ico[8] = 0
+          $ico[9] = 0
+          [Array]::Copy([BitConverter]::GetBytes([UInt16]1), 0, $ico, 10, 2)
+          [Array]::Copy([BitConverter]::GetBytes([UInt16]32), 0, $ico, 12, 2)
+          [Array]::Copy([BitConverter]::GetBytes([UInt32]$png.Length), 0, $ico, 14, 4)
+          [Array]::Copy([BitConverter]::GetBytes([UInt32]22), 0, $ico, 18, 4)
+          [Array]::Copy($png, 0, $ico, 22, $png.Length)
+          [System.IO.File]::WriteAllBytes((Join-Path $iconDir "icon.ico"), $ico)
+          $graphics.Dispose()
+          $bitmap.Dispose()
+          $stream.Dispose()
+
       - name: Build NSIS installer
         working-directory: pisho-notch
         run: tauri build --bundles nsis
