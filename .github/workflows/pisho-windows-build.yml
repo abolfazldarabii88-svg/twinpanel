@@ -1,0 +1,37 @@
+name: Pisho Windows EXE
+
+on:
+  push:
+    branches:
+      - feature/notch-character-v1
+    paths:
+      - "notch/**"
+      - ".github/workflows/pisho-windows-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        working-directory: notch
+        run: npm install --no-audit --no-fund
+      - name: Build Windows installer
+        working-directory: notch
+        run: npm run dist
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pisho-Windows-Installer
+          path: notch/release/Pisho-Setup-0.1.0.exe
+          if-no-files-found: error
+          retention-days: 14
