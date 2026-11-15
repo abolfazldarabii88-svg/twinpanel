@@ -1,0 +1,36 @@
+:root{color-scheme:dark;--white:#fff;--red:#ff344d;--ease:cubic-bezier(.22,.78,.2,1)}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;background:#080808;color:#fff;font-family:Segoe UI,Arial,sans-serif}
+body{overflow:hidden}
+.desktop{position:relative;min-height:100vh;isolation:isolate;background:radial-gradient(ellipse at 50% -18%,#29232a 0,transparent 48%),#080808}
+.wallpaper-glow{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 0%,#30101a55,transparent 46%)}
+.notch-space{position:relative;width:min(560px,100vw);height:260px;margin:0 auto;padding:0 70px 70px;filter:drop-shadow(0 14px 26px #000d) drop-shadow(0 3px 10px #000b)}
+.notch-shadow{position:absolute;inset:-24px -38px 28px;border-radius:0 0 64px 64px;background:#000;filter:blur(25px);opacity:.86;pointer-events:none}
+.notch{position:relative;margin:0 auto;width:min(390px,calc(100vw - 30px));height:126px;padding-top:24px;background:#000;border-radius:0 0 38px 38px;box-shadow:inset 0 -1px 0 #ffffff0b,0 14px 34px #0008;display:flex;flex-direction:column;align-items:center;overflow:visible}
+.face{position:relative;width:142px;height:66px;display:flex;align-items:center;justify-content:center;gap:22px;--gaze-x:0px;--gaze-y:0px;transform:translateY(3px);transition:transform .45s var(--ease)}
+.eye{position:relative;width:27px;height:37px;border-radius:48% 48% 44% 44%;background:#fff;box-shadow:0 0 7px #fff9,0 0 18px #fff7,0 0 31px #fff2;transform:translate(var(--gaze-x),var(--gaze-y));transform-origin:center;transition:transform .13s ease-out,height .18s var(--ease),border-radius .18s}
+.eye i{display:none}
+.face.blink .eye{transform:scaleY(.08);border-radius:50%}
+.face[data-expression="sleep"] .eye{height:7px;border-radius:50%;transform:translateY(9px)}
+.face[data-expression="sleep"] .brow{opacity:0}
+.brow{position:absolute;top:7px;width:29px;height:3px;border-radius:50%;background:#fff;opacity:0;transition:all .2s}
+.brow-left{left:27px;transform:rotate(-12deg)}.brow-right{right:27px;transform:rotate(12deg)}
+.face[data-expression="angry"] .eye{background:var(--red);box-shadow:0 0 8px #ff344dcc,0 0 22px #ff344d88}
+.face[data-expression="angry"] .brow{opacity:1;background:var(--red)}
+.face[data-expression="angry"] .brow-left{transform:rotate(18deg);top:12px}.face[data-expression="angry"] .brow-right{transform:rotate(-18deg);top:12px}
+.face[data-expression="playful"]{animation:playfulBob .8s ease-in-out infinite alternate}
+.face[data-expression="playful"] .eye-left{height:25px;transform:rotate(-12deg) translate(var(--gaze-x),var(--gaze-y))}
+.face[data-expression="dizzy"] .eye{background:transparent;border:4px solid #fff;box-shadow:0 0 9px #fff9,0 0 20px #fff5}
+.face[data-expression="dizzy"] .eye:before,.face[data-expression="dizzy"] .eye:after{content:"";position:absolute;inset:2px;border:2px solid #fff;border-radius:50%;animation:spiral 1.1s linear infinite}
+.face[data-expression="dizzy"] .eye:after{inset:7px;animation-direction:reverse}
+.face[data-expression="working"]{animation:workingLook 3.4s var(--ease) both}
+.face[data-expression="working"] .eye{animation:workingScan 3.4s var(--ease) both}
+@keyframes spiral{to{transform:rotate(360deg)}}
+@keyframes playfulBob{to{transform:translateY(-5px) rotate(-2deg)}}
+@keyframes workingLook{0%{transform:translateY(-42px) scale(.7);opacity:0}12%{transform:translateY(-42px) scale(.8);opacity:1}28%{transform:translateY(-5px)}43%{transform:translate(8px,-2px)}56%{transform:translate(-8px,-2px)}72%{transform:translateY(2px) scale(1.06)}86%{transform:translateY(0) scale(1.02)}100%{transform:translateY(3px) scale(1)}}
+@keyframes workingScan{0%,22%{transform:translateY(-7px)}40%{transform:translate(7px,-1px)}55%{transform:translate(-7px,-1px)}72%,100%{transform:translate(0,0)}}
+.preview-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:17px;padding:0 12px;opacity:.78}
+.preview-controls button{border:1px solid #ffffff20;border-radius:20px;background:#171717;color:#aaa;padding:5px 9px;font:10px inherit;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.preview-controls button:hover,.preview-controls button.active{background:#292929;color:#fff;border-color:#ffffff60}
+.hint{margin:26px auto;text-align:center;color:#666;font-size:10px;letter-spacing:3px}.hint span{color:#a52b40}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
